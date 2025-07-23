@@ -4,7 +4,7 @@ import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { updateAdmins } from "../RoomTools";
 import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck } from "../../model/OperateHelper/Quorum";
+import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, balanceTeamsAfterLeave } from "../../model/OperateHelper/Quorum";
 import { convertToPlayerStorage, getBanlistDataFromDB, setBanlistDataToDB, setPlayerDataToDB } from "../Storage";
 
 export async function onPlayerLeaveListener(player: PlayerObject): Promise<void> {
@@ -48,8 +48,9 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
         // when auto emcee mode is enabled
         if(window.gameRoom.config.rules.autoOperating === true && window.gameRoom.isGamingNow === true) {
             if(player.team !== TeamID.Spec) {
-                // put new players into the team this player has left
-                recuritByOne();
+                // Usar el nuevo sistema de balanceo automático
+                balanceTeamsAfterLeave();
+                window.gameRoom.logger.i('onPlayerLeave', `Player ${player.id} left from team, attempting to balance teams`);
             }
         }
     } else {
@@ -71,14 +72,18 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
         // if this player is disconnected (include abscond)
         window.gameRoom.playerList.get(player.id)!.stats.disconns++;
         placeholderLeft.playerStatsDisconns = window.gameRoom.playerList.get(player.id)!.stats.disconns;
-        if(window.gameRoom.config.settings.antiGameAbscond === true) { // if anti abscond option is enabled
+        
+        // PENALIZACIONES POR ABANDONO DESHABILITADAS - No más sanciones por salir de partida
+        /*if(window.gameRoom.config.settings.antiGameAbscond === true) { // if anti abscond option is enabled
             window.gameRoom.playerList.get(player.id)!.stats.rating -= window.gameRoom.config.settings.gameAbscondRatingPenalty; // rating penalty
             if(await getBanlistDataFromDB(window.gameRoom.playerList.get(player.id)!.conn) === undefined ) { // if this player is in match(team player), fixed-term ban this player
                 // check this player already registered in ban list to prevent overwriting other ban reason.
                 window.gameRoom.logger.i('onPlayerLeave', `${player.name}#${player.id} has been added in fixed term ban list for abscond.`);
                 await setBanlistDataToDB({ conn: window.gameRoom.playerList.get(player.id)!.conn, reason: LangRes.antitrolling.gameAbscond.banReason, register: leftTimeStamp, expire: leftTimeStamp + window.gameRoom.config.settings.gameAbscondBanMillisecs });
             }
-        }
+        }*/
+        
+        window.gameRoom.logger.i('onPlayerLeave', `${player.name}#${player.id} left during game - no penalties applied`);
     }
 
     if (window.gameRoom.config.settings.banVoteEnable) { // check vote and reduce

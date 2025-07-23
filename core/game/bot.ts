@@ -117,30 +117,32 @@ var scheduledTimer5 = setInterval(() => {
 
         // check afk
         if (window.gameRoom.isGamingNow === true && window.gameRoom.isStatRecord === true) { // if the game is in playing
-            if (player.team !== TeamID.Spec) { // if the player is not spectators(include afk mode)
+            if (player.team !== TeamID.Spec && player.permissions.afkmode === false) { // if the player is not spectators and not already AFK
                 if (player.afktrace.count >= window.gameRoom.config.settings.afkCountLimit) { // if the player's count is over than limit
                     window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false); // kick
                 } else {
-                    if (player.afktrace.count >= 1) { // only when the player's count is not 0(in activity)
-                        window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.scheduler.afkDetect, placeholderScheduler), player.id, 0xFF7777, "bold", 2); // warning for all
-                    }
+                    // Comentado temporalmente hasta producción
+                    // if (player.afktrace.count >= 1) { // only when the player's count is not 0(in activity)
+                    //     window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.scheduler.afkDetect, placeholderScheduler), player.id, 0xFF7777, "bold", 2); // warning for all
+                    // }
                     player.afktrace.count++; // add afk detection count
                 }
             }
         } else {
-            if (player.admin == true) { // if the player is admin
+            if (player.admin == true && player.permissions.afkmode === false) { // if the player is admin and not already AFK
                 if (player.afktrace.count >= window.gameRoom.config.settings.afkCountLimit) { // if the player's count is over than limit
                     window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false); // kick
                 } else {
-                    if (player.afktrace.count >= 1) { // only when the player's count is not 0(in activity)
-                        window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.scheduler.afkDetect, placeholderScheduler), player.id, 0xFF7777, "bold", 2); // warning for all
-                    }
+                    // Comentado temporalmente hasta producción
+                    // if (player.afktrace.count >= 1) { // only when the player's count is not 0(in activity)
+                    //     window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.scheduler.afkDetect, placeholderScheduler), player.id, 0xFF7777, "bold", 2); // warning for all
+                    // }
                     player.afktrace.count++; // add afk detection count
                 }
             }
         }
     });
-}, 5000); // 5secs
+}, 15 * 1000); // afk time allowed 15secs
 // ====================================================================================================
 // declare functions
 function makeRoom(): void {

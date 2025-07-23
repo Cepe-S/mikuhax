@@ -52,3 +52,56 @@ export function recuritBothTeamFully() {
         window.gameRoom._room.setPlayerTeam(activeSpecPlayersList[i].id, TeamID.Blue);
     }
 }
+
+/**
+ * Asigna un jugador al equipo con menos jugadores o aleatoriamente si están balanceados
+ */
+export function assignPlayerToBalancedTeam(playerId: number) {
+    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
+    
+    const redPlayersCount: number = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
+    const bluePlayersCount: number = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue).length;
+    
+    window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Before assignment - Red: ${redPlayersCount}, Blue: ${bluePlayersCount}, Total players: ${activePlayersList.length}`);
+    
+    if (redPlayersCount < bluePlayersCount) {
+        // Equipo rojo tiene menos jugadores
+        window.gameRoom._room.setPlayerTeam(playerId, TeamID.Red);
+        window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned to Red team (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
+    } else if (bluePlayersCount < redPlayersCount) {
+        // Equipo azul tiene menos jugadores
+        window.gameRoom._room.setPlayerTeam(playerId, TeamID.Blue);
+        window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned to Blue team (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
+    } else {
+        // Los equipos están balanceados, asignar aleatoriamente
+        const randomTeam = Math.random() < 0.5 ? TeamID.Red : TeamID.Blue;
+        window.gameRoom._room.setPlayerTeam(playerId, randomTeam);
+        window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned randomly to ${randomTeam === TeamID.Red ? 'Red' : 'Blue'} team (both teams balanced: ${redPlayersCount})`);
+    }
+}
+
+/**
+ * Balancea los equipos después de que un jugador salga
+ */
+export function balanceTeamsAfterLeave() {
+    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
+    const activeSpecPlayersList: PlayerObject[] = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Spec);
+    
+    const redPlayersCount: number = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
+    const bluePlayersCount: number = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue).length;
+    
+    const teamDifference = Math.abs(redPlayersCount - bluePlayersCount);
+    
+    // Solo balancear si hay una diferencia de más de 1 jugador y hay espectadores disponibles
+    if (teamDifference > 1 && activeSpecPlayersList.length > 0) {
+        if (redPlayersCount > bluePlayersCount) {
+            // Mover un espectador al equipo azul
+            window.gameRoom._room.setPlayerTeam(activeSpecPlayersList[0].id, TeamID.Blue);
+            window.gameRoom.logger.i('balanceTeamsAfterLeave', `Moved player ${activeSpecPlayersList[0].id} to Blue team to balance (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
+        } else if (bluePlayersCount > redPlayersCount) {
+            // Mover un espectador al equipo rojo
+            window.gameRoom._room.setPlayerTeam(activeSpecPlayersList[0].id, TeamID.Red);
+            window.gameRoom.logger.i('balanceTeamsAfterLeave', `Moved player ${activeSpecPlayersList[0].id} to Red team to balance (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
+        }
+    }
+}

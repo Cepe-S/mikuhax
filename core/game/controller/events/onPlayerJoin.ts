@@ -6,7 +6,7 @@ import { convertToPlayerStorage, getBanlistDataFromDB, getPlayerDataFromDB, remo
 import { getUnixTimestamp } from "../Statistics";
 import { setDefaultStadiums, updateAdmins } from "../RoomTools";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck } from "../../model/OperateHelper/Quorum";
+import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, assignPlayerToBalancedTeam } from "../../model/OperateHelper/Quorum";
 import { decideTier, getAvatarByTier, Tier } from "../../model/Statistics/Tier";
 import { isExistNickname, isIncludeBannedWords } from "../TextFilter";
 
@@ -70,7 +70,8 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         return;
     }
     
-    // if this player has already joinned by other connection
+    // PERMITIR IPs DUPLICADAS - Comentado el check de double joining
+    /*if this player has already joinned by other connection
     for (let eachPlayer of window.gameRoom.playerList.values()) {
         if(eachPlayer.conn === player.conn) {
             window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} was joined but kicked for double joinning. (origin:${eachPlayer.name}#${eachPlayer.id},conn:${player.conn})`);
@@ -78,7 +79,7 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
             //window.room.sendAnnouncement(Tst.maketext(LangRes.onJoin.doubleJoinningMsg, placeholderJoin), null, 0xFF0000, "normal", 0); // notify
             return; // exit from this join event
         }
-    }
+    }*/
 
     // if player's nickname is longer than limitation
     if (player.name.length > window.gameRoom.config.settings.nicknameLengthLimit) {
@@ -241,12 +242,26 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
 
     // when auto emcee mode is enabled
     if (window.gameRoom.config.rules.autoOperating === true) {
-        recuritByOne();
-        if (window.gameRoom.isGamingNow === false) {
-            // if game is not started then start the game for active players
-            setDefaultStadiums(); // set stadium
-            window.gameRoom._room.startGame();
-        }
+        // Usar la nueva función de balanceo automático
+        assignPlayerToBalancedTeam(player.id);
+        
+        // Verificar si se debe iniciar el juego automáticamente
+        setTimeout(() => {
+            const currentPlayers = window.gameRoom._room.getPlayerList().filter(p => p.id !== 0);
+            const redPlayers = currentPlayers.filter(p => p.team === TeamID.Red);
+            const bluePlayers = currentPlayers.filter(p => p.team === TeamID.Blue);
+            
+            window.gameRoom.logger.i('onPlayerJoin', `Current teams after assignment - Red: ${redPlayers.length}, Blue: ${bluePlayers.length}, Total: ${currentPlayers.length}`);
+            
+            // Iniciar juego si no está en curso y hay al menos 1 jugador por equipo
+            if (window.gameRoom._room.getScores() === null && redPlayers.length > 0 && bluePlayers.length > 0) {
+                setDefaultStadiums(); // set stadium
+                window.gameRoom._room.startGame();
+                window.gameRoom.logger.i('onPlayerJoin', `Game started automatically (Red: ${redPlayers.length}, Blue: ${bluePlayers.length})`);
+            } else {
+                window.gameRoom.logger.i('onPlayerJoin', `Game not started - needs players in both teams (Red: ${redPlayers.length}, Blue: ${bluePlayers.length})`);
+            }
+        }, 1000); // Pequeño delay para asegurar que el jugador esté correctamente asignado
     }
 
     // emit websocket event

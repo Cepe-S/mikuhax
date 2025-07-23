@@ -1,180 +1,182 @@
-// YOU CAN USE A PLACEHOLDER FOR INTERPOLATION. FOR EXAMPLE, 'Hello, My name is {name}.'
+// YOU CAN USE A PLACEHOLDER FOR INTERPOLATION. FOR EXAMPLE, 'Hello, My name is {name}'
 // THE TYPES OF PLACEHOLDER ARE LIMITED BY STRING SET.
 
 export const scheduler = {
-    advertise: '📢 Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [디스코드] https://discord.gg/qfg45B2 [후원하기] https://www.patreon.com/dapucita'
-    ,shutdown: '📢 방이 곧 닫힙니다. 이용해주셔서 감사합니다.'
-    ,afkKick: '📢 잠수로 인한 퇴장'
-    ,afkCommandTooLongKick: '📢 2분 이상 잠수로 퇴장'
-    ,afkDetect: '📢 @{targetName}#{targetID}님이 잠수중입니다. 아무 키나 눌러주세요. 계속 잠수시 퇴장당할 수 있습니다.'
-    ,autoUnmute: '🔊 {targetName}#{targetID}님의 음소거가 자동으로 해제되었습니다.'
-    ,banVoteAutoNotify: '🗳️ 추방 투표가 진행중입니다 (!vote #ID) : {voteList}'
+    advertise: '📢 Miku Server\n💬 [Discord] https://discord.gg/qfg45B2 [Donar] https://www.patreon.com/dapucita'
+    ,shutdown: '📢 La sala se cerrará pronto. Gracias por usarla.'
+    ,afkKick: '📢 Expulsado por inactividad.'
+    ,afkCommandTooLongKick: '📢 Expulsado por estar inactivo más de 2 minutos.'
+    ,afkDetect: '📢 @{targetName}#{targetID} está inactivo. Presiona cualquier tecla. Si continúas inactivo, podrías ser expulsado.'
+    ,autoUnmute: '🔊 Se ha desactivado el silencio de {targetName}#{targetID} automáticamente.'
+    ,banVoteAutoNotify: '🗳️ Se está llevando a cabo una votación para expulsar (!vote #ID): {voteList}'
 }
 
 export const teamName = {
-    specTeam: 'Spec'
-    ,redTeam: 'Red'
-    ,blueTeam: 'Blue'
+    specTeam: 'Espectador'
+    ,redTeam: 'Rojo'
+    ,blueTeam: 'Azul'
 }
 
 export const antitrolling = {
     joinFlood: {
-        banReason: '🚫 잦은 재접속(5분)'
-        ,floodWarning: '📢 너무 짧은 시간에 재접속하면 퇴장될 수 있습니다.'
+        banReason: '🚫 Reconexiones frecuentes (5 minutos).'
+        ,floodWarning: '📢 Reconectarte muy rápido puede causar que seas expulsado.'
     }
     ,chatFlood: {
-        muteReason: '🔇 {playerName}#{playerID}님이 채팅 도배로 음소거됐습니다.(3분) 관리자가 해제할 수 있습니다.'
+        muteReason: '🔇 {playerName}#{playerID} ha sido silenciado por spam en el chat (3 minutos). Un administrador puede quitar el silencio.'
     }
     ,ogFlood: {
-        banReason: '🚫 연속 자책골(10분)'
+        banReason: '🚫 Autogoles consecutivos (10 minutos).'
     }
     ,banNoPermission: {
-        banReason: '🚫 영구퇴장 금지(30초)'
+        banReason: '🚫 Prohibido baneo permanente (30 segundos).'
     }
     ,kickAbusing: {
-        banReason: '🚫 잦은 플레이어 킥(5분)'
-        ,abusingWarning: '📢 너무 짧은 시간에 내보내면 퇴장될 수 있습니다.'
+        banReason: '🚫 Expulsiones frecuentes de jugadores (5 minutos).'
+        ,abusingWarning: '📢 Expulsar demasiado rápido puede causar que seas expulsado.'
     }
     ,insufficientStartAbusing: {
-        banReason: '🚫 팀 인원 미충족(5분)'
-        ,abusingWarning: '📢 팀 인원을 채우지 않고 계속 진행하면 퇴장될 수 있습니다.'
+        banReason: '🚫 Falta de jugadores en el equipo (5 minutos).'
+        ,abusingWarning: '📢 Continuar jugando sin suficientes jugadores puede causar que seas expulsado.'
     }
     ,afkAbusing: {
-        cannotReason: '❌ 게임 중에는 잠수할 수 없습니다.'
+        cannotReason: '❌ No puedes estar inactivo durante el juego.'
     }
     ,gameAbscond: {
-        banReason: '🚫 게임중 탈주(5분)'
+        banReason: '🚫 Abandonar el juego (5 minutos).'
     }
     ,malAct: {
-        banReason: '🚫 악의적인 행위 감지'
+        banReason: '🚫 Detección de comportamiento malintencionado.'
     }
 }
 
+
+
 export const command = {
-    _ErrorWrongCommand : '❌ 잘못된 명령어입니다. 📑 !help 또는 !help COMMAND로 자세히 알아보세요.'
-    ,_ErrorNoPermission: '❌ 관리자만 이 명령어를 사용할 수 있습니다.'
-    ,_ErrorDisabled: '❌ 현재 방에서는 사용할 수 없는 명령어입니다.'
-    ,help: '📄 !about, notice, stats, statsreset, tier, afk, vote, poss, streak, scout, list\n📑 !help COMMAND로 자세히 보기 (예: !help stats)\n📑 !help admin 을 입력하여 관리자용 명령어를 볼 수 있습니다.'
-    ,helpadmin: '📄 !freeze, mute\n📑 !help COMMAND로 자세히 보기'
-    ,helpman: { // detailed description for a command
-        _ErrorWrongMan : '❌ 요청하신 명령어에 대한 설명이 없습니다.'
-        ,help: '📑 !help COMMAND : 해당 COMMAND 명령어에 대한 자세한 설명을 보여줍니다.'
-        ,about: '📑 !about : 봇의 정보를 보여줍니다.'
-        ,stats: '📑 !stats : 전적과 레이팅을 보여줍니다. 📑 !statsreset로 초기화합니다.\n📑 !stats #ID : 해당 ID의 플레이어 전적과 레이팅을 봅니다. ID는 숫자이어야 합니다. (예: !stats #12)\n📑 !list red,blue,spec 명령어로 숫자아이디를 확인할 수 있습니다.'
-        ,statsreset: '📑 !statsreset : 전적과 레이팅을 초기화합니다. 다시 복구할 수 없습니다.'
-        ,poss: '📑 !poss : 양 팀의 공 점유율을 보여줍니다.'
-        ,streak: '📑 !streak : 현재 연승팀과 연승 횟수를 보여줍니다.'
-        ,afk: '📑 !afk MSG : 잠수 모드를 설정하거나 해제합니다. MSG에 이유를 쓸 수도 있습니다. 너무 오래 잠수하면 퇴장될 수 있습니다.'
-        ,list: '📑 !list red/blue/spec : 해당 팀의 명단을 보여줍니다. 간략한 정보가 담겨있습니다.\n📑 !list mute : 음소거된 플레이어의 명단을 보여줍니다.\n📑 !list afk : 잠수중인 플레이어의 명단을 보여줍니다.'
-        ,freeze: '📑 !freeze : 방 전체 채팅을 얼리거나 녹입니다. admin만 할 수 있습니다.'
-        ,mute: '📑 !mute #ID : 해당 ID의 플레이어를 음소거하거나 해제합니다. ID는 숫자이어야 합니다. (예: !mute #12)\n📑 !list red,blue,spec,mute 명령어로 숫자아이디를 확인할 수 있습니다.'
-        ,scout: '📑 !scout : 각 팀의 기대승률치를 보여줍니다. 팀 간의 비교는 아니며, 피타고리안 승률 공식의 변형을 사용합니다.'
-        ,vote: '📑 !vote : 현재 추방 투표 현황과 본인의 투표 상태를 보여줍니다.\n📑 !vote #ID : 해당 ID의 플레이어에 대해 추방 투표를 하거나 취소합니다. ID는 숫자이어야 합니다. (예: !vote #12)'
-        ,tier: '📑 !tier : 티어와 레이팅 시스템에 대한 정보를 보여줍니다.'
-        ,notice: '📑 !notice : 공지사항을 보여줍니다.'
+    _ErrorWrongCommand : '❌ Comando incorrecto. 📑 Usa !help o !help COMMAND para más detalles.'
+    ,_ErrorNoPermission: '❌ Solo los administradores pueden usar este comando.'
+    ,_ErrorDisabled: '❌ Este comando no está habilitado en esta sala.'
+    ,help: '📄 !about, notice, stats, statsreset, tier, afk, vote, poss, streak, scout, list\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Usa !help admin para ver los comandos de administrador.'
+    ,helpadmin: '📄 !freeze, mute\n📑 Usa !help COMMAND para más detalles'
+    ,helpman: { // descripción detallada para un comando
+        _ErrorWrongMan : '❌ No hay una descripción disponible para el comando solicitado.'
+        ,help: '📑 !help COMMAND : Muestra detalles sobre el comando COMMAND.'
+        ,about: '📑 !about : Muestra información sobre el bot.'
+        ,stats: '📑 !stats : Muestra las estadísticas y la puntuación. Usa !statsreset para reiniciarlas.\n📑 !stats #ID : Muestra las estadísticas del jugador con el ID especificado. El ID debe ser un número. (Ej: !stats #12)\n📑 Usa !list red,blue,spec para obtener el ID numérico.'
+        ,statsreset: '📑 !statsreset : Reinicia las estadísticas y la puntuación. No se puede recuperar después.'
+        ,poss: '📑 !poss : Muestra la posesión del balón de ambos equipos.'
+        ,streak: '📑 !streak : Muestra el equipo con racha ganadora actual y la cantidad de victorias consecutivas.'
+        ,afk: '📑 !afk MSG : Activa o desactiva el modo ausente. Puedes incluir una razón en MSG. Si estás ausente demasiado tiempo, podrías ser expulsado.'
+        ,list: '📑 !list red/blue/spec : Muestra la lista de jugadores en ese equipo con información básica.\n📑 !list mute : Muestra la lista de jugadores silenciados.\n📑 !list afk : Muestra la lista de jugadores ausentes.'
+        ,freeze: '📑 !freeze : Activa o desactiva el bloqueo de chat global. Solo administradores pueden usarlo.'
+        ,mute: '📑 !mute #ID : Silencia o des-silencia al jugador con el ID especificado. El ID debe ser un número. (Ej: !mute #12)\n📑 Usa !list red,blue,spec,mute para obtener el ID numérico.'
+        ,scout: '📑 !scout : Muestra las probabilidades de victoria esperadas de cada equipo basado en una fórmula modificada de victorias Pythagorean. No compara directamente los equipos.'
+        ,vote: '📑 !vote : Muestra el estado actual de la votación y tu estado de voto.\n📑 !vote #ID : Vota o cancela un voto para expulsar al jugador con el ID especificado. El ID debe ser un número. (Ej: !vote #12)'
+        ,tier: '📑 !tier : Muestra información sobre el sistema de niveles y puntuación.'
+        ,notice: '📑 !notice : Muestra los avisos actuales.'
     } 
-    ,about: '📄 방 이름 : {RoomName} ({_LaunchTime})\n💬 이 방은 Haxbotron🤖 봇에 의해 운영됩니다. (https://dapucita.github.io/haxbotron/)\n💬 [디스코드] https://discord.gg/qfg45B2 [후원하기] https://www.patreon.com/dapucita'
+    ,about: '📄 Nombre de la sala : {RoomName} ({_LaunchTime})\n💬 Esta sala está gestionada por el bot Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [Discord] https://discord.gg/qfg45B2 [Apóyanos] https://www.patreon.com/dapucita'
     ,stats: {
-        _ErrorNoPlayer: '❌ 접속중이지 않습니다. #숫자아이디 의 형식으로 지정해야 합니다. (예: !stats #12)\n📑 !list red,blue,spec 명령어로 숫자아이디를 확인할 수 있습니다.'
-        ,statsMsg: '📊 {targetName}#{ticketTarget}님의 전적 (레이팅 {targetStatsRatingAvatar}{targetStatsRating}) 총 {targetStatsTotal}판(승률 {targetStatsWinRate}%), 연결끊김 {targetStatsDisconns}회 \n📊 (이어서) 골 {targetStatsGoals}, 도움 {targetStatsAssists}, 자책 {targetStatsOgs}, 실점 {targetStatsLosepoints}, 패스성공률 {targetStatsPassSuccess}%\n📊 (이어서) 경기당 {targetStatsGoalsPerGame}골, {targetStatsAssistsPerGame}도움과 {targetStatsOgsPerGame}자책, {targetStatsLostGoalsPerGame}실점을 기록중입니다.'
-        ,matchAnalysis: '📊 (이어서) 현재 경기에서 {targetStatsNowGoals}골 {targetStatsNowAssists}도움 {targetStatsNowOgs}자책을 기록중입니다. (패스성공률 {targetStatsNowPassSuccess}%)'
+        _ErrorNoPlayer: '❌ No está conectado. Debes especificar un ID en el formato #número. (Ej: !stats #12)\n📑 Usa !list red,blue,spec para obtener el ID numérico.'
+        ,statsMsg: '📊 Estadísticas de {targetName}#{ticketTarget} (Puntuación {targetStatsRatingAvatar}{targetStatsRating}): {targetStatsTotal} partidos jugados (victorias {targetStatsWinRate}%), desconexiones {targetStatsDisconns}\n📊 Goles {targetStatsGoals}, asistencias {targetStatsAssists}, goles en contra {targetStatsOgs}, goles recibidos {targetStatsLosepoints}, pases exitosos {targetStatsPassSuccess}%\n📊 Promedios por partido: {targetStatsGoalsPerGame} goles, {targetStatsAssistsPerGame} asistencias, {targetStatsOgsPerGame} goles en contra, {targetStatsLostGoalsPerGame} goles recibidos.'
+        ,matchAnalysis: '📊 En este partido: {targetStatsNowGoals} goles, {targetStatsNowAssists} asistencias, {targetStatsNowOgs} goles en contra. (Pases exitosos {targetStatsNowPassSuccess}%)'
     }
-    ,statsreset: '📊 전적을 초기화했습니다. 다시 복구할 수 없습니다.'
-    ,poss: '📊 점유율 : Red {possTeamRed}%, Blue {possTeamBlue}%.'
-    ,streak: '📊 {streakTeamName}팀이 {streakTeamCount}판째 연승중입니다!'
+    ,statsreset: '📊 Las estadísticas han sido reiniciadas. No se pueden recuperar.'
+    ,poss: '📊 Posesión: Red {possTeamRed}%, Blue {possTeamBlue}%.'
+    ,streak: '📊 El equipo {streakTeamName} lleva {streakTeamCount} victorias consecutivas.'
     ,afk: {
-        _WarnAfkTooLong: '📢 너무 오래 잠수하면 퇴장될 수 있습니다. (2분간 잠수시)'
-        ,setAfk: '💤 {targetName}#{ticketTarget}님이 지금부터 잠수합니다... ({targetAfkReason})'
-        ,unAfk: '📢 {targetName}#{ticketTarget}님이 잠수를 풀고 복귀합니다!'
-        ,muteNotifyWarn: '❌ 음소거된 상태에서는 다른 플레이어에게 잠수 알림이 표시되지 않습니다.'
-        ,startRecord: '📊 충분한 인원이 모였습니다. 지금부터 전적이 기록됩니다.'
-        ,stopRecord: '📊 최소 {gameRuleNeedMin}명이 필요합니다. 지금은 전적이 기록되지 않습니다.'
+        _WarnAfkTooLong: '📢 Podrías ser expulsado si estás ausente por demasiado tiempo (2 minutos).'
+        ,setAfk: '💤 {targetName}#{ticketTarget} está ahora ausente... ({targetAfkReason})'
+        ,unAfk: '📢 {targetName}#{ticketTarget} ha regresado de su estado ausente.'
+        ,muteNotifyWarn: '❌ Si estás silenciado, los demás jugadores no verán tu notificación de ausencia.'
+        ,startRecord: '📊 Hay suficientes jugadores. Las estadísticas ahora se registrarán.'
+        ,stopRecord: '📊 Se necesitan al menos {gameRuleNeedMin} jugadores. Las estadísticas no se registrarán por ahora.'
     }
     ,mute: {
-        _ErrorNoPermission: '❌ 관리자만 이 명령어를 사용할 수 있습니다.'
-        ,_ErrorNoPlayer: '❌ 접속중이지 않습니다. #숫자아이디 의 형식으로 지정해야 합니다. (예: !mute #12)\n📑 !list red,blue,spec,mute 명령어로 숫자아이디를 확인할 수 있습니다.'
-        ,successMute: '🔇 {targetName}#{ticketTarget}님을 음소거했습니다.(3분) 해제하려면 mute 명령어를 다시 사용하세요.'
-        ,successUnmute: '🔊 {targetName}#{ticketTarget}님의 음소거를 해제했습니다.'
-        ,muteAbusingWarn: '❌ 해당 플레이어에 대해 곧바로 음소거할 수 없습니다.(3분)'
+        _ErrorNoPermission: '❌ Solo los administradores pueden usar este comando.'
+        ,_ErrorNoPlayer: '❌ No está conectado. Debes especificar un ID en el formato #número. (Ej: !mute #12)\n📑 Usa !list red,blue,spec,mute para obtener el ID numérico.'
+        ,successMute: '🔇 {targetName}#{ticketTarget} ha sido silenciado por 3 minutos. Usa el comando nuevamente para des-silenciar.'
+        ,successUnmute: '🔊 {targetName}#{ticketTarget} ha sido des-silenciado.'
+        ,muteAbusingWarn: '❌ No puedes silenciar a este jugador inmediatamente (3 minutos de espera necesarios).'
     }
     ,super: {
-        _ErrorWrongCommand: '❌ 잘못된 슈퍼 관리자 명령어입니다.'
-        ,_ErrorNoPermission: '❌ 슈퍼 관리자만 이 명령어를 사용할 수 있습니다.'
-        ,_ErrorLoginAlready: '❌ 이미 슈퍼 관리자입니다. 📑 !super logout로 로그아웃할 수 있습니다.'
-        ,defaultMessage: '📄 Haxbotron 봇을 관리하기 위한 super 명령어입니다.'
-        ,loginSuccess: '🔑 로그인 성공. super 권한을 부여받았습니다.'
-        ,logoutSuccess: '🔑 로그아웃 완료. super 권한을 반납하였습니다.'
-        ,loginFail: '❌ 로그인에 실패하였습니다.'
-        ,loginFailNoKey: '❌ 로그인에 실패하였습니다. 인증키를 입력해야 합니다.'
+        _ErrorWrongCommand: '❌ Comando de superadministrador incorrecto.'
+        ,_ErrorNoPermission: '❌ Solo los superadministradores pueden usar este comando.'
+        ,_ErrorLoginAlready: '❌ Ya eres superadministrador. Usa !super logout para cerrar sesión.'
+        ,defaultMessage: '📄 Comandos super para administrar el bot Haxbotron.'
+        ,loginSuccess: '🔑 Sesión iniciada. Ahora tienes permisos de superadministrador.'
+        ,logoutSuccess: '🔑 Sesión cerrada. Has renunciado a los permisos de superadministrador.'
+        ,loginFail: '❌ Error al iniciar sesión.'
+        ,loginFailNoKey: '❌ Error al iniciar sesión. Debes proporcionar una clave de autenticación.'
         ,thor: {
-            noAdmins: '❌ 일반 관리자 권한을 회수할 플레이어가 남아있지 않습니다.'
-            ,complete: '🔑 일반 관리자 권한을 획득하였습니다.'
-            ,deprive: '🔑 다른 일반 관리자의 권한을 회수하고 대신하였습니다.'
+            noAdmins: '❌ No quedan jugadores con permisos de administrador para revocar.'
+            ,complete: '🔑 Has adquirido permisos de administrador estándar.'
+            ,deprive: '🔑 Has revocado los permisos de otro administrador estándar y los has adquirido.'
         }
         ,kick: {
-            noID: '❌ 잘못된 플레이어ID입니다. 퇴장시킬 수 없습니다. #숫자아이디 의 형식으로 지정해야 합니다. (예: !super kick #12)'
-            ,kickMsg: '📢 퇴장'
-            ,kickSuccess: '📢 해당 플레이어를 퇴장시켰습니다.'
+            noID: '❌ ID del jugador incorrecto. No se puede expulsar. Usa el formato #número. (Ej: !super kick #12)'
+            ,kickMsg: '📢 Expulsión'
+            ,kickSuccess: '📢 El jugador ha sido expulsado.'
         }
         ,ban: {
-            noID: '❌ 잘못된 플레이어ID입니다. 영구퇴장시킬 수 없습니다. #숫자아이디 의 형식으로 지정해야 합니다. (예: !super ban #12)'
-            ,banMsg: '📢 영구퇴장'
-            ,banSuccess: '📢 해당 플레이어를 영구퇴장시켰습니다.'
+            noID: '❌ ID del jugador incorrecto. No se puede prohibir permanentemente. Usa el formato #número. (Ej: !super ban #12)'
+            ,banMsg: '📢 Prohibición permanente'
+            ,banSuccess: '📢 El jugador ha sido prohibido permanentemente.'
         }
         ,banclear: {
-            noTarget: '❌ 잘못된 밴 초기화 형식입니다. 현재는 📑 !super banclear all 만 가능합니다.'
-            ,complete: '🔑 밴 목록을 초기화했습니다.'
+            noTarget: '❌ Formato incorrecto para borrar la lista de prohibidos. Actualmente solo se admite: 📑 !super banclear all.'
+            ,complete: '🔑 Lista de prohibidos borrada.'
         }
         ,banlist: {
-            _ErrorNoOne: '❌ 해당 명단에 아무도 없습니다.'
+            _ErrorNoOne: '❌ No hay nadie en la lista.'
             ,whoisList: '📜 {whoisResult}'
         }
     }
     ,list: {
-        _ErrorNoTeam: '❌ red, blue, spec, mute, afk 중 명단 종류를 지정해야 합니다. (예: !list red)'
-        ,_ErrorNoOne: '❌ 해당 명단에 아무도 없습니다.'
+        _ErrorNoTeam: '❌ Debes especificar el tipo de lista: red, blue, spec, mute, afk. (Ej: !list red)'
+        ,_ErrorNoOne: '❌ La lista está vacía.'
         ,whoisList: '📜 {whoisResult}'
     }
     ,freeze: {
-        _ErrorNoPermission : '❌ 관리자만 이 명령어를 사용할 수 있습니다.'
-        ,onFreeze: '🔇 관리자가 채팅을 전체 비활성화했습니다. 명령어는 사용할 수 있습니다. 📄 !help'
-        ,offFreeze: '🔊 관리자가 채팅을 전체 활성화했습니다. 이제 말할 수 있습니다.' 
+        _ErrorNoPermission : '❌ Solo los administradores pueden usar este comando.'
+        ,onFreeze: '🔇 El administrador ha deshabilitado el chat global. Los comandos aún están disponibles. 📄 !help'
+        ,offFreeze: '🔊 El administrador ha habilitado el chat global. Ahora puedes hablar.' 
     }
     ,scout: {
-        _ErrorNoMode : '❌ 충분한 인원이 모이지 않아 기대승률을 확인할 수 없습니다.'
-        ,scouting: '📊 피타고리안 기대승률 : Red 팀 {teamExpectationRed}%, Blue 팀 {teamExpectationBlue}%, 대기팀 {teamExpectationSpec}%.'
+        _ErrorNoMode : '❌ No hay suficientes jugadores para calcular las probabilidades de victoria.'
+        ,scouting: '📊 Probabilidad de victoria Pythagorean: Equipo Red {teamExpectationRed}%, Equipo Blue {teamExpectationBlue}%, Espectadores {teamExpectationSpec}%.'
     }
     ,vote: {
-        _ErrorNoPlayer: '❌ 접속중이지 않습니다. #숫자아이디 의 형식으로 지정해야 합니다. (예: !vote #12)'
-        ,_ErrorNoPermission: '❌ 인원이 부족하여 투표를 할 수 없습니다.'
-        ,voteBanMessage: '🚫 투표에 의한 추방 (30분)'
-        ,voteComplete: '🗳️ {targetName}#{targetID} 님에게 추방 투표를 하였습니다. 명령어를 다시 사용하여 취소할 수 있습니다.'
-        ,voteCancel: '🗳️ {targetName}#{targetID} 님에 대한 추방 투표를 취소하였습니다.'
-        ,voteIntroduce : '🗳️ 특정 플레이어에 대해 추방 투표를 하거나 취소할 수 있습니다. (예: !vote #12)'
-        ,voteStatus : '🗳️ 현재 {targetName}#{targetID} 님에게 추방 투표를 한 상태입니다.'
-        ,voteAutoNotify: '🗳️ 현재 추방 투표가 진행중입니다 : {voteList}'
+        _ErrorNoPlayer: '❌ No estás conectado. Debes especificar en el formato #ID (ej: !vote #12)'
+        ,_ErrorNoPermission: '❌ No hay suficientes jugadores para votar.'
+        ,voteBanMessage: '🚫 Expulsión por votación (30 minutos)'
+        ,voteComplete: '🗳️ Se ha realizado una votación de expulsión para {targetName}#{targetID}. Puedes cancelar la votación usando el comando nuevamente.'
+        ,voteCancel: '🗳️ Se ha cancelado la votación de expulsión para {targetName}#{targetID}.'
+        ,voteIntroduce : '🗳️ Puedes votar para expulsar a un jugador o cancelar la votación. (ej: !vote #12)'
+        ,voteStatus : '🗳️ Actualmente hay una votación de expulsión para {targetName}#{targetID}.'
+        ,voteAutoNotify: '🗳️ Actualmente está en curso una votación de expulsión: {voteList}'
     }
-    ,tier: '📄 티어는 레이팅 점수에 따라 결정됩니다. 레이팅 점수는 !stats 명령어로 봅니다.\n📑 {tierAvatar9}{tierCutoff9} {tierAvatar8}{tierCutoff8} {tierAvatar7}{tierCutoff7} {tierAvatar6}{tierCutoff6} {tierAvatar5}{tierCutoff5} {tierAvatar4}{tierCutoff4} {tierAvatar3}{tierCutoff3} {tierAvatar2}{tierCutoff2} {tierAvatar1}{tierCutoff1}'
+    ,tier: '📄 El tier se determina según el puntaje de rating. Puedes ver el puntaje con el comando !stats.\n📑 {tierAvatar9}{tierCutoff9} {tierAvatar8}{tierCutoff8} {tierAvatar7}{tierCutoff7} {tierAvatar6}{tierCutoff6} {tierAvatar5}{tierCutoff5} {tierAvatar4}{tierCutoff4} {tierAvatar3}{tierCutoff3} {tierAvatar2}{tierCutoff2} {tierAvatar1}{tierCutoff1}'
     ,notice: {
-        _ErrorNoMessage: '❌ 현재 공지사항이 없습니다.'
+        _ErrorNoMessage: '❌ No hay avisos disponibles actualmente.'
     }
 }
 
 export const funcUpdateAdmins = {
-    newAdmin: '📢 {playerName}#{playerID}님이 새로운 관리자가 되었습니다.\n📑 맵을 변경하거나, 다른 플레이어를 영구퇴장할 수는 없습니다.\n📑 !help admin 을 입력하여 관리자용 명령어를 볼 수 있습니다.'
+    newAdmin: '📢 {playerName}#{playerID} ha sido asignado como nuevo administrador.\n📑 No puede cambiar el mapa ni expulsar permanentemente a otros jugadores.\n📑 Escribe !help admin para ver los comandos disponibles para administradores.'
 }
 
 export const onJoin = {
-    welcome: '📢 {playerName}#{playerID}님 반갑습니다! 📄 !help로 도움말을 볼 수 있습니다.'
-    ,changename: '📢 {playerName}#{playerID}님이 {playerNameOld}에서 닉네임을 변경하였습니다.'
-    ,startRecord: '📊 충분한 인원이 모였습니다. 지금부터 전적이 기록됩니다.'
-    ,stopRecord: '📊 최소 {gameRuleNeedMin}명이 필요합니다. 지금은 전적이 기록되지 않습니다.'
-    ,doubleJoinningMsg: '🚫 {playerName}#{playerID}님이 중복 접속하였습니다.'
-    ,doubleJoinningKick: '🚫 중복 접속으로 퇴장'
-    ,tooLongNickname: '🚫 너무 긴 닉네임'
-    ,duplicatedNickname: '🚫 중복 닉네임'
-    ,bannedNickname: '🚫 금지된 닉네임'
-    ,includeSeperator: '🚫 금지된 닉네임 (|,|)'
+    welcome: '📢 ¡Bienvenido {playerName}#{playerID}! 📄 Usa !help para ver los comandos de ayuda.'
+    ,changename: '📢 {playerName}#{playerID} ha cambiado su nombre de {playerNameOld}.'
+    ,startRecord: '📊 Se ha reunido suficiente gente. A partir de ahora, los registros se guardarán.'
+    ,stopRecord: '📊 Se necesitan al menos {gameRuleNeedMin} jugadores. Actualmente, no se están registrando estadísticas.'
+    ,doubleJoinningMsg: '🚫 {playerName}#{playerID} ha iniciado sesión en varias cuentas.'
+    ,doubleJoinningKick: '🚫 Expulsado por inicio de sesión duplicado'
+    ,tooLongNickname: '🚫 Nombre de usuario demasiado largo'
+    ,duplicatedNickname: '🚫 Nombre de usuario duplicado'
+    ,bannedNickname: '🚫 Nombre de usuario prohibido'
+    ,includeSeperator: '🚫 Nombre de usuario prohibido (|,|)'
     ,banList: {
         permanentBan: '{banListReason}'
         ,fixedTermBan: '{banListReason}'
@@ -182,47 +184,47 @@ export const onJoin = {
 }
 
 export const onLeft = {
-    startRecord: '📊 충분한 인원이 모였습니다. 지금부터 스탯 기록이 될 것입니다.'
-    ,stopRecord: '📊 최소 {gameRuleNeedMin}명이 필요합니다. 현재 상태에선 스탯 기록이 되지 않습니다.'
+    startRecord: '📊 Se ha reunido suficiente gente. A partir de ahora, las estadísticas serán registradas.'
+    ,stopRecord: '📊 Se necesitan al menos {gameRuleNeedMin} jugadores. Actualmente, las estadísticas no se están registrando.'
 }
 
 export const onChat = {
-    mutedChat: '🔇 음소거되어 채팅을 할 수 없습니다. 명령어는 사용할 수 있습니다.'
-    ,tooLongChat: '🔇 채팅 메시지가 너무 깁니다.'
-    ,bannedWords: '🚫 채팅에 금칙어가 포함되어 있습니다.'
-    ,includeSeperator: '🚫 채팅에 금칙어(|,|)가 포함되어 있습니다.'
+    mutedChat: '🔇 Estás silenciado y no puedes chatear. Los comandos aún pueden ser usados.'
+    ,tooLongChat: '🔇 El mensaje es demasiado largo.'
+    ,bannedWords: '🚫 El mensaje contiene palabras prohibidas.'
+    ,includeSeperator: '🚫 El mensaje contiene palabras prohibidas (|,|).'
 }
 
 export const onTeamChange = {
-    afkPlayer: '🚫 {targetPlayerName}#{targetPlayerID}님은 잠수중이라 팀을 옮길 수 없습니다. ({targetAfkReason})'
+    afkPlayer: '🚫 {targetPlayerName}#{targetPlayerID} está inactivo y no puede cambiar de equipo. ({targetAfkReason})'
 }
 
 export const onStart = {
-    startRecord: '📊 충분한 인원이 모였습니다. 지금부터 전적이 기록됩니다.'
-    ,stopRecord: '📊 최소 {gameRuleNeedMin}명이 필요합니다. 지금은 전적이 기록되지 않습니다.'
-    ,expectedWinRate: '📊 Red 팀의 기대승률은 {teamExpectationRed}%이고, Blue 팀의 기대승률은 {teamExpectationBlue}%입니다. (양 팀간의 비교가 아닙니다)'
+    startRecord: '📊 Se ha reunido suficiente gente. A partir de ahora, los registros se guardarán.'
+    ,stopRecord: '📊 Se necesitan al menos {gameRuleNeedMin} jugadores. Actualmente, no se están registrando estadísticas.'
+    ,expectedWinRate: '📊 La tasa de ganancia esperada para el equipo rojo es {teamExpectationRed}%, y para el equipo azul es {teamExpectationBlue}%. (No es una comparación entre ambos equipos)'
 }
 
 export const onStop = {
     feedSocialDiscordWebhook: {
-        replayMessage: '💽 {roomName}의 리플레이 파일 ({replayDate})'
+        replayMessage: '💽 Archivo de repetición de {roomName} ({replayDate})'
     }
 }
 
 export const onVictory = {
-    victory: '🎉 경기 종료! 스코어 {redScore}:{blueScore} !! ⚽️'
-    ,burning: '🔥 {streakTeamName} 팀이 {streakTeamCount}연승중입니다 !!'
-    ,reroll: '📢 {streakTeamCount}연승을 축하합니다. 팀을 자동으로 섞습니다.'
+    victory: '🎉 ¡Fin del partido! ¡El marcador es {redScore}:{blueScore}!! ⚽️'
+    ,burning: '🔥 El equipo {streakTeamName} está en una racha de {streakTeamCount} victorias consecutivas!!'
+    ,reroll: '📢 Felicitaciones por {streakTeamCount} victorias consecutivas. Los equipos se mezclarán automáticamente.'
 }
 
 export const onKick = {
-    cannotBan: '🚫 일반 퇴장만 시킬 수 있습니다. 영구퇴장은 취소됩니다.'
-    ,notifyNotBan: '🚫 {kickedName}#{kickedID}님의 영구퇴장이 취소되었습니다. 다시 접속할 수 있습니다.'
+    cannotBan: '🚫 Solo puedes expulsar temporalmente. La expulsión permanente ha sido cancelada.'
+    ,notifyNotBan: '🚫 La expulsión permanente de {kickedName}#{kickedID} ha sido cancelada. Puede volver a unirse.'
 }
 
 export const onStadium = {
-    loadNewStadium: '📁 {stadiumName} 맵이 새로 열렸습니다.'
-    ,cannotChange: '🚫 맵을 변경할 수 없습니다.'
+    loadNewStadium: '📁 Se ha abierto un nuevo mapa: {stadiumName}.'
+    ,cannotChange: '🚫 No se puede cambiar el mapa.'
 }
 
 export const onTouch = {
@@ -230,15 +232,15 @@ export const onTouch = {
 }
 
 export const onGoal = {
-    goal: '⚽️ {scorerName}#{scorerID}님의 득점!'
-    ,goalWithAssist: '⚽️ {scorerName}#{scorerID}님의 득점! {assistName}#{assistID}님이 어시스트했습니다.'
-    ,og: '⚽️ {ogName}#{ogID}님이 자책골을 넣었습니다...'
+    goal: '⚽️ ¡Gol de {scorerName}#{scorerID}!'
+    ,goalWithAssist: '⚽️ ¡Gol de {scorerName}#{scorerID}! {assistName}#{assistID} asistió.'
+    ,og: '⚽️ {ogName}#{ogID} anotó un gol en propia puerta...'
 }
 
 export const onAdminChange = {
-    afknoadmin: '🚫 잠수 중인 플레이어는 관리자가 될 수 없습니다.'
+    afknoadmin: '🚫 Los jugadores inactivos no pueden ser administradores.'
 }
 
 export const onGamePause = {
-    readyForStart: '📢 곧 경기가 시작됩니다!'
+    readyForStart: '📢 ¡El partido comenzará pronto!'
 }

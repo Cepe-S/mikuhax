@@ -3,7 +3,7 @@ import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { TeamID } from "../../model/GameObject/TeamID";
 import { getUnixTimestamp } from "../Statistics";
-import { roomActivePlayersNumberCheck } from "../../model/OperateHelper/Quorum";
+import { roomActivePlayersNumberCheck, assignPlayerToBalancedTeam, balanceTeamsAfterLeave } from "../../model/OperateHelper/Quorum";
 
 export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
     var placeholder = {
@@ -16,6 +16,12 @@ export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
         window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkmode = false; // return to active mode
         window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkreason = ''; // init
         window.gameRoom.playerList.get(byPlayer.id)!.afktrace = { exemption: false, count: 0 }; // reset for afk trace
+        
+        // Balancear equipos cuando un jugador sale del AFK
+        if (window.gameRoom.config.rules.autoOperating === true) {
+            assignPlayerToBalancedTeam(byPlayer.id);
+            window.gameRoom.logger.i('cmdAfk', `Player ${byPlayer.name}#${byPlayer.id} returned from AFK and was assigned to balanced team`);
+        }
         
         if(window.gameRoom.config.settings.antiAFKFlood === true && window.gameRoom.playerList.get(byPlayer.id)!.permissions.mute === true) {
             window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.command.afk.unAfk, placeholder), byPlayer.id, 0x479947, "normal", 1);
@@ -35,6 +41,14 @@ export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
         window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkmode = true; // set afk mode
         window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkdate = getUnixTimestamp(); // set afk beginning time stamp
         window.gameRoom.playerList.get(byPlayer.id)!.afktrace = { exemption: false, count: 0}; // reset for afk trace
+
+        // Balancear equipos después de que alguien se ponga AFK
+        if (window.gameRoom.config.rules.autoOperating === true) {
+            setTimeout(() => {
+                balanceTeamsAfterLeave();
+                window.gameRoom.logger.i('cmdAfk', `Teams rebalanced after player ${byPlayer.name}#${byPlayer.id} went AFK`);
+            }, 500); // Pequeño delay para asegurar que el cambio de equipo se procesó
+        }
 
         if(message !== undefined) { // if the reason is not skipped
             window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkreason = message; // set reason
