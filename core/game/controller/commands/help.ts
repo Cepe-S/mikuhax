@@ -48,10 +48,6 @@ export function cmdHelp(byPlayer: PlayerObject, message?: string): void {
                 window.gameRoom._room.sendAnnouncement(LangRes.command.helpman.mute, byPlayer.id, 0x479947, "normal", 1);
                 break;
             }
-            case window.gameRoom.config.commands._helpManadmin: {
-                window.gameRoom._room.sendAnnouncement(LangRes.command.helpman.admin, byPlayer.id, 0x479947, "normal", 1);
-                break;
-            }
             case window.gameRoom.config.commands._helpManvote: {
                 window.gameRoom._room.sendAnnouncement(LangRes.command.helpman.vote, byPlayer.id, 0x479947, "normal", 1);
                 break;

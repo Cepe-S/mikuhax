@@ -77,8 +77,8 @@
 		"autoAdmin": false,
 		"autoOperating": true,
 		"statsRecord": true,
-		"defaultMapName": "gbhothuge",
-		"readyMapName": "gbtraining"
+		"defaultMapName": "futx4",
+		"readyMapName": "futx2"
 	},
 	"helo": {
 		"factor": {
@@ -128,7 +128,6 @@
 		"_helpManvote": "vote",
 		"_helpMantier": "tier",
 		"_helpMansuper": "super",
-		"_helpManadmin": "admin",
 		"_helpMannotice": "notice",
 		"_helpManpowershotadmin": "powershotadmin",
 		"_listSubafk": "afk",
@@ -142,7 +141,6 @@
 		"_superSubthordeprive": "deprive",
 		"_superSubkick": "kick",
 		"_superSubban": "ban",
-		"_adminSublogin": "login",
 		"_disabledCommandList": [
 			"SampleDisabledCommandName1",
 			"SampleDisabledCommandName2"
@@ -162,7 +160,6 @@
 		"vote": "vote",
 		"tier": "tier",
 		"notice": "notice",
-		"powershotadmin": "powershotadmin",
-		"admin": "admin"
+		"powershotadmin": "powershotadmin"
 	}
 }

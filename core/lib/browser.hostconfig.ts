@@ -175,7 +175,6 @@ export interface BrowserHostRoomCommands {
     _helpManvote: string
     _helpMantier: string
     _helpMansuper: string
-    _helpManadmin: string
     _helpMannotice: string
 
     _listSubafk: string

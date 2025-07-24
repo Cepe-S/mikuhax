@@ -125,7 +125,6 @@ const commandsSchema = Joi.object().keys({
     _helpManvote: Joi.string().required(),
     _helpMantier: Joi.string().required(),
     _helpMansuper: Joi.string().required(),
-    _helpManadmin: Joi.string().required(),
     _helpMannotice: Joi.string().required(),
     _helpManpowershotadmin: Joi.string().required(),
 
@@ -141,8 +140,6 @@ const commandsSchema = Joi.object().keys({
     _superSubthordeprive: Joi.string().required(),
     _superSubkick: Joi.string().required(),
     _superSubban: Joi.string().required(),
-
-    _adminSublogin: Joi.string().required(),
 
     _disabledCommandList: Joi.array().items(Joi.string()).optional().allow(null),
 
@@ -162,7 +159,6 @@ const commandsSchema = Joi.object().keys({
     tier: Joi.string().required(),
     notice: Joi.string().required(),
     powershotadmin: Joi.string().required(),
-    admin: Joi.string().required(),
 });
 
 const configHEloSchema = Joi.object().keys({
