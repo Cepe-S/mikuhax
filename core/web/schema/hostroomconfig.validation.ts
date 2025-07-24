@@ -55,6 +55,7 @@ const roomSettingSchema = Joi.object().keys({
 
     ,antiChatFlood : Joi.boolean().required()
     ,chatFloodCriterion : Joi.number().required()
+    ,chatFloodIntervalMillisecs : Joi.number().required()
 
     ,antiOgFlood : Joi.boolean().required()
     ,ogFloodCriterion : Joi.number().required()
@@ -141,6 +142,8 @@ const commandsSchema = Joi.object().keys({
     _superSubkick: Joi.string().required(),
     _superSubban: Joi.string().required(),
 
+    _adminSublogin: Joi.string().required(),
+
     _disabledCommandList: Joi.array().items(Joi.string()).optional().allow(null),
 
     about: Joi.string().required(),
@@ -159,6 +162,7 @@ const commandsSchema = Joi.object().keys({
     tier: Joi.string().required(),
     notice: Joi.string().required(),
     powershotadmin: Joi.string().required(),
+    admin: Joi.string().required(),
 });
 
 const configHEloSchema = Joi.object().keys({

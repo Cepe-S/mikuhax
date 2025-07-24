@@ -1,10 +1,10 @@
 {
 	"ruid": "haxbotron-room-default",
 	"_config": {
-		"roomName": "Play with 𝙃𝙖𝙭𝙗𝙤𝙩𝙧𝙤𝙣 🤖",
+		"roomName": "🟦🟦🟦 new miku server *in progress...* 🟦🟦🟦",
 		"playerName": "🤖",
 		"password": "",
-		"maxPlayers": 12,
+		"maxPlayers": 40,
 		"public": true,
 		"token": "",
 		"noPlayer": true
@@ -24,7 +24,8 @@
 		"joinFloodIntervalMillisecs": 30000,
 		"joinFloodBanMillisecs": 300000,
 		"antiChatFlood": true,
-		"chatFloodCriterion": 5,
+		"chatFloodCriterion": 8,
+		"chatFloodIntervalMillisecs": 10000,
 		"antiOgFlood": true,
 		"ogFloodCriterion": 2,
 		"ogFloodBanMillisecs": 300000,
@@ -67,10 +68,10 @@
 		"ruleName": "default-rule",
 		"ruleDescription": "this is default rule. (Auto+Relay+Shuffle)",
 		"requisite": {
-			"minimumPlayers": 8,
-			"eachTeamPlayers": 4,
+			"minimumPlayers": 1,
+			"eachTeamPlayers": 12,
 			"timeLimit": 3,
-			"scoreLimit": 3,
+			"scoreLimit": 1,
 			"teamLock": true
 		},
 		"autoAdmin": false,
@@ -141,6 +142,7 @@
 		"_superSubthordeprive": "deprive",
 		"_superSubkick": "kick",
 		"_superSubban": "ban",
+		"_adminSublogin": "login",
 		"_disabledCommandList": [
 			"SampleDisabledCommandName1",
 			"SampleDisabledCommandName2"
@@ -160,6 +162,7 @@
 		"vote": "vote",
 		"tier": "tier",
 		"notice": "notice",
-		"powershotadmin": "powershotadmin"
+		"powershotadmin": "powershotadmin",
+		"admin": "admin"
 	}
 }

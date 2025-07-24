@@ -4,7 +4,7 @@ import { ScoresObject } from "../../model/GameObject/ScoresObject";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { shuffleArray } from "../RoomTools";
-import { fetchActiveSpecPlayers, roomActivePlayersNumberCheck } from "../../model/OperateHelper/Quorum";
+import { fetchActiveSpecPlayers, roomActivePlayersNumberCheck, assignPlayerToBalancedTeam } from "../../model/OperateHelper/Quorum";
 import { HElo, MatchResult, StatsRecord } from "../../model/Statistics/HElo";
 import { convertToPlayerStorage, setPlayerDataToDB } from "../Storage";
 
@@ -164,6 +164,7 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
                 window.gameRoom.logger.i('onTeamVictory', `Whole players are shuffled. (${shuffledIDList.toString()})`);
             }
         } else { // or still under the limit, then change spec and loser team
+            // Mover perdedores a espectadores (respetando tiempo de juego garantizado)
             window.gameRoom._room.getPlayerList()
                 .filter((player: PlayerObject) => player.team === loserTeamID)
                 .forEach((player: PlayerObject) => {
@@ -172,10 +173,22 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
                     }
                 });
 
+            // Usar el nuevo sistema de balance para rellenar equipos
             const specPlayers: PlayerObject[] = fetchActiveSpecPlayers();
-            const insufficiency: number = window.gameRoom.config.rules.requisite.eachTeamPlayers - window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.team === loserTeamID).length;
-            for(let i=0; i < insufficiency && i < specPlayers.length; i++) {
+            const currentLosers = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.team === loserTeamID);
+            const needToFill = window.gameRoom.config.rules.requisite.eachTeamPlayers - currentLosers.length;
+            
+            // Asignar jugadores de espectadores al equipo perdedor usando balance inteligente
+            for(let i = 0; i < needToFill && i < specPlayers.length; i++) {
+                // Forzar al equipo perdedor para mantener el juego
                 window.gameRoom._room.setPlayerTeam(specPlayers[i].id, loserTeamID);
+                window.gameRoom.logger.i('onTeamVictory', `Player ${specPlayers[i].id} assigned to losing team ${loserTeamID} to continue game`);
+            }
+            
+            // Si quedan más espectadores, balancear entre ambos equipos
+            const remainingSpecs = fetchActiveSpecPlayers();
+            for(let i = 0; i < remainingSpecs.length; i++) {
+                assignPlayerToBalancedTeam(remainingSpecs[i].id);
             }
         }
     }

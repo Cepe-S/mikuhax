@@ -23,7 +23,7 @@ export const antitrolling = {
         ,floodWarning: '📢 Reconectarte muy rápido puede causar que seas expulsado.'
     }
     ,chatFlood: {
-        muteReason: '🔇 {playerName}#{playerID} ha sido silenciado por spam en el chat (3 minutos). Un administrador puede quitar el silencio.'
+        muteReason: '🔇 {playerName}#{playerID} ha sido silenciado por spam excesivo (3 minutos). Un administrador puede quitar el silencio.'
     }
     ,ogFlood: {
         banReason: '🚫 Autogoles consecutivos (10 minutos).'
@@ -56,7 +56,7 @@ export const command = {
     _ErrorWrongCommand : '❌ Comando incorrecto. 📑 Usa !help o !help COMMAND para más detalles.'
     ,_ErrorNoPermission: '❌ Solo los administradores pueden usar este comando.'
     ,_ErrorDisabled: '❌ Este comando no está habilitado en esta sala.'
-    ,help: '📄 !about, notice, stats, statsreset, tier, afk, vote, poss, streak, scout, list, powershot\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Usa !help admin para ver los comandos de administrador.'
+    ,help: '📄 !about, notice, stats, statsreset, tier, afk, vote, poss, streak, scout, list, powershot, admin\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Usa !help admin para ver los comandos de administrador.'
     ,helpadmin: '📄 !freeze, mute, powershotadmin\n📑 Usa !help COMMAND para más detalles'
     ,helpman: { // descripción detallada para un comando
         _ErrorWrongMan : '❌ No hay una descripción disponible para el comando solicitado.'
@@ -75,6 +75,7 @@ export const command = {
         ,tier: '📑 !tier : Muestra información sobre el sistema de niveles y puntuación.'
         ,notice: '📑 !notice : Muestra los avisos actuales.'
         ,powershotadmin: '📑 !powershotadmin <on|off> : [ADMIN] Activa/desactiva el sistema de powershot automático.'
+        ,admin: '📑 !admin login <clave> : Inicia sesión como administrador usando una clave de super admin. Te da permisos de administrador regular.'
     } 
     ,about: '📄 Nombre de la sala : {RoomName} ({_LaunchTime})\n💬 Esta sala está gestionada por el bot Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [Discord] https://discord.gg/qfg45B2 [Apóyanos] https://www.patreon.com/dapucita'
     ,stats: {
@@ -132,6 +133,14 @@ export const command = {
             _ErrorNoOne: '❌ No hay nadie en la lista.'
             ,whoisList: '📜 {whoisResult}'
         }
+    }
+    ,admin: {
+        _ErrorWrongCommand: '❌ Comando de administrador incorrecto.'
+        ,_ErrorLoginAlready: '❌ Ya eres administrador. No necesitas loguearte nuevamente.'
+        ,defaultMessage: '📄 Comando admin para obtener permisos de administrador regular.\n📑 Uso: !admin login <clave>'
+        ,loginSuccess: '🔑 Sesión iniciada. Ahora tienes permisos de administrador.'
+        ,loginFail: '❌ Error al iniciar sesión. Clave incorrecta.'
+        ,loginFailNoKey: '❌ Error al iniciar sesión. Debes proporcionar una clave de autenticación.\n📑 Uso: !admin login <clave>'
     }
     ,list: {
         _ErrorNoTeam: '❌ Debes especificar el tipo de lista: red, blue, spec, mute, afk. (Ej: !list red)'

@@ -23,7 +23,7 @@ export const antitrolling = {
         ,floodWarning: '📢 If you reconnect several times in a short period of time, you may be kicked.'
     }
     ,chatFlood: {
-        muteReason: '🔇 You are muted for too many chats.(3mins) Admin player can unmute it.'
+        muteReason: '🔇 {playerName}#{playerID} muted for excessive spam (3mins). Admin can unmute.'
     }
     ,ogFlood: {
         banReason: '🚫 too much OGs(10mins)'

@@ -42,25 +42,42 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                 window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onChat.mutedChat, placeholderChat), player.id, 0xFF0000, "bold", 2); // notify that fact
                 return false; // and hide this chat
             } else {
-                // Anti Chat Flood Checking
-                if (window.gameRoom.config.settings.antiChatFlood === true && window.gameRoom.isStatRecord === true) { // if anti chat flood options is enabled
-                    let chatFloodCritFlag: boolean = false;
-                    window.gameRoom.antiTrollingChatFloodCount.push(player.id); // record who said this chat
-                    for (let floodCritCount = 1; floodCritCount <= window.gameRoom.config.settings.chatFloodCriterion; floodCritCount++) {
-                        let floodID: number = window.gameRoom.antiTrollingChatFloodCount[window.gameRoom.antiTrollingChatFloodCount.length - floodCritCount] || 0;
-                        if (floodID === player.id) {
-                            chatFloodCritFlag = true;
-                        } else {
-                            chatFloodCritFlag = false;
-                            break; // abort loop
-                        }
-                    }
-                    if (chatFloodCritFlag === true && window.gameRoom.playerList.get(player.id)!.permissions['mute'] === false) { // after complete loop, check flag
-                        const nowTimeStamp: number = getUnixTimestamp(); //get timestamp
-                        // judge as chat flood.
-                        window.gameRoom.playerList.get(player.id)!.permissions['mute'] = true; // mute this player
-                        window.gameRoom.playerList.get(player.id)!.permissions.muteExpire = nowTimeStamp + window.gameRoom.config.settings.muteDefaultMillisecs; //record mute expiration date by unix timestamp
-                        window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.antitrolling.chatFlood.muteReason, placeholderChat), null, 0xFF0000, "normal", 1); // notify that fact
+                // Anti Chat Flood Checking - Intelligent Spam Detection
+                if (window.gameRoom.config.settings.antiChatFlood === true && window.gameRoom.isStatRecord === true) {
+                    const currentTime = getUnixTimestamp() * 1000; // Convert to milliseconds for precision
+                    
+                    // Add current message with timestamp
+                    window.gameRoom.antiTrollingChatFloodCount.push({ 
+                        playerID: player.id, 
+                        timestamp: currentTime 
+                    });
+                    
+                    // Clean old messages outside the time window (older than chatFloodIntervalMillisecs)
+                    const timeWindow = window.gameRoom.config.settings.chatFloodIntervalMillisecs;
+                    window.gameRoom.antiTrollingChatFloodCount = window.gameRoom.antiTrollingChatFloodCount.filter(
+                        record => (currentTime - record.timestamp) <= timeWindow
+                    );
+                    
+                    // Count this player's messages in the current time window
+                    const playerMessagesInWindow = window.gameRoom.antiTrollingChatFloodCount.filter(
+                        record => record.playerID === player.id
+                    ).length;
+                    
+                    // Only mute if player exceeded the criterion within the time window AND is not already muted
+                    if (playerMessagesInWindow >= window.gameRoom.config.settings.chatFloodCriterion && 
+                        window.gameRoom.playerList.get(player.id)!.permissions['mute'] === false) {
+                        
+                        const nowTimeStamp: number = getUnixTimestamp();
+                        
+                        // Apply mute
+                        window.gameRoom.playerList.get(player.id)!.permissions['mute'] = true;
+                        window.gameRoom.playerList.get(player.id)!.permissions.muteExpire = nowTimeStamp + window.gameRoom.config.settings.muteDefaultMillisecs;
+                        
+                        // Notify about the mute
+                        window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.antitrolling.chatFlood.muteReason, placeholderChat), null, 0xFF0000, "normal", 1);
+                        
+                        // Log the action
+                        window.gameRoom.logger.i('onPlayerChat', `🔇 Player ${player.name}#${player.id} muted for spam: ${playerMessagesInWindow} messages in ${timeWindow/1000}s`);
                         
                         window._emitSIOPlayerStatusChangeEvent(player.id);
                         return false;

@@ -73,7 +73,7 @@ declare global {
             }
 
             antiTrollingOgFloodCount: number[] // flood counter for OG (player id: number)
-            antiTrollingChatFloodCount: number[] // flood counter for chat. (player id: number)
+            antiTrollingChatFloodCount: { playerID: number, timestamp: number }[] // flood counter for chat with timestamps
             antiInsufficientStartAbusingCount: number[] // ID record for start with insufficient players (player id: number)
             antiPlayerKickAbusingCount: AdminKickTrace[] // ID and Timestamp record for abusing kick other players (id:number, register date:number)
 

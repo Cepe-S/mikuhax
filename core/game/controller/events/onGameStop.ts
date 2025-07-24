@@ -2,9 +2,8 @@ import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { recuritBothTeamFully } from "../../model/OperateHelper/Quorum";
+import { recuritBothTeamFully, assignPlayerToBalancedTeam, fetchActiveSpecPlayers } from "../../model/OperateHelper/Quorum";
 import { setDefaultRoomLimitation, setDefaultStadiums } from "../RoomTools";
-
 
 export function onGameStopListener(byPlayer: PlayerObject): void {
     /*
@@ -74,7 +73,15 @@ export function onGameStopListener(byPlayer: PlayerObject): void {
 
     // when auto emcee mode is enabled
     if(window.gameRoom.config.rules.autoOperating === true) {
-        recuritBothTeamFully();
+        // Use new balanced team assignment system
+        const specPlayers = fetchActiveSpecPlayers();
+        
+        // Assign spectators to balanced teams before starting new game
+        for (const specPlayer of specPlayers) {
+            assignPlayerToBalancedTeam(specPlayer.id);
+        }
+        
+        window.gameRoom.logger.i('onGameStop', `🔄 Teams balanced automatically for next game`);
         window.gameRoom._room.startGame(); // start next new game
     }
 }

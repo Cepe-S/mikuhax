@@ -20,10 +20,11 @@ export interface GameRoomSettings {
 
     antiChatFlood : boolean
     chatFloodCriterion : number
+    chatFloodIntervalMillisecs : number
 
     antiOgFlood : boolean
     ogFloodCriterion : number
-    ogFloodBanMillisecs : number
+    ogFloodBanMillisecs : number    
 
     antiBanNoPermission : boolean
     banNoPermissionBanMillisecs : number

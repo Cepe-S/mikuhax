@@ -32,6 +32,8 @@ export interface GameCommands {
     _superSubkick: string
     _superSubban: string
 
+    _adminSublogin: string
+
     _disabledCommandList?: string[]
 
     about: string
@@ -50,4 +52,5 @@ export interface GameCommands {
     tier: string
     notice: string
     powershotadmin: string
+    admin: string
 }

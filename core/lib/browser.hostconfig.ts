@@ -72,6 +72,7 @@ export interface BrowserHostRoomSettings {
 
     antiChatFlood : boolean
     chatFloodCriterion : number
+    chatFloodIntervalMillisecs : number
 
     antiOgFlood : boolean
     ogFloodCriterion : number

@@ -13,6 +13,7 @@ import { cmdFreeze } from "./commands/freeze";
 import { cmdMute } from "./commands/mute";
 import { cmdVote } from "./commands/vote";
 import { cmdSuper } from "./commands/super";
+import { cmdAdmin } from "./commands/admin";
 import { cmdTier } from "./commands/tier";
 import { cmdNotice } from "./commands/notice";
 import { cmdPowershotAdmin } from "./commands/powershotadmin";
@@ -139,6 +140,18 @@ export function parseCommand(byPlayer: PlayerObject, message: string): void {
                 }
             } else {
                 cmdSuper(byPlayer);
+            }
+            break;
+        }
+        case window.gameRoom.config.commands.admin: {
+            if(msgChunk[1] !== undefined) {
+                if(msgChunk[2] !== undefined) {
+                    cmdAdmin(byPlayer, msgChunk[1], msgChunk[2]);
+                } else {
+                    cmdAdmin(byPlayer, msgChunk[1]);
+                }
+            } else {
+                cmdAdmin(byPlayer);
             }
             break;
         }

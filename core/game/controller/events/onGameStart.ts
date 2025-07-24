@@ -30,7 +30,7 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
     window.gameRoom.isGamingNow = true; // turn on
 
     if (window.gameRoom.config.settings.antiChatFlood === true) { // if anti-chat flood option is enabled
-        window.gameRoom.antiTrollingOgFloodCount = []; // clear and init again
+        window.gameRoom.antiTrollingChatFloodCount = []; // clear and init again
     }
     if (window.gameRoom.config.settings.antiOgFlood === true) { // if anti-OG flood option is enabled
         window.gameRoom.antiTrollingOgFloodCount = []; // clear and init again
