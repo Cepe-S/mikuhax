@@ -23,7 +23,7 @@ export class KickStack {
         isActive: false,
         counter: 0,
         currentPlayerId: 0,
-        activationThreshold: 100, // 5.0 seconds (100 * 50ms)
+        activationThreshold: 100, // we don't know hom many seconds are :c
         normalColor: 0xFFFFFF,     // White
         powershotColor: 0xFF4500,  // Red-orange
         normalInvMass: 1.0,        // Normal ball physics
@@ -180,7 +180,7 @@ export class KickStack {
         this.powershot.counter = 0;
         this.powershot.ballStuckCounter = 0;
 
-        // Start timer - check every 50ms for responsive flashing
+        // Start timer - check every 25ms for responsive flashing (2x faster)
         this.powershot.timerInterval = setInterval(() => {
             // Check if ball is still stuck to this player using distance detection
             if (!this.isBallStuckToPlayer(playerId)) {
@@ -192,17 +192,22 @@ export class KickStack {
             this.powershot.counter++;
             this.powershot.ballStuckCounter++;
             
-            // Sistema de titileo arreglado
-            const currentSecond = Math.floor(this.powershot.counter / 20); // Segundo actual (0,1,2,3,4,5...)
-            const justHitSecond = this.powershot.counter % 20 === 0; // Exactamente al llegar al segundo
+            // Sistema de titileo basado en porcentaje del tiempo total
+            const progressPercent = (this.powershot.counter / this.powershot.activationThreshold) * 100;
             
             // Solo manejar colores si no se ha activado aún el powershot
             if (!this.powershot.isActive && window.gameRoom._room) {
-                // Titileo simplificado: gris claro a los 3 y 4 segundos exactos, blanco a los 3.5 y 4.5
-                if (currentSecond === 3 || currentSecond === 4) {
-                    const ticksInSecond = this.powershot.counter % 20; // 0-19 dentro del segundo
-                    // Gris claro al inicio del segundo (0-9 ticks), blanco en la mitad (10-19 ticks)
-                    const isFirstHalf = ticksInSecond < 10; // Primeros 0.5s del segundo
+                // Titileo empieza al 60% del tiempo (antes era 3/5 = 60%)
+                // Titileo termina al 80% del tiempo (antes era 4/5 = 80%)
+                if (progressPercent >= 60 && progressPercent < 100) {
+                    // Calcular cuántos ticks han pasado en este 40% de tiempo (60% a 100%)
+                    const flashingPeriod = this.powershot.activationThreshold * 0.4; // 40% del tiempo total
+                    const ticksInFlashingPeriod = this.powershot.counter - (this.powershot.activationThreshold * 0.6);
+                    
+                    // Crear ciclos de titileo cada 20 ticks (0.5 segundos a 25ms/tick)
+                    const ticksInCycle = ticksInFlashingPeriod % 20;
+                    const isFirstHalf = ticksInCycle < 10; // Primeros 0.25s del ciclo
+                    
                     const flashColor = isFirstHalf ? 0xCCCCCC : this.powershot.normalColor; // Gris claro/Blanco
                     
                     try {
@@ -210,8 +215,8 @@ export class KickStack {
                     } catch (e) {
                         // Ignore errors during color setting
                     }
-                } else if (currentSecond < 3) {
-                    // Mantener pelota blanca en segundos 1-2
+                } else if (progressPercent < 60) {
+                    // Mantener pelota blanca antes del 60%
                     try {
                         window.gameRoom._room.setDiscProperties(0, { color: this.powershot.normalColor });
                     } catch (e) {
@@ -224,7 +229,7 @@ export class KickStack {
             if (this.powershot.counter >= this.powershot.activationThreshold && !this.powershot.isActive) {
                 this.activatePowershot();
             }
-        }, 50); // Update every 50ms for smooth flashing
+        }, 25); // Update every 25ms for faster, smoother flashing
     }
 
     /**
