@@ -38,6 +38,12 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
 
     window.gameRoom.logger.i('onPlayerLeave', `${player.name}#${player.id} has left.`);
 
+    // Reset powershot if the leaving player was the powershot holder
+    if (window.gameRoom.ballStack.getPowershotPlayer() === player.id) {
+        window.gameRoom.ballStack.resetPowershot();
+        window.gameRoom.logger.i('powershot', `🔄 Powershot reset - player ${player.name}#${player.id} left`);
+    }
+
     // check number of players joined and change game mode
     let activePlayersNumber: number = roomActivePlayersNumberCheck();
     if (window.gameRoom.config.rules.statsRecord === true && activePlayersNumber >= window.gameRoom.config.rules.requisite.minimumPlayers) {

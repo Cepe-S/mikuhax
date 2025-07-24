@@ -17,6 +17,7 @@ export interface GameCommands {
     _helpMansuper: string
     _helpManadmin: string
     _helpMannotice: string
+    _helpManpowershotadmin: string
 
     _listSubafk: string
     _listSubmute: string
@@ -48,4 +49,5 @@ export interface GameCommands {
     vote: string
     tier: string
     notice: string
+    powershotadmin: string
 }

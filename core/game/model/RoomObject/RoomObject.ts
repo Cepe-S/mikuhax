@@ -175,7 +175,7 @@ export interface Room {
     Properties that are null or undefined will not be set and therefor will preserve whatever value the disc already had.
     For example room.setDiscProperties(0, {x: 0, y: 0}); will set the position of disc 0 to <0,0> while leaving any other value intact.
     */
-    setDiscProperties(discIndex: number, properties: DiscPropertiesObject): void;
+    setDiscProperties(discIndex: number, properties: Partial<DiscPropertiesObject>): void;
 
     /*
     Gets the properties of the disc at discIndex. Returns null if discIndex is out of bounds.
@@ -185,7 +185,7 @@ export interface Room {
     /*
     Same as setDiscProperties but targets the disc belonging to a player with the given Id.
     */
-    setPlayerDiscProperties(playerId: number, properties: DiscPropertiesObject): void;
+    setPlayerDiscProperties(playerId: number, properties: Partial<DiscPropertiesObject>): void;
 
     /*
     Same as getDiscProperties but targets the disc belonging to a player with the given Id.

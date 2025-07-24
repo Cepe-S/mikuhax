@@ -174,18 +174,28 @@ export class HeadlessBrowser {
             this._SIOserver?.sockets.emit('statuschange', { ruid: ruid, playerID: event.playerID });
         });
         page.addListener('_SOCIAL.DiscordWebhook', (event: any) => {
+            winstonLogger.info(`[${ruid}] 🎯 Discord Webhook Event Received: ${event.type}, ID: ${event.id}`);
             const webhookClient = new Discord.WebhookClient(event.id, event.token);
 
             switch (event.type as string) {
                 case "replay": {
-                    const bufferData = Buffer.from(JSON.parse(event.content.data));
-                    const date = Date.now().toLocaleString();
-                    const attachment = new Discord.MessageAttachment(
-                        bufferData
-                        , `${date}.hbr2`);
-                    webhookClient.send(event.content.message, {
-                        files: [attachment],
-                    });
+                    try {
+                        winstonLogger.info(`[${ruid}] 📤 Sending replay to Discord...`);
+                        const bufferData = Buffer.from(JSON.parse(event.content.data));
+                        const date = new Date().toLocaleString();
+                        const attachment = new Discord.MessageAttachment(
+                            bufferData
+                            , `${date}.hbr2`);
+                        webhookClient.send(event.content.message, {
+                            files: [attachment],
+                        }).then(() => {
+                            winstonLogger.info(`[${ruid}] ✅ Replay sent successfully to Discord`);
+                        }).catch((error) => {
+                            winstonLogger.error(`[${ruid}] ❌ Error sending replay to Discord: ${error}`);
+                        });
+                    } catch (error) {
+                        winstonLogger.error(`[${ruid}] ❌ Error processing replay: ${error}`);
+                    }
                     break;
                 }
             }

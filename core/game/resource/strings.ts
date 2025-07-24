@@ -56,8 +56,8 @@ export const command = {
     _ErrorWrongCommand : '❌ Comando incorrecto. 📑 Usa !help o !help COMMAND para más detalles.'
     ,_ErrorNoPermission: '❌ Solo los administradores pueden usar este comando.'
     ,_ErrorDisabled: '❌ Este comando no está habilitado en esta sala.'
-    ,help: '📄 !about, notice, stats, statsreset, tier, afk, vote, poss, streak, scout, list\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Usa !help admin para ver los comandos de administrador.'
-    ,helpadmin: '📄 !freeze, mute\n📑 Usa !help COMMAND para más detalles'
+    ,help: '📄 !about, notice, stats, statsreset, tier, afk, vote, poss, streak, scout, list, powershot\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Usa !help admin para ver los comandos de administrador.'
+    ,helpadmin: '📄 !freeze, mute, powershotadmin\n📑 Usa !help COMMAND para más detalles'
     ,helpman: { // descripción detallada para un comando
         _ErrorWrongMan : '❌ No hay una descripción disponible para el comando solicitado.'
         ,help: '📑 !help COMMAND : Muestra detalles sobre el comando COMMAND.'
@@ -74,6 +74,7 @@ export const command = {
         ,vote: '📑 !vote : Muestra el estado actual de la votación y tu estado de voto.\n📑 !vote #ID : Vota o cancela un voto para expulsar al jugador con el ID especificado. El ID debe ser un número. (Ej: !vote #12)'
         ,tier: '📑 !tier : Muestra información sobre el sistema de niveles y puntuación.'
         ,notice: '📑 !notice : Muestra los avisos actuales.'
+        ,powershotadmin: '📑 !powershotadmin <on|off> : [ADMIN] Activa/desactiva el sistema de powershot automático.'
     } 
     ,about: '📄 Nombre de la sala : {RoomName} ({_LaunchTime})\n💬 Esta sala está gestionada por el bot Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [Discord] https://discord.gg/qfg45B2 [Apóyanos] https://www.patreon.com/dapucita'
     ,stats: {
@@ -209,6 +210,11 @@ export const onStop = {
     feedSocialDiscordWebhook: {
         replayMessage: '💽 Archivo de repetición de {roomName} ({replayDate})'
     }
+}
+
+export const powershot = {
+    activated: '🔥 ¡POWERSHOT ACTIVADO! La pelota ahora tiene más potencia.',
+    executed: '⚡ ¡{playerName}#{playerID} ejecutó un POWERSHOT!'
 }
 
 export const onVictory = {

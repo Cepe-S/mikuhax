@@ -17,6 +17,27 @@ export function onPlayerBallKickListener(player: PlayerObject): void {
         streakTeamCount: window.gameRoom.winningStreak.count
     };
 
+    // ==================== POWERSHOT SYSTEM ====================
+    // Only process powershot if enabled in settings
+    if (window.gameRoom.config.settings.powershotEnabled) {
+        // Update the lastTouched immediately
+        window.gameRoom.ballStack.touchPlayerSubmit(player.id);
+        window.gameRoom.ballStack.touchTeamSubmit(player.team);
+        
+        // Check if ball is actually stuck to this player after the kick
+        setTimeout(() => {
+            window.gameRoom.ballStack.checkBallStuckToPlayer(player.id);
+        }, 50); // Small delay to let ball physics settle
+        
+        // Check if this is a powershot kick (from manual activation or automatic)
+        const wasPlayershot = window.gameRoom.ballStack.applyPowershotKick();
+        
+        if (wasPlayershot) {
+            window.gameRoom.logger.i('onPlayerBallKick', `⚡ ${player.name}#${player.id} executed a POWERSHOT!`);
+        }
+    }
+    // ==================== END POWERSHOT SYSTEM ====================
+
     if (window.gameRoom.config.rules.statsRecord === true && window.gameRoom.isStatRecord === true) { // record only when stat record mode
 
         window.gameRoom.playerList.get(player.id)!.matchRecord.balltouch++; // add count of ball touch in match record

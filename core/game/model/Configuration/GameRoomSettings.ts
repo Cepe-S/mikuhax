@@ -62,4 +62,13 @@ export interface GameRoomSettings {
     forbidDuplicatedNickname: boolean
     nicknameTextFilter: boolean
     chatTextFilter: boolean
+
+    // Powershot system settings
+    powershotEnabled: boolean
+    powershotActivationTime: number  // Time in deciseconds (10 = 1 second)
+    powershotNormalColor: number    // Ball normal color (hex)
+    powershotActiveColor: number    // Ball powershot color (hex)
+    powershotInvMassFactor: number  // Powershot force multiplier
+    powershotCooldown: number       // Cooldown between powershot uses (milliseconds)
+    powershotStickDistance: number  // Distance threshold to consider ball "stuck" to player
 }

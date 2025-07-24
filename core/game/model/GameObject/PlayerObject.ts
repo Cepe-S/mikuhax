@@ -67,6 +67,7 @@ export interface PlayerPermissions {
     malActCount: number; // count for malicious behaviour like Brute force attack
     superadmin: boolean; // Is this player super admin? It doesn't matter whether he/she is an admin.
     // admin permission is already decleared by admin: boolean.
+    lastPowershotUse: number; // timestamp of last powershot use for cooldown
 }
 
 export interface PlayerAfkTrace {

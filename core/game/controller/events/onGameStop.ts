@@ -43,11 +43,16 @@ export function onGameStopListener(byPlayer: PlayerObject): void {
     window.gameRoom.ballStack.initTouchInfo(); // clear touch info
     window.gameRoom.ballStack.clear(); // clear the stack.
     window.gameRoom.ballStack.possClear(); // clear possession count
+    window.gameRoom.ballStack.resetPowershot(); // reset powershot system
 
     // stop replay record and send it
     const replay = window.gameRoom._room.stopRecording();
     
+    window.gameRoom.logger.i('onGameStop', `🎮 Game stopped. Replay data: ${replay ? 'Available' : 'Not available'}`);
+    window.gameRoom.logger.i('onGameStop', `🔧 Discord config - feed: ${window.gameRoom.social.discordWebhook.feed}, replayUpload: ${window.gameRoom.social.discordWebhook.replayUpload}, id: ${window.gameRoom.social.discordWebhook.id ? 'Set' : 'Not set'}, token: ${window.gameRoom.social.discordWebhook.token ? 'Set' : 'Not set'}`);
+    
     if(replay && window.gameRoom.social.discordWebhook.feed && window.gameRoom.social.discordWebhook.replayUpload && window.gameRoom.social.discordWebhook.id && window.gameRoom.social.discordWebhook.token) {
+        window.gameRoom.logger.i('onGameStop', '📤 Attempting to send replay to Discord...');
         const placeholder = {
             roomName: window.gameRoom.config._config.roomName
             ,replayDate: Date().toLocaleString()
@@ -57,6 +62,14 @@ export function onGameStopListener(byPlayer: PlayerObject): void {
             message: Tst.maketext(LangRes.onStop.feedSocialDiscordWebhook.replayMessage, placeholder)
             ,data: JSON.stringify(Array.from(replay))
         });
+    } else {
+        const missing = [];
+        if (!replay) missing.push('replay');
+        if (!window.gameRoom.social.discordWebhook.feed) missing.push('feed');
+        if (!window.gameRoom.social.discordWebhook.replayUpload) missing.push('replayUpload');
+        if (!window.gameRoom.social.discordWebhook.id) missing.push('id');
+        if (!window.gameRoom.social.discordWebhook.token) missing.push('token');
+        window.gameRoom.logger.w('onGameStop', `❌ Replay not sent. Missing: ${missing.join(', ')}`);
     }
 
     // when auto emcee mode is enabled

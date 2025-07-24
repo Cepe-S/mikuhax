@@ -114,6 +114,14 @@ export interface BrowserHostRoomSettings {
     forbidDuplicatedNickname: boolean
     nicknameTextFilter: boolean
     chatTextFilter: boolean
+    
+    powershotEnabled: boolean
+    powershotActivationTime: number
+    powershotNormalColor: number
+    powershotActiveColor: number
+    powershotInvMassFactor: number
+    powershotCooldown: number
+    powershotStickDistance: number
 }
 
 export interface BrowserHostRoomHEloConfig {

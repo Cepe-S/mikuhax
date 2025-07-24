@@ -54,7 +54,14 @@
 		"chatLengthLimit": 80,
 		"forbidDuplicatedNickname": true,
 		"nicknameTextFilter": true,
-		"chatTextFilter": true
+		"chatTextFilter": true,
+		"powershotEnabled": true,
+		"powershotActivationTime": 100,
+		"powershotNormalColor": 16777215,
+		"powershotActiveColor": 16729344,
+		"powershotInvMassFactor": 2.0,
+		"powershotCooldown": 30000,
+		"powershotStickDistance": 26
 	},
 	"rules": {
 		"ruleName": "default-rule",
@@ -122,6 +129,7 @@
 		"_helpMansuper": "super",
 		"_helpManadmin": "admin",
 		"_helpMannotice": "notice",
+		"_helpManpowershotadmin": "powershotadmin",
 		"_listSubafk": "afk",
 		"_listSubmute": "mute",
 		"_listSubred": "red",
@@ -151,6 +159,7 @@
 		"super": "super",
 		"vote": "vote",
 		"tier": "tier",
-		"notice": "notice"
+		"notice": "notice",
+		"powershotadmin": "powershotadmin"
 	}
 }

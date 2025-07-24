@@ -97,6 +97,14 @@ const roomSettingSchema = Joi.object().keys({
     ,forbidDuplicatedNickname: Joi.boolean().required()
     ,nicknameTextFilter: Joi.boolean().required()
     ,chatTextFilter: Joi.boolean().required()
+    
+    ,powershotEnabled: Joi.boolean().required()
+    ,powershotActivationTime: Joi.number().required()
+    ,powershotNormalColor: Joi.number().required()
+    ,powershotActiveColor: Joi.number().required()
+    ,powershotInvMassFactor: Joi.number().required()
+    ,powershotCooldown: Joi.number().required()
+    ,powershotStickDistance: Joi.number().required()
 });
 
 const commandsSchema = Joi.object().keys({
@@ -118,6 +126,7 @@ const commandsSchema = Joi.object().keys({
     _helpMansuper: Joi.string().required(),
     _helpManadmin: Joi.string().required(),
     _helpMannotice: Joi.string().required(),
+    _helpManpowershotadmin: Joi.string().required(),
 
     _listSubafk: Joi.string().required(),
     _listSubmute: Joi.string().required(),
@@ -149,6 +158,7 @@ const commandsSchema = Joi.object().keys({
     vote: Joi.string().required(),
     tier: Joi.string().required(),
     notice: Joi.string().required(),
+    powershotadmin: Joi.string().required(),
 });
 
 const configHEloSchema = Joi.object().keys({

@@ -81,12 +81,7 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         }
     }*/
 
-    // if player's nickname is longer than limitation
-    if (player.name.length > window.gameRoom.config.settings.nicknameLengthLimit) {
-        window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} was joined but kicked for too long nickname.`);
-        window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.onJoin.tooLongNickname, placeholderJoin), false); // kick
-        return;
-    }
+    // Name length limit removed - players can use names of any length
 
     // if player's nickname is already used (duplicated nickname)
     if (window.gameRoom.config.settings.forbidDuplicatedNickname === true && isExistNickname(player.name) === true) {
@@ -124,7 +119,8 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
             afkreason: '',
             afkdate: 0,
             malActCount: existPlayerData.malActCount,
-            superadmin: false
+            superadmin: false,
+            lastPowershotUse: 0
         }, {
             rejoinCount: existPlayerData.rejoinCount,
             joinDate: joinTimeStamp,
@@ -190,7 +186,8 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
             afkreason: '',
             afkdate: 0,
             malActCount: 0,
-            superadmin: false
+            superadmin: false,
+            lastPowershotUse: 0
         }, {
             rejoinCount: 0,
             joinDate: joinTimeStamp,

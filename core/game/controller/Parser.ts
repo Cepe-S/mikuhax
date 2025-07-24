@@ -15,6 +15,8 @@ import { cmdVote } from "./commands/vote";
 import { cmdSuper } from "./commands/super";
 import { cmdTier } from "./commands/tier";
 import { cmdNotice } from "./commands/notice";
+import { cmdPowershotAdmin } from "./commands/powershotadmin";
+import { cmdDebugPowershot } from "./commands/debugpowershot";
 
 // if given string is command chat, this function returns true, nor false.
 export function isCommandString(message: string): boolean {
@@ -118,6 +120,14 @@ export function parseCommand(byPlayer: PlayerObject, message: string): void {
         }
         case window.gameRoom.config.commands.notice: {
             cmdNotice(byPlayer);
+            break;
+        }
+        case window.gameRoom.config.commands.powershotadmin: {
+            cmdPowershotAdmin(byPlayer, message);
+            break;
+        }
+        case "debugpowershot": {
+            cmdDebugPowershot(byPlayer, message);
             break;
         }
         case window.gameRoom.config.commands.super: {

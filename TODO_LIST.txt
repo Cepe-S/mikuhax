@@ -1,0 +1,9 @@
+- arreglar problemas de balance de equipos al comenzarse nuevas partidas
+- habilitar íconos libres
+- agregar webhooks de:
+	. llamar admin
+	. boletero
+	. server open
+	. chat
+	. entradas y salidas
+- cambiar mapa

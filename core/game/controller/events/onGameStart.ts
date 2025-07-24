@@ -105,5 +105,8 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
     // replay record start
     window.gameRoom._room.startRecording();
 
+    // Initialize powershot system for new game
+    window.gameRoom.ballStack.resetPowershot();
+
     window.gameRoom.logger.i('onGameStart', msg);
 }

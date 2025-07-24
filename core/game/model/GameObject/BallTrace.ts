@@ -18,6 +18,22 @@ export class KickStack {
         team: 0
     };
 
+    // Powershot system properties
+    private powershot = {
+        isActive: false,
+        counter: 0,
+        currentPlayerId: 0,
+        activationThreshold: 100, // 5.0 seconds (100 * 50ms)
+        normalColor: 0xFFFFFF,     // White
+        powershotColor: 0xFF4500,  // Red-orange
+        normalInvMass: 1.0,        // Normal ball physics
+        powershotInvMass: 2.0,     // Double the power (higher invMass = more power for kicks)
+        timerInterval: null as NodeJS.Timeout | null,
+        lastBallPos: { x: 0, y: 0 }, // To detect if ball is moving
+        ballStuckCounter: 0,         // Counter for how long ball has been stuck to player
+        stickDistance: 26            // Distance threshold to consider ball "stuck" to player (in pixels)
+    };
+
     private KickStack<Number>() { } // not use
     public static getInstance(): KickStack {
         if (this.instance == null) {
@@ -80,5 +96,273 @@ export class KickStack {
     }
     possClear(): void {
         this.ballPossession = {red: 0, blue: 0};
+    }
+
+    // ==================== POWERSHOT SYSTEM ====================
+    
+    /**
+     * Check if ball is stuck to a specific player using distance calculation
+     */
+    private isBallStuckToPlayer(playerId: number): boolean {
+        if (typeof window === 'undefined' || !window.gameRoom || !window.gameRoom._room) {
+            return false;
+        }
+
+        try {
+            // Get ball position
+            const ballPosition = window.gameRoom._room.getBallPosition();
+            if (!ballPosition || ballPosition.x == null || ballPosition.y == null) {
+                return false;
+            }
+
+            // Get player position
+            const player = window.gameRoom._room.getPlayer(playerId);
+            if (!player || !player.position || player.position.x == null || player.position.y == null) {
+                return false;
+            }
+
+            // Calculate distance between ball and player
+            const deltaX = ballPosition.x! - player.position.x!;
+            const deltaY = ballPosition.y! - player.position.y!;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            // Simple boolean logic: if player is within stick distance, they have the ball
+            const result = distance <= this.powershot.stickDistance;
+            
+            return result;
+        } catch (error) {
+            // If there's any error accessing positions, fall back to lastTouched method
+            return this.lastTouched.id === playerId;
+        }
+    }
+
+    /**
+     * Start powershot timer for a player (with distance-based detection)
+     */
+    startPowershotTimer(playerId: number): void {
+        // Check if powershot is enabled in settings
+        if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.config && window.gameRoom.config.settings && !window.gameRoom.config.settings.powershotEnabled) {
+            return; // Powershot disabled
+        }
+
+        // Don't start if no valid player ID
+        if (!playerId || playerId === 0) {
+            return;
+        }
+
+        // Check if ball is actually stuck to this player before starting timer
+        if (!this.isBallStuckToPlayer(playerId)) {
+            return; // Ball is not stuck to player, don't start timer
+        }
+
+        // Reset if different player or if already active
+        if (this.powershot.currentPlayerId !== playerId) {
+            this.resetPowershot();
+            this.powershot.currentPlayerId = playerId;
+        }
+
+        // Don't restart timer if already running for same player
+        if (this.powershot.timerInterval && this.powershot.currentPlayerId === playerId) {
+            return;
+        }
+
+        // Get settings from game config (with safe fallbacks)
+        if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.config && window.gameRoom.config.settings) {
+            const settings = window.gameRoom.config.settings;
+            this.powershot.activationThreshold = settings.powershotActivationTime || 100;
+            this.powershot.normalColor = settings.powershotNormalColor || 0xFFFFFF;
+            this.powershot.powershotColor = settings.powershotActiveColor || 0xFF4500;
+            this.powershot.powershotInvMass = settings.powershotInvMassFactor || 2.0;
+            this.powershot.stickDistance = settings.powershotStickDistance || 26;
+        }
+
+        // Initialize timer
+        this.powershot.counter = 0;
+        this.powershot.ballStuckCounter = 0;
+
+        // Start timer - check every 50ms for responsive flashing
+        this.powershot.timerInterval = setInterval(() => {
+            // Check if ball is still stuck to this player using distance detection
+            if (!this.isBallStuckToPlayer(playerId)) {
+                // Ball is no longer stuck to player, reset powershot
+                this.resetPowershot();
+                return;
+            }
+
+            this.powershot.counter++;
+            this.powershot.ballStuckCounter++;
+            
+            // Sistema de titileo arreglado
+            const currentSecond = Math.floor(this.powershot.counter / 20); // Segundo actual (0,1,2,3,4,5...)
+            const justHitSecond = this.powershot.counter % 20 === 0; // Exactamente al llegar al segundo
+            
+            // Solo manejar colores si no se ha activado aún el powershot
+            if (!this.powershot.isActive && window.gameRoom._room) {
+                // Titileo simplificado: gris claro a los 3 y 4 segundos exactos, blanco a los 3.5 y 4.5
+                if (currentSecond === 3 || currentSecond === 4) {
+                    const ticksInSecond = this.powershot.counter % 20; // 0-19 dentro del segundo
+                    // Gris claro al inicio del segundo (0-9 ticks), blanco en la mitad (10-19 ticks)
+                    const isFirstHalf = ticksInSecond < 10; // Primeros 0.5s del segundo
+                    const flashColor = isFirstHalf ? 0xCCCCCC : this.powershot.normalColor; // Gris claro/Blanco
+                    
+                    try {
+                        window.gameRoom._room.setDiscProperties(0, { color: flashColor });
+                    } catch (e) {
+                        // Ignore errors during color setting
+                    }
+                } else if (currentSecond < 3) {
+                    // Mantener pelota blanca en segundos 1-2
+                    try {
+                        window.gameRoom._room.setDiscProperties(0, { color: this.powershot.normalColor });
+                    } catch (e) {
+                        // Ignore errors during color setting
+                    }
+                }
+            }
+            
+            // Activate powershot when threshold is reached
+            if (this.powershot.counter >= this.powershot.activationThreshold && !this.powershot.isActive) {
+                this.activatePowershot();
+            }
+        }, 50); // Update every 50ms for smooth flashing
+    }
+
+    /**
+     * Stop powershot timer
+     */
+    stopPowershotTimer(): void {
+        if (this.powershot.timerInterval) {
+            clearInterval(this.powershot.timerInterval);
+            this.powershot.timerInterval = null;
+        }
+    }
+
+    /**
+     * Activate powershot mode
+     */
+    private activatePowershot(): void {
+        if (this.powershot.isActive) return;
+
+        this.powershot.isActive = true;
+        
+        // Change ball color to powershot color
+        if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom._room) {
+            window.gameRoom._room.setDiscProperties(0, {
+                color: this.powershot.powershotColor,
+                invMass: this.powershot.powershotInvMass
+            });
+            
+            // Log powershot activation (only to logs, not to chat)
+            window.gameRoom.logger.i('powershot', `🔥 Powershot activated! Player #${this.powershot.currentPlayerId}`);
+        }
+    }
+
+    /**
+     * Manually activate powershot (for admin command usage)
+     */
+    activatePowershotManually(): boolean {
+        // Check if powershot is enabled (with safe checks)
+        if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.config && window.gameRoom.config.settings && !window.gameRoom.config.settings.powershotEnabled) {
+            return false;
+        }
+
+        // Get settings from game config (with safe fallbacks)
+        if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.config && window.gameRoom.config.settings) {
+            const settings = window.gameRoom.config.settings;
+            this.powershot.normalColor = settings.powershotNormalColor || 0xFFFFFF;
+            this.powershot.powershotColor = settings.powershotActiveColor || 0xFF4500;
+            this.powershot.powershotInvMass = settings.powershotInvMassFactor || 2.0;
+        }
+
+        this.activatePowershot();
+        return true;
+    }
+
+    /**
+     * Apply powershot effect when ball is kicked
+     */
+    applyPowershotKick(): boolean {
+        if (!this.powershot.isActive) return false;
+
+        // The ball already has the powershot properties set
+        // Return true to indicate powershot was applied
+        window.gameRoom.logger.i('powershot', `⚡ Powershot kick applied by Player #${this.powershot.currentPlayerId}!`);
+        
+        // Reset powershot after kick (this will reset color and physics)
+        this.resetPowershot();
+        return true;
+    }
+
+    /**
+     * Reset powershot to normal state
+     */
+    resetPowershot(): void {
+        this.stopPowershotTimer();
+        
+        // Always reset ball color and physics to normal
+        if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom._room) {
+            window.gameRoom._room.setDiscProperties(0, {
+                color: this.powershot.normalColor,
+                invMass: this.powershot.normalInvMass
+            });
+        }
+
+        this.powershot.isActive = false;
+        this.powershot.counter = 0;
+        this.powershot.currentPlayerId = 0;
+    }
+
+    /**
+     * Check if powershot is currently active
+     */
+    isPowershotActive(): boolean {
+        return this.powershot.isActive;
+    }
+
+    /**
+     * Get current powershot counter
+     */
+    getPowershotCounter(): number {
+        return this.powershot.counter;
+    }
+
+    /**
+     * Get current powershot player
+     */
+    getPowershotPlayer(): number {
+        return this.powershot.currentPlayerId;
+    }
+
+    /**
+     * Check and potentially start powershot timer based on ball position
+     * This should be called regularly to detect when ball gets stuck to a player
+     */
+    checkBallStuckToPlayer(playerId: number): void {
+        if (!playerId || playerId === 0) return;
+
+        // Check if ball is stuck to this player
+        const isBallStuck = this.isBallStuckToPlayer(playerId);
+        const wasStuckBefore = this.powershot.currentPlayerId === playerId && this.powershot.timerInterval !== null;
+        
+        if (isBallStuck && !wasStuckBefore) {
+            // If we have a timer for a different player, that player no longer has the ball
+            if (this.powershot.timerInterval && this.powershot.currentPlayerId !== playerId) {
+                this.resetPowershot();
+            }
+            this.startPowershotTimer(playerId);
+            
+        } else if (!isBallStuck && wasStuckBefore) {
+            // Ball just got unstuck
+            this.resetPowershot();
+        }
+        // If isBallStuck && wasStuckBefore: still stuck (no action needed)
+        // If !isBallStuck && !wasStuckBefore: still not stuck (no action needed)
+    }
+
+    /**
+     * Public method to check if ball is stuck to a player (for external use)
+     */
+    isPlayerHoldingBall(playerId: number): boolean {
+        return this.isBallStuckToPlayer(playerId);
     }
 }
