@@ -42,9 +42,11 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                 window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onChat.mutedChat, placeholderChat), player.id, 0xFF0000, "bold", 2); // notify that fact
                 return false; // and hide this chat
             } else {
-                // Anti Chat Flood Checking - Intelligent Spam Detection
+                // Anti Chat Flood Checking - Intelligent Time-based Spam Detection
                 if (window.gameRoom.config.settings.antiChatFlood === true && window.gameRoom.isStatRecord === true) {
                     const currentTime = getUnixTimestamp() * 1000; // Convert to milliseconds for precision
+                    const timeWindow = window.gameRoom.config.settings.chatFloodIntervalMillisecs;
+                    const playerData = window.gameRoom.playerList.get(player.id)!;
                     
                     // Add current message with timestamp
                     window.gameRoom.antiTrollingChatFloodCount.push({ 
@@ -52,10 +54,10 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                         timestamp: currentTime 
                     });
                     
-                    // Clean old messages outside the time window (older than chatFloodIntervalMillisecs)
-                    const timeWindow = window.gameRoom.config.settings.chatFloodIntervalMillisecs;
+                    // Clean old messages outside the time window in a single pass
+                    const cutoffTime = currentTime - timeWindow;
                     window.gameRoom.antiTrollingChatFloodCount = window.gameRoom.antiTrollingChatFloodCount.filter(
-                        record => (currentTime - record.timestamp) <= timeWindow
+                        record => record.timestamp > cutoffTime
                     );
                     
                     // Count this player's messages in the current time window
@@ -65,18 +67,16 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                     
                     // Only mute if player exceeded the criterion within the time window AND is not already muted
                     if (playerMessagesInWindow >= window.gameRoom.config.settings.chatFloodCriterion && 
-                        window.gameRoom.playerList.get(player.id)!.permissions['mute'] === false) {
+                        playerData.permissions['mute'] === false) {
                         
-                        const nowTimeStamp: number = getUnixTimestamp();
-                        
-                        // Apply mute
-                        window.gameRoom.playerList.get(player.id)!.permissions['mute'] = true;
-                        window.gameRoom.playerList.get(player.id)!.permissions.muteExpire = nowTimeStamp + window.gameRoom.config.settings.muteDefaultMillisecs;
+                        // Apply mute (use consistent timestamp format)
+                        playerData.permissions['mute'] = true;
+                        playerData.permissions.muteExpire = (currentTime / 1000) + window.gameRoom.config.settings.muteDefaultMillisecs;
                         
                         // Notify about the mute
                         window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.antitrolling.chatFlood.muteReason, placeholderChat), null, 0xFF0000, "normal", 1);
                         
-                        // Log the action
+                        // Log the action with better formatting
                         window.gameRoom.logger.i('onPlayerChat', `🔇 Player ${player.name}#${player.id} muted for spam: ${playerMessagesInWindow} messages in ${timeWindow/1000}s`);
                         
                         window._emitSIOPlayerStatusChangeEvent(player.id);

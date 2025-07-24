@@ -19,28 +19,24 @@ import { cmdNotice } from "./commands/notice";
 import { cmdPowershotAdmin } from "./commands/powershotadmin";
 import { cmdDebugPowershot } from "./commands/debugpowershot";
 
-// if given string is command chat, this function returns true, nor false.
+// Check if given string is a command chat. Returns true if it is, false otherwise.
 export function isCommandString(message: string): boolean {
-    if(message.charAt(0) == window.gameRoom.config.commands._commandPrefix) {
-        // If message has prefix signature (default: !) as first character in it's string, return true.
-        return true;
-    } else {
-        return false;
-    }
+    return message.charAt(0) === window.gameRoom.config.commands._commandPrefix;
 }
 
-// divide into 3 parts by sperator. !COMMAND FIRST-ARG SECOND-ARG
+// Divide message into 3 parts by separator: !COMMAND FIRST-ARG SECOND-ARG
 export function getCommandChunk(message: string): string[] { 
     return message.split(" ", 3);
 }
 
-// parse command message and excute it (need to check if it's command)
+// Parse command message and execute it (must check if it's a command first)
 export function parseCommand(byPlayer: PlayerObject, message: string): void {
-    let msgChunk: string[] = getCommandChunk(message);
-    let commandSign: string = msgChunk[0].substring(1); // remove prefix character(default: !)
-    if(window.gameRoom.config.commands._disabledCommandList?.includes(commandSign) === true) { // if this command is in disabled list
-        window.gameRoom._room.sendAnnouncement(LangRes.command._ErrorDisabled, byPlayer.id, 0xFF7777, "normal", 2); // notify
-        return; // exit this function
+    const msgChunk: string[] = getCommandChunk(message);
+    const commandSign: string = msgChunk[0].substring(1); // Remove prefix character (default: !)
+    
+    if(window.gameRoom.config.commands._disabledCommandList?.includes(commandSign)) { // If this command is in disabled list
+        window.gameRoom._room.sendAnnouncement(LangRes.command._ErrorDisabled, byPlayer.id, 0xFF7777, "normal", 2); // Notify
+        return; // Exit this function
     }
     switch(commandSign) {
         case window.gameRoom.config.commands.help: {

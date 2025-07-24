@@ -49,7 +49,7 @@ export function cmdHelp(byPlayer: PlayerObject, message?: string): void {
                 break;
             }
             case window.gameRoom.config.commands._helpManadmin: {
-                window.gameRoom._room.sendAnnouncement(LangRes.command.helpadmin, byPlayer.id, 0x479947, "normal", 1);
+                window.gameRoom._room.sendAnnouncement(LangRes.command.helpman.admin, byPlayer.id, 0x479947, "normal", 1);
                 break;
             }
             case window.gameRoom.config.commands._helpManvote: {
@@ -66,10 +66,6 @@ export function cmdHelp(byPlayer: PlayerObject, message?: string): void {
             }
             case window.gameRoom.config.commands._helpManpowershotadmin: {
                 window.gameRoom._room.sendAnnouncement(LangRes.command.helpman.powershotadmin, byPlayer.id, 0x479947, "normal", 1);
-                break;
-            }
-            case window.gameRoom.config.commands.admin: {
-                window.gameRoom._room.sendAnnouncement(LangRes.command.helpman.admin, byPlayer.id, 0x479947, "normal", 1);
                 break;
             }
             default: {
