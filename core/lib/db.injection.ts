@@ -148,7 +148,6 @@ export async function deleteBanlistDB(ruid: string, playerConn: string): Promise
 export async function createPlayerDB(ruid: string, player: PlayerStorage): Promise<void> {
     try {
         const post = `${dbConnAddr}room/${ruid}/player`;
-        winstonLogger.info(`POST to ${post} with player: ${JSON.stringify(player)}`);
         const result = await axios.post(post, player);
         if (result.status === 204 && result.data) {
             winstonLogger.info(`${result.status} Succeed on createPlayerDB: Created. auth(${player.auth})`);
@@ -204,7 +203,6 @@ export async function readPlayerDB(ruid: string, playerAuth: string): Promise<Pl
 export async function updatePlayerDB(ruid: string, player: PlayerStorage): Promise<void> {
     try {
         const post = `${dbConnAddr}room/${ruid}/player/${player.auth}`;
-        winstonLogger.info(`PUT to ${post} with player: ${JSON.stringify(player)}`);
         const result = await axios.put(`${dbConnAddr}room/${ruid}/player/${player.auth}`, player);
         if (result.status === 204 && result.data) {
             winstonLogger.info(`${result.status} Succeed on updatePlayerDB: Updated. auth(${player.auth})`);
@@ -239,7 +237,6 @@ export async function deletePlayerDB(ruid: string, playerAuth: string): Promise<
 export async function createMatchEventDB(ruid: string, matchEvent: MatchEvent): Promise<void> {
     try {
         const post = `${dbConnAddr}room/${ruid}/match_event`;
-        winstonLogger.info(`POST to ${post} with matchEvent: ${JSON.stringify(matchEvent)}`);
         const result = await axios.post(post, matchEvent);
         if (result.status === 204 && result.data) {
             winstonLogger.info(`${result.status} Succeed on createMatchEventDB: Created. matchId(${matchEvent.matchId})`);
@@ -257,7 +254,6 @@ export async function createMatchEventDB(ruid: string, matchEvent: MatchEvent): 
 export async function createMatchSummaryDB(ruid: string, matchSummary: MatchSummary): Promise<void> {
     try {
         const post = `${dbConnAddr}room/${ruid}/match_summary`
-        winstonLogger.info(`POST to ${post} with matchSummary: ${JSON.stringify(matchSummary)}`);
         const result = await axios.post(post, matchSummary);
         if (result.status === 204 && result.data) {
             winstonLogger.info(`${result.status} Succeed on createMatchSummaryDB: Created. matchId(${matchSummary.matchId})`);

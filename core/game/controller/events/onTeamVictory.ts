@@ -150,7 +150,6 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
                 matchTime: holder.matchTime,
                 timestamp: getUnixTimestamp()
             } as MatchEvent;
-            console.log('[onTeamVictory] Intentando guardar matchEvent:', matchEvent);
             setMatchEventDataToDB(matchEvent).catch((err: Error) => {
                 window.gameRoom.logger.e('onTeamVictory', `Error saving match event: ${err.message}`);
             });
@@ -164,7 +163,6 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
             serverRuid: window.gameRoom.config._RUID,
             timestamp: getUnixTimestamp()
         } as MatchSummary;
-        console.log('[onTeamVictory] Intentando guardar matchSummary:', matchSummary);
         setMatchSummaryDataToDB(matchSummary).catch((err: Error) => {
             window.gameRoom.logger.e('onTeamVictory', `Error saving match summary: ${err.message}`);
         });
