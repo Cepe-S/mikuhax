@@ -1,10 +1,14 @@
+
 import "dotenv/config";
 import axios from "axios";
 import { PlayerStorage } from "../game/model/GameObject/PlayerObject";
 import { winstonLogger } from "../winstonLoggerSystem";
 import { BanList } from "../game/model/PlayerBan/BanList";
+import { MatchEvent } from "../game/model/GameObject/MatchEvent";
+import { MatchSummary } from "../game/model/GameObject/MatchSummary";
 
 // These functions will be injected into bot script on puppeteer
+
 
 const dbConnAddr: string = (
     'http://'
@@ -19,13 +23,16 @@ const dbConnAddr: string = (
 
 export async function createSuperadminDB(ruid: string, key: string, description: string): Promise<void> {
     try {
-        const result = await axios.post(`${dbConnAddr}room/${ruid}/superadmin`, {key: key, description: description});
+        const post = `${dbConnAddr}room/${ruid}/superadmin`;
+        winstonLogger.info(`POST to ${post} with key: ${key}, description: ${description}`);
+        const result = await axios.post(post, { key: key, description: description });
         if (result.status === 204 && result.data) {
             winstonLogger.info(`${result.status} Succeed on createSuperadminDB: Created. key(${key})`);
         }
     } catch(error) {
-        if(error.response && error.response.status === 400) {
-            winstonLogger.info(`${error.response.status} Failed on createSuperadminDB: Already exist. key(${key})`);
+        const err = error as any;
+        if(err.response && err.response.status === 400) {
+            winstonLogger.info(`${err.response.status} Failed on createSuperadminDB: Already exist. key(${key})`);
         } else {
             winstonLogger.error(`Error caught on createSuperadminDB: ${error}`);
         }
@@ -40,8 +47,9 @@ export async function readSuperadminDB(ruid: string, key: string): Promise<strin
             return result.data.description;
         }
     } catch (error) {
-        if(error.response && error.response.status === 404) {
-            winstonLogger.info(`${error.response.status} Failed on readSuperadminDB: No exist. key(${key})`);
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            winstonLogger.info(`${err.response.status} Failed on readSuperadminDB: No exist. key(${key})`);
         } else {
             winstonLogger.error(`Error caught on readSuperadminDB: ${error}`);
         }
@@ -57,8 +65,9 @@ export async function deleteSuperadminDB(ruid: string, key: string): Promise<voi
             winstonLogger.info(`${result.status} Succeed on deleteSuperadminDB: Deleted. key(${key})`);
         }
     } catch (error) {
-        if(error.response && error.response.status === 404) {
-            winstonLogger.info(`${error.response.status} Failed on deleteSuperadminDB: No exist. key(${key})`);
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            winstonLogger.info(`${err.response.status} Failed on deleteSuperadminDB: No exist. key(${key})`);
         } else {
             winstonLogger.error(`Error caught on deleteSuperadminDB: ${error}`);
         }
@@ -72,8 +81,9 @@ export async function createBanlistDB(ruid: string, banList: BanList): Promise<v
             winstonLogger.info(`${result.status} Succeed on createBanlistDB: Created. conn(${banList.conn})`);
         }
     } catch(error) {
-        if(error.response && error.response.status === 400) {
-            winstonLogger.info(`${error.response.status} Failed on createBanlistDB: Already exist. conn(${banList.conn})`);
+        const err = error as any;
+        if(err.response && err.response.status === 400) {
+            winstonLogger.info(`${err.response.status} Failed on createBanlistDB: Already exist. conn(${banList.conn})`);
         } else {
             winstonLogger.error(`Error caught on createBanlistDB: ${error}`);
         }
@@ -94,8 +104,9 @@ export async function readBanlistDB(ruid: string, playerConn: string): Promise<B
             return banlist;
         }
     } catch (error) {
-        if(error.response && error.response.status === 404) {
-            winstonLogger.info(`${error.response.status} Failed on readBanlistDB: No exist. conn(${playerConn})`);
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            winstonLogger.info(`${err.response.status} Failed on readBanlistDB: No exist. conn(${playerConn})`);
         } else {
             winstonLogger.error(`Error caught on readBanlistDB: ${error}`);
         }
@@ -109,8 +120,9 @@ export async function updateBanlistDB(ruid: string, banList: BanList):Promise<vo
             winstonLogger.info(`${result.status} Succeed on updateBanlistDB: Updated. conn(${banList.conn})`);
         }
     } catch(error) {
-        if(error.response && error.response.status === 404) {
-            winstonLogger.info(`${error.response.status} Failed on updateBanlistDB: No Exist. conn(${banList.conn})`);
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            winstonLogger.info(`${err.response.status} Failed on updateBanlistDB: No Exist. conn(${banList.conn})`);
         } else {
             winstonLogger.error(`Error caught on updateBanlistDB: ${error}`);
         }
@@ -124,8 +136,9 @@ export async function deleteBanlistDB(ruid: string, playerConn: string): Promise
             winstonLogger.info(`${result.status} Succeed on deleteBanlistDB: Deleted. conn(${playerConn})`);
         }
     } catch (error) {
-        if(error.response && error.response.status === 404) {
-            winstonLogger.info(`${error.response.status} Failed on deleteBanlistDB: No exist. conn(${playerConn})`);
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            winstonLogger.info(`${err.response.status} Failed on deleteBanlistDB: No exist. conn(${playerConn})`);
         } else {
             winstonLogger.error(`Error caught on deleteBanlistDB: ${error}`);
         }
@@ -134,13 +147,16 @@ export async function deleteBanlistDB(ruid: string, playerConn: string): Promise
 
 export async function createPlayerDB(ruid: string, player: PlayerStorage): Promise<void> {
     try {
-        const result = await axios.post(`${dbConnAddr}room/${ruid}/player`, player);
+        const post = `${dbConnAddr}room/${ruid}/player`;
+        winstonLogger.info(`POST to ${post} with player: ${JSON.stringify(player)}`);
+        const result = await axios.post(post, player);
         if (result.status === 204 && result.data) {
             winstonLogger.info(`${result.status} Succeed on createPlayerDB: Created. auth(${player.auth})`);
         }
     } catch(error) {
-        if(error.response && error.response.status === 400) {
-            winstonLogger.info(`${error.response.status} Failed on createPlayerDB: Already exist. auth(${player.auth})`);
+        const err = error as any;
+        if(err.response && err.response.status === 400) {
+            winstonLogger.info(`${err.response.status} Failed on createPlayerDB: Already exist. auth(${player.auth})`);
         } else {
             winstonLogger.error(`Error caught on createPlayerDB: ${error}`);
         }
@@ -176,8 +192,9 @@ export async function readPlayerDB(ruid: string, playerAuth: string): Promise<Pl
             return player;
         }
     } catch (error) {
-        if(error.response && error.response.status === 404) {
-            winstonLogger.info(`${error.response.status} Failed on readPlayerDB: No exist. auth(${playerAuth})`);
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            winstonLogger.info(`${err.response.status} Failed on readPlayerDB: No exist. auth(${playerAuth})`);
         } else {
             winstonLogger.error(`Error caught on readPlayerDB: ${error}`);
         }
@@ -186,13 +203,16 @@ export async function readPlayerDB(ruid: string, playerAuth: string): Promise<Pl
 
 export async function updatePlayerDB(ruid: string, player: PlayerStorage): Promise<void> {
     try {
+        const post = `${dbConnAddr}room/${ruid}/player/${player.auth}`;
+        winstonLogger.info(`PUT to ${post} with player: ${JSON.stringify(player)}`);
         const result = await axios.put(`${dbConnAddr}room/${ruid}/player/${player.auth}`, player);
         if (result.status === 204 && result.data) {
             winstonLogger.info(`${result.status} Succeed on updatePlayerDB: Updated. auth(${player.auth})`);
         }
     } catch(error) {
-        if(error.response && error.response.status === 404) {
-            winstonLogger.info(`${error.response.status} Failed on updatePlayerDB: No exist. auth(${player.auth})`);
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            winstonLogger.info(`${err.response.status} Failed on updatePlayerDB: No exist. auth(${player.auth})`);
         } else {
             winstonLogger.error(`Error caught on updatePlayerDB: ${error}`);
         }
@@ -206,10 +226,48 @@ export async function deletePlayerDB(ruid: string, playerAuth: string): Promise<
             winstonLogger.info(`${result.status} Succeed on deletePlayerDB: Deleted. auth(${playerAuth})`);
         }
     } catch (error) {
-        if(error.response && error.response.status === 404) {
-            winstonLogger.info(`${error.response.status} Failed on deletePlayerDB: No exist. auth(${playerAuth})`);
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            winstonLogger.info(`${err.response.status} Failed on deletePlayerDB: No exist. auth(${playerAuth})`);
         } else {
             winstonLogger.error(`Error caught on deletePlayerDB: ${error}`);
+        }
+    }
+}
+
+// Crear evento de partido (match_event)
+export async function createMatchEventDB(ruid: string, matchEvent: MatchEvent): Promise<void> {
+    try {
+        const post = `${dbConnAddr}room/${ruid}/match_event`;
+        winstonLogger.info(`POST to ${post} with matchEvent: ${JSON.stringify(matchEvent)}`);
+        const result = await axios.post(post, matchEvent);
+        if (result.status === 204 && result.data) {
+            winstonLogger.info(`${result.status} Succeed on createMatchEventDB: Created. matchId(${matchEvent.matchId})`);
+        }
+    } catch(error) {
+        const err = error as any;
+        if(err.response && err.response.status === 400) {
+            winstonLogger.info(`${err.response.status} Failed on createMatchEventDB: Already exist. matchId(${matchEvent.matchId})`);
+        } else {
+            winstonLogger.error(`Error caught on createMatchEventDB: ${error}`);
+        }
+    }
+}
+
+export async function createMatchSummaryDB(ruid: string, matchSummary: MatchSummary): Promise<void> {
+    try {
+        const post = `${dbConnAddr}room/${ruid}/match_summary`
+        winstonLogger.info(`POST to ${post} with matchSummary: ${JSON.stringify(matchSummary)}`);
+        const result = await axios.post(post, matchSummary);
+        if (result.status === 204 && result.data) {
+            winstonLogger.info(`${result.status} Succeed on createMatchSummaryDB: Created. matchId(${matchSummary.matchId})`);
+        }
+    } catch(error) {
+        const err = error as any;
+        if(err.response && err.response.status === 400) {
+            winstonLogger.info(`${err.response.status} Failed on createMatchSummaryDB: Already exist. matchId(${matchSummary.matchId})`);
+        } else {
+            winstonLogger.error(`Error caught on createMatchSummaryDB: ${error}`);
         }
     }
 }

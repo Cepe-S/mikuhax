@@ -1,6 +1,8 @@
 import { Player } from "../model/GameObject/Player";
 import { PlayerStorage } from "../model/GameObject/PlayerObject";
 import { BanList } from "../model/PlayerBan/BanList";
+import { MatchEvent } from "../model/GameObject/MatchEvent";
+import { MatchSummary } from "../model/GameObject/MatchSummary";
 
 // Utilities
 export function convertToPlayerStorage(player: Player): PlayerStorage {
@@ -40,6 +42,16 @@ export async function setPlayerDataToDB(playerStorage: PlayerStorage): Promise<v
     }
 }
 
+// CRUDs for match_event
+export async function setMatchEventDataToDB(matchEvent: MatchEvent): Promise<void> {
+    await window._createMatchEventDB(window.gameRoom.config._RUID, matchEvent);
+}
+
+// CRUDs for match_summary
+export async function setMatchSummaryDataToDB(matchSummary: MatchSummary): Promise<void> {
+    await window._createMatchSummaryDB(window.gameRoom.config._RUID, matchSummary);
+}
+
 // get player data
 export async function getPlayerDataFromDB(playerAuth: string): Promise<PlayerStorage | undefined> {
     const player: PlayerStorage | undefined = await window._readPlayerDB(window.gameRoom.config._RUID, playerAuth);
@@ -68,3 +80,5 @@ export async function getBanlistDataFromDB(playerConn: string): Promise<BanList 
 export async function removeBanlistDataFromDB(playerConn: string): Promise<void> {
     await window._deleteBanlistDB(window.gameRoom.config._RUID, playerConn);
 }
+
+// ...existing code...

@@ -19,7 +19,11 @@ import { GameRoomConfig } from "./model/Configuration/GameRoomConfig";
 // load initial configurations
 const loadedConfig: GameRoomConfig = JSON.parse(localStorage.getItem('_initConfig')!);
 
+
 window.gameRoom = {
+    
+// Reiniciar eventos al inicio de cada partido
+    
     _room: window.HBInit(loadedConfig._config)
     ,config: loadedConfig
     ,link: ''
@@ -57,6 +61,7 @@ window.gameRoom = {
     ,antiPlayerKickAbusingCount: []
     ,notice: ''
     ,onEmergency: EmergencyTools
+    ,matchEventsHolder: [] // Almacena eventos del partido actual
 }
 
 // clear localStorage
@@ -66,7 +71,6 @@ localStorage.removeItem('_readyMap');
 
 // start main bot script
 console.log(`Haxbotron loaded bot script. (UID ${window.gameRoom.config._RUID}, TOKEN ${window.gameRoom.config._config.token})`);
-
 window.document.title = `Haxbotron ${window.gameRoom.config._RUID}`;
 
 makeRoom();

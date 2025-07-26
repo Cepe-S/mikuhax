@@ -6,7 +6,11 @@ import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { shuffleArray } from "../RoomTools";
 import { fetchActiveSpecPlayers, roomActivePlayersNumberCheck, assignPlayerToBalancedTeam } from "../../model/OperateHelper/Quorum";
 import { HElo, MatchResult, StatsRecord } from "../../model/Statistics/HElo";
-import { convertToPlayerStorage, setPlayerDataToDB } from "../Storage";
+import { convertToPlayerStorage, setPlayerDataToDB, setMatchEventDataToDB, setMatchSummaryDataToDB } from "../Storage";
+import { getUnixTimestamp } from "../Statistics";
+import { MatchEvent } from "../../model/GameObject/MatchEvent";
+import { set } from "node-persist";
+import { MatchSummary } from "../../model/GameObject/MatchSummary";
 
 export async function onTeamVictoryListener(scores: ScoresObject): Promise<void> {
     // Event called when a team 'wins'. not just when game ended.
@@ -132,6 +136,38 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
         if (window.gameRoom.winningStreak.count >= 3) {
             winningMessage += '\n' + Tst.maketext(LangRes.onVictory.burning, placeholderVictory);
         }
+
+        const matchId = `${window.gameRoom.config._RUID}_${getUnixTimestamp()}`; // Unique match ID: RUID_timestamp
+
+        // save matchEvents
+        window.gameRoom.matchEventsHolder.forEach(holder => {
+            // sets the matchEvent
+            const matchEvent = {
+                eventType: holder.type,
+                playerId: holder.playerId,
+                playerTeamId: holder.playerTeamId,
+                matchId: matchId,
+                matchTime: holder.matchTime,
+                timestamp: getUnixTimestamp()
+            } as MatchEvent;
+            console.log('[onTeamVictory] Intentando guardar matchEvent:', matchEvent);
+            setMatchEventDataToDB(matchEvent).catch((err: Error) => {
+                window.gameRoom.logger.e('onTeamVictory', `Error saving match event: ${err.message}`);
+            });
+        });
+
+        const matchSummary = {
+            matchId: matchId,
+            totalMatchTime: window.gameRoom.config.rules.requisite.timeLimit,
+            team1Players: redTeamPlayers.map(player => player.id),
+            team2Players: blueTeamPlayers.map(player => player.id),
+            serverRuid: window.gameRoom.config._RUID,
+            timestamp: getUnixTimestamp()
+        } as MatchSummary;
+        console.log('[onTeamVictory] Intentando guardar matchSummary:', matchSummary);
+        setMatchSummaryDataToDB(matchSummary).catch((err: Error) => {
+            window.gameRoom.logger.e('onTeamVictory', `Error saving match summary: ${err.message}`);
+        });
     }
 
     // when auto emcee mode is enabled

@@ -8,6 +8,8 @@ import { decideTier, getAvatarByTier, Tier } from "../../model/Statistics/Tier";
 import { setBanlistDataToDB } from "../Storage";
 
 export function onGameStartListener(byPlayer: PlayerObject | null): void {
+    // Reiniciar almacenamiento temporal de eventos de partido
+    window.gameRoom.matchEventsHolder = [];
     /* Event called when a game starts.
         byPlayer is the player which caused the event (can be null if the event wasn't caused by a player). */
     let placeholderStart = {

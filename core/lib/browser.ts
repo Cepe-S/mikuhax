@@ -232,6 +232,8 @@ export class HeadlessBrowser {
         await page.exposeFunction('_readBanlistDB', dbUtilityInject.readBanlistDB);
         await page.exposeFunction('_updateBanlistDB', dbUtilityInject.updateBanlistDB);
         await page.exposeFunction('_deleteBanlistDB', dbUtilityInject.deleteBanlistDB);
+        await page.exposeFunction('_createMatchEventDB', dbUtilityInject.createMatchEventDB);
+        await page.exposeFunction('_createMatchSummaryDB', dbUtilityInject.createMatchSummaryDB);
         // ================================================================================
 
         await page.addScriptTag({ // add and load bot script

@@ -1,10 +1,11 @@
 import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
+import { MatchEvent } from "../../model/GameObject/MatchEvent";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { ScoresObject } from "../../model/GameObject/ScoresObject";
 import { setBanlistDataToDB } from "../Storage";
+import { getUnixTimestamp } from "../Statistics";
 
 export async function onTeamGoalListener(team: TeamID): Promise<void> {
     // Event called when a team scores a goal.
@@ -43,6 +44,7 @@ export async function onTeamGoalListener(team: TeamID): Promise<void> {
     var assistPlayer: number | undefined = window.gameRoom.ballStack.pop();
     window.gameRoom.ballStack.clear(); // clear the stack.
     window.gameRoom.ballStack.initTouchInfo(); // clear touch info
+    var matchTime = Math.round(scores?.time || 0); // get match time
     if (window.gameRoom.isStatRecord == true && touchPlayer !== undefined) { // records when game mode is for stats recording.
         // except spectators and filter who were lose a point
         var losePlayers: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.team !== TeamID.Spec && player.team !== team);
@@ -57,14 +59,24 @@ export async function onTeamGoalListener(team: TeamID): Promise<void> {
             placeholderGoal.scorerID = window.gameRoom.playerList.get(touchPlayer)!.id;
             placeholderGoal.scorerName = window.gameRoom.playerList.get(touchPlayer)!.name;
             window.gameRoom.playerList.get(touchPlayer)!.matchRecord.goals++; // record goal in match record
-            //setPlayerData(window.playerList.get(touchPlayer)!);
+            window.gameRoom.matchEventsHolder.push({
+                type: 'goal',
+                playerId: window.gameRoom.playerList.get(touchPlayer)!.id,
+                playerTeamId: team,
+                matchTime: matchTime
+            });
             var goalMsg: string = Tst.maketext(LangRes.onGoal.goal, placeholderGoal);
             if (assistPlayer !== undefined && touchPlayer != assistPlayer && window.gameRoom.playerList.get(assistPlayer)!.team === team) {
                 // records assist when the player who assists is not same as the player goaled, and is not other team.
                 placeholderGoal.assistID = window.gameRoom.playerList.get(assistPlayer)!.id;
                 placeholderGoal.assistName = window.gameRoom.playerList.get(assistPlayer)!.name;
                 window.gameRoom.playerList.get(assistPlayer)!.matchRecord.assists++; // record assist in match record
-                //setPlayerData(window.playerList.get(assistPlayer)!);
+                window.gameRoom.matchEventsHolder.push({
+                    type: 'assist',
+                    playerId: window.gameRoom.playerList.get(assistPlayer)!.id,
+                    playerTeamId: team,
+                    matchTime: matchTime
+                });
                 goalMsg = Tst.maketext(LangRes.onGoal.goalWithAssist, placeholderGoal);
             }
             window.gameRoom._room.sendAnnouncement(goalMsg, null, 0x00FF00, "normal", 0);
@@ -73,13 +85,17 @@ export async function onTeamGoalListener(team: TeamID): Promise<void> {
             placeholderGoal.ogID = touchPlayer;
             placeholderGoal.ogName = window.gameRoom.playerList.get(touchPlayer)!.name;
             window.gameRoom.playerList.get(touchPlayer)!.matchRecord.ogs++; // record OG in match record
-            //setPlayerData(window.playerList.get(touchPlayer)!);
             window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onGoal.og, placeholderGoal), null, 0x00FF00, "normal", 0);
             window.gameRoom.logger.i('onTeamGoal', `${window.gameRoom.playerList.get(touchPlayer)!.name}#${touchPlayer} made an OG.`);
-
+            window.gameRoom.matchEventsHolder.push({
+                type: 'ownGoal',
+                playerId: touchPlayer,
+                playerTeamId: window.gameRoom.playerList.get(touchPlayer)!.team,
+                matchTime: matchTime
+            });
             if(window.gameRoom.config.settings.antiOgFlood === true) { // if anti-OG flood option is enabled
                 window.gameRoom.antiTrollingOgFloodCount.push(touchPlayer); // record it
-
+                
                 let ogCountByPlayer: number = 0;
                 window.gameRoom.antiTrollingOgFloodCount.forEach((record) =>  { //check how many times OG made by this player
                     if(record === touchPlayer) {
