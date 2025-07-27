@@ -21,9 +21,9 @@
         "install:packages:core": "cd core && npm install",
         "install:packages:db": "cd db && npm install",
         "build": "npm run build:core && npm run build:db",
-        "build:core": "cd core && npm run build",
+        "build:core": "cd core && NODE_OPTIONS='--openssl-legacy-provider' npm run build",
         "build:db": "cd db && npm run build",
-        "build:force": "cd core && npx tsc --noEmitOnError false && npm run build:bot && npm run build:web && cd ../db && npx tsc --noEmitOnError false",
+        "build:force": "cd core && NODE_OPTIONS='--openssl-legacy-provider' npx tsc --noEmitOnError false && NODE_OPTIONS='--openssl-legacy-provider' npm run build:bot && NODE_OPTIONS='--openssl-legacy-provider' npm run build:web && cd ../db && npx tsc --noEmitOnError false",
         "setup:linux": "chmod +x setup-linux.sh && ./setup-linux.sh"
     },
     "dependencies": {

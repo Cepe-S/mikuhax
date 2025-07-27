@@ -1,26 +1,51 @@
-# Node modules
+# Dependencies
 node_modules/
 **/node_modules/
+package-lock.json
+**/package-lock.json
 
 # Build output
 out/
+**/out/
 dist/
 build/
 public/out/
+**/public/out/
 
-# Logs
+# Runtime data and logs
 logs/
+**/logs/
+.logs/
+**/.logs/
 *.log
+
+# Persistent storage
+.node-persist/
+**/.node-persist/
 
 # Environment files
 .env
+**/.env
 
-# Database
+# Database files
 *.db
+*.sqlite
+*.sqlite3
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# Webpack config (except if needed)
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+
+# Keep webpack configs
 !webpack.config.js
+!webpack.config.*.js

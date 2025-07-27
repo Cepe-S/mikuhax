@@ -32,6 +32,11 @@ sudo apt-get install -y libnss3-dev libatk-bridge2.0-dev libdrm-dev libxcomposit
 echo "📦 Installing TypeScript globally..."
 npm install -g typescript
 
+# Set Node.js options for OpenSSL compatibility
+echo "🔧 Setting Node.js OpenSSL compatibility..."
+echo 'export NODE_OPTIONS="--openssl-legacy-provider"' >> ~/.bashrc
+export NODE_OPTIONS="--openssl-legacy-provider"
+
 # Clean any existing builds
 echo "🧹 Cleaning existing builds..."
 rm -rf core/out db/out core/node_modules db/node_modules node_modules
