@@ -3,12 +3,6 @@ set -e
 
 echo "🚀 Setting up Haxbotron for Linux/Ubuntu..."
 
-# Check if running as root
-if [[ $EUID -eq 0 ]]; then
-   echo "❌ This script should not be run as root"
-   exit 1
-fi
-
 # Update system
 echo "📦 Updating system packages..."
 sudo apt update
@@ -36,7 +30,7 @@ sudo apt-get install -y libnss3-dev libatk-bridge2.0-dev libdrm-dev libxcomposit
 
 # Install TypeScript globally
 echo "📦 Installing TypeScript globally..."
-sudo npm install -g typescript
+npm install -g typescript
 
 # Clean any existing builds
 echo "🧹 Cleaning existing builds..."
