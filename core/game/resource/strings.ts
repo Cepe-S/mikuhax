@@ -2,7 +2,7 @@
 // THE TYPES OF PLACEHOLDER ARE LIMITED BY STRING SET.
 
 export const scheduler = {
-    advertise: '📢 Miku Server\n💬 [Discord] https://discord.gg/qfg45B2 [Donar] https://www.patreon.com/dapucita'
+    advertise: '📢 Miku Server\n💬 [Discord] https://discord.gg/qfg45B2'
     ,shutdown: '📢 La sala se cerrará pronto. Gracias por usarla.'
     ,afkKick: '📢 Expulsado por inactividad.'
     ,afkCommandTooLongKick: '📢 Expulsado por estar inactivo más de 2 minutos.'

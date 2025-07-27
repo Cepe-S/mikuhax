@@ -92,7 +92,7 @@ var scheduledTimer60 = setInterval(() => {
         }
         window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.scheduler.banVoteAutoNotify, placeholderVote), null, 0x00FF00, "normal", 0); //notify it
     }
-}, 60000); // 60secs
+}, 120000); // 120secs (2 minutes)
 
 var scheduledTimer5 = setInterval(() => {
     const nowTimeStamp: number = getUnixTimestamp(); //get timestamp
