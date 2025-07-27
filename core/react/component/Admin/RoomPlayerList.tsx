@@ -221,7 +221,11 @@ function OnlinePlayerRow(props: { ruid: string, row: Player }) {
                         {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                     </IconButton>
                 </TableCell>
-                <TableCell component="th" scope="row">{row.name}#{row.id}</TableCell>
+                <TableCell component="th" scope="row">
+                    {row.permissions.superadmin && '👑'}
+                    {row.admin && '⭐'}
+                    {row.name}#{row.id}
+                </TableCell>
                 <TableCell>{row.auth}</TableCell>
                 <TableCell>{row.conn}</TableCell>
                 <TableCell>{convertTeamID(row.team)}</TableCell>

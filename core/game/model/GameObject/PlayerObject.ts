@@ -68,6 +68,8 @@ export interface PlayerPermissions {
     superadmin: boolean; // Is this player super admin? It doesn't matter whether he/she is an admin.
     // admin permission is already decleared by admin: boolean.
     lastPowershotUse: number; // timestamp of last powershot use for cooldown
+    cachedDisplayName?: string; // cached display name with tier and admin indicators
+    lastAdminCheck?: string; // last admin status check for cache invalidation
 }
 
 export interface PlayerAfkTrace {

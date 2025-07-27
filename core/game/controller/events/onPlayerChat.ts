@@ -6,6 +6,7 @@ import { isCommandString, parseCommand } from "../Parser";
 import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { isIncludeBannedWords } from "../TextFilter";
+import { decideTier } from "../../model/Statistics/Tier";
 
 export function onPlayerChatListener(player: PlayerObject, message: string): boolean {
     // Event called when a player sends a chat message.
@@ -98,8 +99,23 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                     window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onChat.bannedWords, placeholderChat), player.id, 0xFF0000, "bold", 2); // notify that fact
                     return false;
                 }
-                // otherwise, send to room
-                return true;
+                // Interceptar mensaje y enviarlo con formato personalizado
+                const playerData = window.gameRoom.playerList.get(player.id)!;
+                const teamEmoji = player.team === TeamID.Red ? '🔴' : player.team === TeamID.Blue ? '🔵' : '⚪';
+                
+                // Cache del formato del jugador para evitar cálculos repetitivos
+                const currentState = `${player.admin}|${playerData.permissions.superadmin}`;
+                if (!playerData.permissions.cachedDisplayName || playerData.permissions.lastAdminCheck !== currentState) {
+                    const playerTier = decideTier(playerData.stats.rating);
+                    const adminIndicator = player.admin ? '⭐' : '';
+                    const superAdminIndicator = playerData.permissions.superadmin ? '👑' : '';
+                    playerData.permissions.cachedDisplayName = `⟨ LV.${playerTier} ⟩${superAdminIndicator}${adminIndicator}`;
+                    playerData.permissions.lastAdminCheck = currentState;
+                }
+                
+                const customMessage = `${teamEmoji} ${playerData.permissions.cachedDisplayName} ▶ ${player.name}: ${message}`;
+                window.gameRoom._room.sendAnnouncement(customMessage, null, 0xFFFFFF, "bold", 0);
+                return false; // Bloquear el mensaje original
             }
         }
     }

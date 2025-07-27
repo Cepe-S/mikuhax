@@ -212,7 +212,12 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
     }
 
     // send welcome message to new player. other players cannot read this message.
-    window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onJoin.welcome, placeholderJoin), player.id, 0x00FF00, "normal", 0);
+    const playerData = window.gameRoom.playerList.get(player.id)!;
+    const playerTier = decideTier(playerData.stats.rating);
+    const adminIndicator = player.admin ? '⭐' : '';
+    const superAdminIndicator = playerData.permissions.superadmin ? '👑' : '';
+    const welcomeMessage = `📢 ¡Bienvenido ${superAdminIndicator}${adminIndicator}${player.name}#${player.id}! ⟨ LV.${playerTier} ⟩ 📄 Usa !help para ver los comandos de ayuda.`;
+    window.gameRoom._room.sendAnnouncement(welcomeMessage, player.id, 0x00FF00, "normal", 0);
 
     // send notice
     if(window.gameRoom.notice !== '') {

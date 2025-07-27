@@ -43,6 +43,12 @@ export function onGameStopListener(byPlayer: PlayerObject): void {
     window.gameRoom.ballStack.clear(); // clear the stack.
     window.gameRoom.ballStack.possClear(); // clear possession count
     window.gameRoom.ballStack.resetPowershot(); // reset powershot system
+    
+    // Invalidar cache de display names para actualizar tiers tras cambios de rating
+    for (const [playerId, playerData] of window.gameRoom.playerList) {
+        playerData.permissions.cachedDisplayName = undefined;
+        playerData.permissions.lastAdminCheck = undefined;
+    }
 
     // stop replay record and send it
     const replay = window.gameRoom._room.stopRecording();

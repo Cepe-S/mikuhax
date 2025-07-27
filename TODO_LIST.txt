@@ -1,5 +1,6 @@
 - arreglar problemas de balance de equipos al comenzarse nuevas partidas
-- ✅ optimizar el top goleadores/asistidores (FIXED: Added missing function injections and interface definitions)
+- mejorar visualización de admins en el chat
+- optimizar el top goleadores/asistidores
 - habilitar íconos libres
 - agregar webhooks de:
 	. llamar admin
@@ -7,4 +8,3 @@
 	. server open
 	. chat
 	. entradas y salidas
-- cambiar mapa

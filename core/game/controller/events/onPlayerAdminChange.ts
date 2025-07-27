@@ -13,6 +13,11 @@ export function onPlayerAdminChangeListener(changedPlayer: PlayerObject, byPlaye
     }
 
     window.gameRoom.playerList.get(changedPlayer.id)!.admin = changedPlayer.admin; // update
+    
+    // Invalidar cache de display name cuando cambian permisos de admin
+    const playerData = window.gameRoom.playerList.get(changedPlayer.id)!;
+    playerData.permissions.cachedDisplayName = undefined;
+    playerData.permissions.lastAdminCheck = undefined;
 
     if (changedPlayer.admin == true) { // if this event means that the player has been admin
         if (window.gameRoom.playerList.get(changedPlayer.id)!.permissions.afkmode == true) {

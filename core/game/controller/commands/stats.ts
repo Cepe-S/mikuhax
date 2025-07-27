@@ -19,9 +19,13 @@ export function cmdStats(byPlayer: PlayerObject, message?: string): void {
         if (message.charAt(0) == "#") {
             let targetStatsID: number = parseInt(message.substr(1), 10);
             if (isNaN(targetStatsID) != true && window.gameRoom.playerList.has(targetStatsID) == true) { // if the value is not NaN and there's the player
+                const targetPlayer = window.gameRoom._room.getPlayerList().find(p => p.id === targetStatsID);
+                const targetPlayerData = window.gameRoom.playerList.get(targetStatsID)!;
+                const adminIndicator = targetPlayer?.admin ? '⭐' : '';
+                const superAdminIndicator = targetPlayerData.permissions.superadmin ? '👑' : '';
                 let placeholder = {
                     ticketTarget: targetStatsID
-                    , targetName: window.gameRoom.playerList.get(targetStatsID)!.name
+                    , targetName: superAdminIndicator + adminIndicator + targetPlayerData.name
                     , targetAfkReason: window.gameRoom.playerList.get(targetStatsID)!.permissions.afkreason
                     , targetStatsRatingAvatar: getAvatarByTier( // set avatar
                         (window.gameRoom.playerList.get(targetStatsID)!.stats.totals < window.gameRoom.config.HElo.factor.placement_match_chances)
@@ -58,9 +62,12 @@ export function cmdStats(byPlayer: PlayerObject, message?: string): void {
         }
     } else {
         //stats for self
+        const playerData = window.gameRoom.playerList.get(byPlayer.id)!;
+        const adminIndicator = byPlayer.admin ? '⭐' : '';
+        const superAdminIndicator = playerData.permissions.superadmin ? '👑' : '';
         let placeholder = {
             ticketTarget: byPlayer.id
-            , targetName: window.gameRoom.playerList.get(byPlayer.id)!.name
+            , targetName: superAdminIndicator + adminIndicator + playerData.name
             , targetAfkReason: window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkreason
             , targetStatsRatingAvatar: getAvatarByTier( // set avatar
                 (window.gameRoom.playerList.get(byPlayer.id)!.stats.totals < window.gameRoom.config.HElo.factor.placement_match_chances)
