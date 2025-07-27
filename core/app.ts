@@ -32,7 +32,7 @@ const coreServerSettings = {
     , level: (process.env.SERVER_LEVEL || 'common')
 }
 const buildOutputDirectory = path.resolve(__dirname, "../public");
-const whiteListIPs: string[] = process.env.SERVER_WHITELIST_IP?.split(",") || ['127.0.0.1'];
+const whiteListIPs: string[] = process.env.SERVER_WHITELIST_IP?.split(",") || [];
 
 nodeStorage.init();
 
@@ -74,7 +74,7 @@ sio.on('connection', (socket: SIOsocket) => {
 sio.use((socket, next) => jwtMiddlewareWS(socket, next));
 
 server
-    .listen(coreServerSettings.port, async () => {
+    .listen(coreServerSettings.port, '0.0.0.0', async () => {
         const _GitHublastestRelease = await axios.get('https://api.github.com/repos/dapucita/haxbotron/releases/latest');
         console.log("_|    _|                      _|                    _|                                  "+"\n"+
                     "_|    _|    _|_|_|  _|    _|  _|_|_|      _|_|    _|_|_|_|  _|  _|_|    _|_|    _|_|_|  "+"\n"+

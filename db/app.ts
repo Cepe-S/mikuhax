@@ -34,7 +34,7 @@ const dbServerSettings = {
     port: (process.env.SERVER_PORT ? parseInt(JSON.parse(process.env.SERVER_PORT)) : 13001)
     , level: (process.env.SERVER_LEVEL || 'common')
 }
-const whiteListIPs: string[] = process.env.SERVER_WHITELIST_IP?.split(",") || ['127.0.0.1'];
+const whiteListIPs: string[] = process.env.SERVER_WHITELIST_IP?.split(",") || [];
 // ========================================================
 // DB CONNECTION
 createConnection({
@@ -57,7 +57,7 @@ createConnection({
         .use(router.allowedMethods());
 
     // LISTENING
-    app.listen(dbServerSettings.port, () => {
+    app.listen(dbServerSettings.port, '0.0.0.0', () => {
         winstonLogger.info(`[db] Haxbotron DB server is opened at ${dbServerSettings.port} port.`);
         winstonLogger.info(`[db] IP Whitelist : ${whiteListIPs}`);
     });

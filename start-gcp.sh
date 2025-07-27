@@ -1,51 +1,30 @@
 #!/bin/bash
+set -e
 
-echo "🚀 Starting Haxbotron on Google Cloud Platform..."
-
-# Set Node.js options for OpenSSL compatibility
 export NODE_OPTIONS="--openssl-legacy-provider"
 
-# Kill any existing processes
-echo "🔄 Stopping existing processes..."
-pkill -f "node.*haxbotron" || true
-sleep 2
+# Configurar para conexiones externas
+if [ ! -f "core/.env" ]; then
+    cp core/.env.sample core/.env
+    sed -i 's/SERVER_WHITELIST_IP = "127.0.0.1"/SERVER_WHITELIST_IP = ""/' core/.env
+fi
 
-# Start DB server in background
-echo "🗄️  Starting DB server..."
-cd db
-nohup npm start > ../logs/db.log 2>&1 &
-DB_PID=$!
-echo "DB Server started with PID: $DB_PID"
+if [ ! -f "db/.env" ]; then
+    cp db/.env.sample db/.env
+    sed -i 's/SERVER_WHITELIST_IP = "::ffff:127.0.0.1,127.0.0.1"/SERVER_WHITELIST_IP = ""/' db/.env
+fi
 
-# Wait for DB server to start
-sleep 5
+# Iniciar servidores
+echo "🚀 Iniciando Haxbotron..."
+cd db && npm start &
+sleep 3
+cd ../core && npm start &
 
-# Start Core server in background
-echo "🌐 Starting Core server..."
-cd ../core
-nohup npm start > ../logs/core.log 2>&1 &
-CORE_PID=$!
-echo "Core Server started with PID: $CORE_PID"
-
-# Create logs directory if it doesn't exist
-mkdir -p ../logs
-
-# Save PIDs for later management
-echo $DB_PID > ../logs/db.pid
-echo $CORE_PID > ../logs/core.pid
-
+# Mostrar información
+EXTERNAL_IP=$(curl -s ifconfig.me 2>/dev/null || echo "No detectada")
 echo ""
-echo "✅ Haxbotron started successfully!"
-echo "📊 DB Server PID: $DB_PID"
-echo "🌐 Core Server PID: $CORE_PID"
-echo ""
-echo "🌍 Access your server at:"
-echo "   Web Interface: http://$(curl -s ifconfig.me):12001"
-echo "   Database API:  http://$(curl -s ifconfig.me):13001"
-echo ""
-echo "📋 To monitor logs:"
-echo "   tail -f logs/core.log"
-echo "   tail -f logs/db.log"
-echo ""
-echo "🛑 To stop servers:"
-echo "   ./stop-gcp.sh"
+echo "✅ Servidores iniciados"
+echo "🌐 Web: http://$EXTERNAL_IP:12001"
+echo "🗄️ DB: http://$EXTERNAL_IP:13001"
+
+wait
