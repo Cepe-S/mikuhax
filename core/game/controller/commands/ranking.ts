@@ -1,13 +1,20 @@
 import * as LangRes from "../../resource/strings";
 import * as Tst from "../Translator";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { decideTier, getTierName, getTierColor } from "../../model/Statistics/Tier";
+import { decideTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
 
-function formatTierNameWithColor(tier: any, playerId?: number): string {
-    const tierName = getTierName(tier, playerId);
-    const tierColor = getTierColor(tier);
-    const colorHex = tierColor.toString(16).padStart(6, '0');
-    return `<font color="#${colorHex}">${tierName}</font>`;
+function getTierEmoji(tier: Tier): string {
+    if(tier === Tier.TierNew) return '⚪'; // Placement
+    if(tier === Tier.Tier1) return '🥉'; // Bronze
+    if(tier === Tier.Tier2) return '🥈'; // Silver
+    if(tier === Tier.Tier3) return '🥇'; // Gold
+    if(tier === Tier.Tier4) return '💙'; // Platinum
+    if(tier === Tier.Tier5) return '💚'; // Emerald
+    if(tier === Tier.Tier6) return '💎'; // Diamond
+    if(tier === Tier.Tier7) return '🏆'; // Master
+    if(tier === Tier.Challenger) return '🚀'; // Challenger
+    if(tier >= Tier.Tier8 && tier <= Tier.Tier27) return '🔥'; // Top Rankings
+    return '❓'; // Unknown
 }
 
 export function cmdRanking(byPlayer: PlayerObject): void {
@@ -27,10 +34,10 @@ export function cmdRanking(byPlayer: PlayerObject): void {
     top20.forEach((player, index) => {
         const rank = index + 1;
         const tier = decideTier(player.stats.rating, player.id);
-        const tierName = formatTierNameWithColor(tier, player.id);
+        const tierEmoji = getTierEmoji(tier);
         const winRate = player.stats.totals > 0 ? Math.round((player.stats.wins / player.stats.totals) * 100) : 0;
         
-        rankingMessage += `#${rank} ${tierName} ${player.name} - ${player.stats.rating} pts (${winRate}% WR)\n`;
+        rankingMessage += `#${rank} ${tierEmoji} ${player.stats.rating} ➤ ${player.name} (${winRate}% WR)\n`;
     });
 
     // Show current player's position if not in top 20
@@ -38,10 +45,10 @@ export function cmdRanking(byPlayer: PlayerObject): void {
     if (currentPlayerIndex >= 20) {
         const currentPlayer = allPlayers[currentPlayerIndex];
         const tier = decideTier(currentPlayer.stats.rating, currentPlayer.id);
-        const tierName = formatTierNameWithColor(tier, currentPlayer.id);
+        const tierEmoji = getTierEmoji(tier);
         const winRate = currentPlayer.stats.totals > 0 ? Math.round((currentPlayer.stats.wins / currentPlayer.stats.totals) * 100) : 0;
         
-        rankingMessage += `\n📍 Tu posición: #${currentPlayerIndex + 1} ${tierName} - ${currentPlayer.stats.rating} pts (${winRate}% WR)`;
+        rankingMessage += `\n📍 Tu posición: #${currentPlayerIndex + 1} ${tierEmoji} ${currentPlayer.stats.rating} ➤ ${currentPlayer.name} (${winRate}% WR)`;
     }
 
     window.gameRoom._room.sendAnnouncement(rankingMessage, byPlayer.id, 0xFFFFFF, "normal", 1);
