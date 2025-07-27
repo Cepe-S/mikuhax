@@ -24,7 +24,12 @@
         "build:core": "cd core && NODE_OPTIONS='--openssl-legacy-provider' npm run build",
         "build:db": "cd db && npm run build",
         "build:force": "cd core && NODE_OPTIONS='--openssl-legacy-provider' npx tsc --noEmitOnError false && NODE_OPTIONS='--openssl-legacy-provider' npm run build:bot && NODE_OPTIONS='--openssl-legacy-provider' npm run build:web && cd ../db && npx tsc --noEmitOnError false",
-        "setup:linux": "chmod +x setup-linux.sh && ./setup-linux.sh"
+        "setup:linux": "chmod +x setup-linux.sh && ./setup-linux.sh",
+        "start:gcp": "chmod +x start-gcp.sh && ./start-gcp.sh",
+        "stop:gcp": "chmod +x stop-gcp.sh && ./stop-gcp.sh",
+        "pm2:start": "pm2 start pm2.config.js",
+        "pm2:stop": "pm2 stop pm2.config.js",
+        "pm2:restart": "pm2 restart pm2.config.js"
     },
     "dependencies": {
         "redis": "^5.6.1"
