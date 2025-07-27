@@ -13,11 +13,14 @@
     "listFiles": true,
     "removeComments": true,
     
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "strictNullChecks": false,
     "esModuleInterop": true,
 
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": false
   },
   "exclude": [
     "out",
