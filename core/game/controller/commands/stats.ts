@@ -2,7 +2,7 @@ import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
 import * as StatCalc from "../Statistics";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { decideTier, getAvatarByTier, Tier } from "../../model/Statistics/Tier";
+import { decideTier, getAvatarByTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
 
 /**
  * Check if this player plays this match
@@ -27,10 +27,10 @@ export function cmdStats(byPlayer: PlayerObject, message?: string): void {
                     ticketTarget: targetStatsID
                     , targetName: superAdminIndicator + adminIndicator + targetPlayerData.name
                     , targetAfkReason: window.gameRoom.playerList.get(targetStatsID)!.permissions.afkreason
-                    , targetStatsRatingAvatar: getAvatarByTier( // set avatar
-                        (window.gameRoom.playerList.get(targetStatsID)!.stats.totals < window.gameRoom.config.HElo.factor.placement_match_chances)
-                            ? Tier.TierNew
-                            : decideTier(window.gameRoom.playerList.get(targetStatsID)!.stats.rating))
+                    , targetStatsRatingAvatar: (() => {
+                        const tier = decideTier(window.gameRoom.playerList.get(targetStatsID)!.stats.rating, targetStatsID);
+                        return getTierName(tier, targetStatsID);
+                    })()
                     , targetStatsRating: window.gameRoom.playerList.get(targetStatsID)!.stats.rating
                     , targetStatsTotal: window.gameRoom.playerList.get(targetStatsID)!.stats.totals
                     , targetStatsDisconns: window.gameRoom.playerList.get(targetStatsID)!.stats.disconns
@@ -53,7 +53,9 @@ export function cmdStats(byPlayer: PlayerObject, message?: string): void {
                 let resultMsg: string = (isOnMatchNow(targetStatsID))
                     ? Tst.maketext(LangRes.command.stats.statsMsg + '\n' + LangRes.command.stats.matchAnalysis, placeholder)
                     : Tst.maketext(LangRes.command.stats.statsMsg, placeholder)
-                window.gameRoom._room.sendAnnouncement(resultMsg, byPlayer.id, 0x479947, "normal", 1);
+                const targetTier = decideTier(window.gameRoom.playerList.get(targetStatsID)!.stats.rating, targetStatsID);
+                const targetTierColor = getTierColor(targetTier);
+                window.gameRoom._room.sendAnnouncement(resultMsg, byPlayer.id, targetTierColor, "normal", 1);
             } else {
                 window.gameRoom._room.sendAnnouncement(LangRes.command.stats._ErrorNoPlayer, byPlayer.id, 0xFF7777, "normal", 2);
             }
@@ -69,10 +71,10 @@ export function cmdStats(byPlayer: PlayerObject, message?: string): void {
             ticketTarget: byPlayer.id
             , targetName: superAdminIndicator + adminIndicator + playerData.name
             , targetAfkReason: window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkreason
-            , targetStatsRatingAvatar: getAvatarByTier( // set avatar
-                (window.gameRoom.playerList.get(byPlayer.id)!.stats.totals < window.gameRoom.config.HElo.factor.placement_match_chances)
-                    ? Tier.TierNew
-                    : decideTier(window.gameRoom.playerList.get(byPlayer.id)!.stats.rating))
+            , targetStatsRatingAvatar: (() => {
+                const tier = decideTier(window.gameRoom.playerList.get(byPlayer.id)!.stats.rating, byPlayer.id);
+                return getTierName(tier, byPlayer.id);
+            })()
             , targetStatsRating: window.gameRoom.playerList.get(byPlayer.id)!.stats.rating
             , targetStatsTotal: window.gameRoom.playerList.get(byPlayer.id)!.stats.totals
             , targetStatsDisconns: window.gameRoom.playerList.get(byPlayer.id)!.stats.disconns
@@ -96,6 +98,8 @@ export function cmdStats(byPlayer: PlayerObject, message?: string): void {
             ? Tst.maketext(LangRes.command.stats.statsMsg + '\n' + LangRes.command.stats.matchAnalysis, placeholder)
             : Tst.maketext(LangRes.command.stats.statsMsg, placeholder)
 
-        window.gameRoom._room.sendAnnouncement(resultMsg, byPlayer.id, 0x479947, "normal", 1);
+        const playerTier = decideTier(window.gameRoom.playerList.get(byPlayer.id)!.stats.rating, byPlayer.id);
+        const playerTierColor = getTierColor(playerTier);
+        window.gameRoom._room.sendAnnouncement(resultMsg, byPlayer.id, playerTierColor, "normal", 1);
     }
 }

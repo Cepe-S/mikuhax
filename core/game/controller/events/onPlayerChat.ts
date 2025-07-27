@@ -6,7 +6,7 @@ import { isCommandString, parseCommand } from "../Parser";
 import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { isIncludeBannedWords } from "../TextFilter";
-import { decideTier } from "../../model/Statistics/Tier";
+import { decideTier, getTierName, getTierColor } from "../../model/Statistics/Tier";
 
 export function onPlayerChatListener(player: PlayerObject, message: string): boolean {
     // Event called when a player sends a chat message.
@@ -104,17 +104,20 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                 const teamEmoji = player.team === TeamID.Red ? '🔴' : player.team === TeamID.Blue ? '🔵' : '⚪';
                 
                 // Cache del formato del jugador para evitar cálculos repetitivos
-                const currentState = `${player.admin}|${playerData.permissions.superadmin}`;
+                const currentState = `${player.admin}|${playerData.permissions.superadmin}|${playerData.stats.rating}`;
                 if (!playerData.permissions.cachedDisplayName || playerData.permissions.lastAdminCheck !== currentState) {
-                    const playerTier = decideTier(playerData.stats.rating);
+                    const playerTier = decideTier(playerData.stats.rating, player.id);
+                    const tierName = getTierName(playerTier, player.id);
                     const adminIndicator = player.admin ? '⭐' : '';
                     const superAdminIndicator = playerData.permissions.superadmin ? '👑' : '';
-                    playerData.permissions.cachedDisplayName = `⟨ LV.${playerTier} ⟩${superAdminIndicator}${adminIndicator}`;
+                    playerData.permissions.cachedDisplayName = `${tierName}${superAdminIndicator}${adminIndicator}`;
                     playerData.permissions.lastAdminCheck = currentState;
                 }
                 
+                const playerTier = decideTier(playerData.stats.rating, player.id);
+                const tierColor = getTierColor(playerTier);
                 const customMessage = `${teamEmoji} ${playerData.permissions.cachedDisplayName} ▶ ${player.name}: ${message}`;
-                window.gameRoom._room.sendAnnouncement(customMessage, null, 0xFFFFFF, "bold", 0);
+                window.gameRoom._room.sendAnnouncement(customMessage, null, tierColor, "bold", 0);
                 return false; // Bloquear el mensaje original
             }
         }

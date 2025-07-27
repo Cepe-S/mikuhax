@@ -7,7 +7,7 @@ import { getUnixTimestamp } from "../Statistics";
 import { setDefaultStadiums, updateAdmins } from "../RoomTools";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, assignPlayerToBalancedTeam } from "../../model/OperateHelper/Quorum";
-import { decideTier, getAvatarByTier, Tier } from "../../model/Statistics/Tier";
+import { decideTier, getAvatarByTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
 import { isExistNickname, isIncludeBannedWords } from "../TextFilter";
 
 export async function onPlayerJoinListener(player: PlayerObject): Promise<void> {
@@ -204,20 +204,19 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
 
     if (window.gameRoom.config.settings.avatarOverridingByTier === true) {
         // if avatar overrding option is enabled
-        window.gameRoom._room.setPlayerAvatar(player.id, getAvatarByTier( // set avatar
-            (window.gameRoom.playerList.get(player.id)!.stats.totals < window.gameRoom.config.HElo.factor.placement_match_chances)
-                ? Tier.TierNew
-                : decideTier(window.gameRoom.playerList.get(player.id)!.stats.rating)
-        ));
+        const playerTierForAvatar = decideTier(window.gameRoom.playerList.get(player.id)!.stats.rating, player.id);
+        window.gameRoom._room.setPlayerAvatar(player.id, getAvatarByTier(playerTierForAvatar, player.id));
     }
 
     // send welcome message to new player. other players cannot read this message.
     const playerData = window.gameRoom.playerList.get(player.id)!;
-    const playerTier = decideTier(playerData.stats.rating);
+    const playerTier = decideTier(playerData.stats.rating, player.id);
+    const tierName = getTierName(playerTier, player.id);
+    const tierColor = getTierColor(playerTier);
     const adminIndicator = player.admin ? '⭐' : '';
     const superAdminIndicator = playerData.permissions.superadmin ? '👑' : '';
-    const welcomeMessage = `📢 ¡Bienvenido ${superAdminIndicator}${adminIndicator}${player.name}#${player.id}! ⟨ LV.${playerTier} ⟩ 📄 Usa !help para ver los comandos de ayuda.`;
-    window.gameRoom._room.sendAnnouncement(welcomeMessage, player.id, 0x00FF00, "normal", 0);
+    const welcomeMessage = `📢 ¡Bienvenido ${superAdminIndicator}${adminIndicator}${player.name}#${player.id}! ${tierName} 📄 Usa !help para ver los comandos de ayuda.`;
+    window.gameRoom._room.sendAnnouncement(welcomeMessage, player.id, tierColor, "normal", 0);
 
     // send notice
     if(window.gameRoom.notice !== '') {

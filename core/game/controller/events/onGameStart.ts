@@ -48,11 +48,8 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
     if(window.gameRoom.config.settings.avatarOverridingByTier === true) {
         // if avatar overrding option is enabled
         allPlayersList.forEach((eachPlayer: PlayerObject) => {
-            window.gameRoom._room.setPlayerAvatar(eachPlayer.id, getAvatarByTier( // set avatar
-                (window.gameRoom.playerList.get(eachPlayer.id)!.stats.totals < window.gameRoom.config.HElo.factor.placement_match_chances)
-                ? Tier.TierNew
-                : decideTier(window.gameRoom.playerList.get(eachPlayer.id)!.stats.rating)
-            )); 
+            const playerTier = decideTier(window.gameRoom.playerList.get(eachPlayer.id)!.stats.rating, eachPlayer.id);
+            window.gameRoom._room.setPlayerAvatar(eachPlayer.id, getAvatarByTier(playerTier, eachPlayer.id)); 
         });
     }
 

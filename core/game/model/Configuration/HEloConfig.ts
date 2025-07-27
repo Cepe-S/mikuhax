@@ -28,5 +28,6 @@ export interface HEloConfig {
         avatar_tier_7: string
         avatar_tier_8: string
         avatar_tier_9: string
+        avatar_challenger: string
     }
 }

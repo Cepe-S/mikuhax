@@ -56,7 +56,7 @@ export const command = {
     _ErrorWrongCommand : '❌ Comando incorrecto. 📑 Usa !help o !help COMMAND para más detalles.'
     ,_ErrorNoPermission: '❌ Solo los administradores pueden usar este comando.'
     ,_ErrorDisabled: '❌ Este comando no está habilitado en esta sala.'
-    ,help: '📄 !about, notice, stats, statsreset, tier, afk, vote, poss, streak, scout, list, powershot, goleadores, asistidores\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Los super admins tienen acceso a comandos adicionales de administrador.'
+    ,help: '📄 !about, notice, stats, statsreset, tier, ranking, afk, vote, poss, streak, scout, list, powershot, goleadores, asistidores\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Los super admins tienen acceso a comandos adicionales de administrador.'
     ,helpadmin: '📄 !freeze, mute, powershotadmin\n📑 Usa !help COMMAND para más detalles'
     ,helpman: { // descripción detallada para un comando
         _ErrorWrongMan : '❌ No hay una descripción disponible para el comando solicitado.'
@@ -77,11 +77,12 @@ export const command = {
         ,powershotadmin: '📑 !powershotadmin <on|off> : [ADMIN] Activa/desactiva el sistema de powershot automático.'
         ,goleadores: '📑 !goleadores [dia|mes] : Muestra el top de goleadores. Sin parámetro muestra el top global, con "dia" muestra el top del día, con "mes" muestra el top del mes.'
         ,asistidores: '📑 !asistidores [dia|mes] : Muestra el top de asistidores. Sin parámetro muestra el top global, con "dia" muestra el top del día, con "mes" muestra el top del mes.'
+        ,ranking: '📑 !ranking : Muestra el ranking de los top 20 jugadores por rating ELO y tu posición actual.'
     } 
     ,about: '📄 Nombre de la sala : {RoomName} ({_LaunchTime})\n💬 Esta sala está gestionada por el bot Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [Discord] https://discord.gg/qfg45B2 [Apóyanos] https://www.patreon.com/dapucita'
     ,stats: {
         _ErrorNoPlayer: '❌ No está conectado. Debes especificar un ID en el formato #número. (Ej: !stats #12)\n📑 Usa !list red,blue,spec para obtener el ID numérico.'
-        ,statsMsg: '📊 Estadísticas de {targetName}#{ticketTarget} (Puntuación {targetStatsRatingAvatar}{targetStatsRating}): {targetStatsTotal} partidos jugados (victorias {targetStatsWinRate}%), desconexiones {targetStatsDisconns}\n📊 Goles {targetStatsGoals}, asistencias {targetStatsAssists}, goles en contra {targetStatsOgs}, goles recibidos {targetStatsLosepoints}, pases exitosos {targetStatsPassSuccess}%\n📊 Promedios por partido: {targetStatsGoalsPerGame} goles, {targetStatsAssistsPerGame} asistencias, {targetStatsOgsPerGame} goles en contra, {targetStatsLostGoalsPerGame} goles recibidos.'
+        ,statsMsg: '📊 Estadísticas de {targetName}#{ticketTarget} ({targetStatsRatingAvatar} - {targetStatsRating} pts): {targetStatsTotal} partidos jugados (victorias {targetStatsWinRate}%), desconexiones {targetStatsDisconns}\n📊 Goles {targetStatsGoals}, asistencias {targetStatsAssists}, goles en contra {targetStatsOgs}, goles recibidos {targetStatsLosepoints}, pases exitosos {targetStatsPassSuccess}%\n📊 Promedios por partido: {targetStatsGoalsPerGame} goles, {targetStatsAssistsPerGame} asistencias, {targetStatsOgsPerGame} goles en contra, {targetStatsLostGoalsPerGame} goles recibidos.'
         ,matchAnalysis: '📊 En este partido: {targetStatsNowGoals} goles, {targetStatsNowAssists} asistencias, {targetStatsNowOgs} goles en contra. (Pases exitosos {targetStatsNowPassSuccess}%)'
     }
     ,statsreset: '📊 Las estadísticas han sido reiniciadas. No se pueden recuperar.'
@@ -159,7 +160,7 @@ export const command = {
         ,voteStatus : '🗳️ Actualmente hay una votación de expulsión para {targetName}#{targetID}.'
         ,voteAutoNotify: '🗳️ Actualmente está en curso una votación de expulsión: {voteList}'
     }
-    ,tier: '📄 El tier se determina según el puntaje de rating. Puedes ver el puntaje con el comando !stats.\n📑 {tierAvatar9}{tierCutoff9} {tierAvatar8}{tierCutoff8} {tierAvatar7}{tierCutoff7} {tierAvatar6}{tierCutoff6} {tierAvatar5}{tierCutoff5} {tierAvatar4}{tierCutoff4} {tierAvatar3}{tierCutoff3} {tierAvatar2}{tierCutoff2} {tierAvatar1}{tierCutoff1}'
+    ,tier: '📄 Sistema de Tiers Competitivo - Basado en tu rating ELO\n📑 [PLACEMENT] Partidas de colocación ({placementMatches} partidas)\n📑 [BRONZE] < {tierCutoff1} pts | [SILVER] {tierCutoff1}-{tierCutoff2} pts\n📑 [GOLD] {tierCutoff2}-{tierCutoff3} pts | [PLATINUM] {tierCutoff3}-{tierCutoff4} pts\n📑 [EMERALD] {tierCutoff4}-{tierCutoff5} pts | [DIAMOND] {tierCutoff5}-{tierCutoff6} pts\n📑 [MASTER] {tierCutoff6}+ pts | [CHALLENGER] & [TOP 1-20] Rankings especiales\n📊 Los tiers se muestran en colores distintivos. Usa !stats para ver tu tier actual'
     ,notice: {
         _ErrorNoMessage: '❌ No hay avisos disponibles actualmente.'
     }
