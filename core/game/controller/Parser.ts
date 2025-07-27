@@ -17,6 +17,8 @@ import { cmdTier } from "./commands/tier";
 import { cmdNotice } from "./commands/notice";
 import { cmdPowershotAdmin } from "./commands/powershotadmin";
 import { cmdDebugPowershot } from "./commands/debugpowershot";
+import { cmdGoleadores } from "./commands/goleadores";
+import { cmdAsistidores } from "./commands/asistidores";
 
 // Check if given string is a command chat. Returns true if it is, false otherwise.
 export function isCommandString(message: string): boolean {
@@ -136,6 +138,14 @@ export function parseCommand(byPlayer: PlayerObject, message: string): void {
             } else {
                 cmdSuper(byPlayer);
             }
+            break;
+        }
+        case window.gameRoom.config.commands.goleadores: {
+            cmdGoleadores(byPlayer);
+            break;
+        }
+        case window.gameRoom.config.commands.asistidores: {
+            cmdAsistidores(byPlayer);
             break;
         }
         default: {

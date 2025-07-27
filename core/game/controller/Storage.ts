@@ -81,4 +81,28 @@ export async function removeBanlistDataFromDB(playerConn: string): Promise<void>
     await window._deleteBanlistDB(window.gameRoom.config._RUID, playerConn);
 }
 
-// ...existing code...
+// Top scorers functions
+export async function getTopScorersGlobalFromDB(): Promise<{playerId: number, playerName: string, count: number}[]> {
+    return await window._getTopScorersGlobalDB(window.gameRoom.config._RUID);
+}
+
+export async function getTopScorersMonthlyFromDB(): Promise<{playerId: number, playerName: string, count: number}[]> {
+    return await window._getTopScorersMonthlyDB(window.gameRoom.config._RUID);
+}
+
+export async function getTopScorersDailyFromDB(): Promise<{playerId: number, playerName: string, count: number}[]> {
+    return await window._getTopScorersDailyDB(window.gameRoom.config._RUID);
+}
+
+// Top assisters functions
+export async function getTopAssistersGlobalFromDB(): Promise<{playerId: number, playerName: string, count: number}[]> {
+    return await window._getTopAssistersGlobalDB(window.gameRoom.config._RUID);
+}
+
+export async function getTopAssistersMonthlyFromDB(): Promise<{playerId: number, playerName: string, count: number}[]> {
+    return await window._getTopAssistersMonthlyDB(window.gameRoom.config._RUID);
+}
+
+export async function getTopAssistersDailyFromDB(): Promise<{playerId: number, playerName: string, count: number}[]> {
+    return await window._getTopAssistersDailyDB(window.gameRoom.config._RUID);
+}

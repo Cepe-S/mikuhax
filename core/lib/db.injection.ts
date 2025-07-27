@@ -267,3 +267,89 @@ export async function createMatchSummaryDB(ruid: string, matchSummary: MatchSumm
         }
     }
 }
+
+// Top scorers functions
+export async function getTopScorersGlobalDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-scorers/global`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`200 Succeed on getTopScorersGlobalDB`);
+            return result.data;
+        }
+        return [];
+    } catch (error) {
+        winstonLogger.error(`Error caught on getTopScorersGlobalDB: ${error}`);
+        return [];
+    }
+}
+
+export async function getTopScorersMonthlyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-scorers/monthly`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`200 Succeed on getTopScorersMonthlyDB`);
+            return result.data;
+        }
+        return [];
+    } catch (error) {
+        winstonLogger.error(`Error caught on getTopScorersMonthlyDB: ${error}`);
+        return [];
+    }
+}
+
+export async function getTopScorersDailyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-scorers/daily`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`200 Succeed on getTopScorersDailyDB`);
+            return result.data;
+        }
+        return [];
+    } catch (error) {
+        winstonLogger.error(`Error caught on getTopScorersDailyDB: ${error}`);
+        return [];
+    }
+}
+
+// Top assisters functions
+export async function getTopAssistersGlobalDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-assisters/global`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`200 Succeed on getTopAssistersGlobalDB`);
+            return result.data;
+        }
+        return [];
+    } catch (error) {
+        winstonLogger.error(`Error caught on getTopAssistersGlobalDB: ${error}`);
+        return [];
+    }
+}
+
+export async function getTopAssistersMonthlyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-assisters/monthly`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`200 Succeed on getTopAssistersMonthlyDB`);
+            return result.data;
+        }
+        return [];
+    } catch (error) {
+        winstonLogger.error(`Error caught on getTopAssistersMonthlyDB: ${error}`);
+        return [];
+    }
+}
+
+export async function getTopAssistersDailyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-assisters/daily`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`200 Succeed on getTopAssistersDailyDB`);
+            return result.data;
+        }
+        return [];
+    } catch (error) {
+        winstonLogger.error(`Error caught on getTopAssistersDailyDB: ${error}`);
+        return [];
+    }
+}

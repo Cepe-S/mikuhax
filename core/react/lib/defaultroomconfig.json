@@ -130,6 +130,8 @@
 		"_helpMansuper": "super",
 		"_helpMannotice": "notice",
 		"_helpManpowershotadmin": "powershotadmin",
+		"_helpMangoleadores": "goleadores",
+		"_helpManasistidores": "asistidores",
 		"_listSubafk": "afk",
 		"_listSubmute": "mute",
 		"_listSubred": "red",
@@ -160,6 +162,8 @@
 		"vote": "vote",
 		"tier": "tier",
 		"notice": "notice",
-		"powershotadmin": "powershotadmin"
+		"powershotadmin": "powershotadmin",
+		"goleadores": "goleadores",
+		"asistidores": "asistidores"
 	}
 }

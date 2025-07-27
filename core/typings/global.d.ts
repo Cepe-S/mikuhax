@@ -103,6 +103,14 @@ declare global {
         // Match Event/Match Summary DB
         _createMatchEventDB(ruid: string, matchEvent: MatchEvent): Promise<void>;
         _createMatchSummaryDB(ruid: string, matchSummary: MatchSummary): Promise<void>;
+        // Top Scorers DB
+        _getTopScorersGlobalDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
+        _getTopScorersMonthlyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
+        _getTopScorersDailyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
+        // Top Assisters DB
+        _getTopAssistersGlobalDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
+        _getTopAssistersMonthlyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
+        _getTopAssistersDailyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
 
         // ==============================
         // Haxball Headless Initial Methods

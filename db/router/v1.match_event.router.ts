@@ -32,3 +32,29 @@ matchEventRouter.delete("/:matchId/:playerId/:timestamp", async (ctx) => {
     // Implementar si tienes delete en el controller
     ctx.status = 501; // Not Implemented
 });
+
+// GET top scorers routes
+matchEventRouter.get("/top-scorers/global", async (ctx) => {
+    await controller.getTopScorersGlobal(ctx);
+});
+
+matchEventRouter.get("/top-scorers/monthly", async (ctx) => {
+    await controller.getTopScorersMonthly(ctx);
+});
+
+matchEventRouter.get("/top-scorers/daily", async (ctx) => {
+    await controller.getTopScorersDaily(ctx);
+});
+
+// GET top assisters routes
+matchEventRouter.get("/top-assisters/global", async (ctx) => {
+    await controller.getTopAssistersGlobal(ctx);
+});
+
+matchEventRouter.get("/top-assisters/monthly", async (ctx) => {
+    await controller.getTopAssistersMonthly(ctx);
+});
+
+matchEventRouter.get("/top-assisters/daily", async (ctx) => {
+    await controller.getTopAssistersDaily(ctx);
+});

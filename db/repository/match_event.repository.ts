@@ -1,11 +1,11 @@
 
 import { getRepository, Repository } from 'typeorm';
-import { IRepository } from './repository.interface';
+import { IRepository, IMatchEventRepository } from './repository.interface';
 import { MatchEvent } from '../entity/match_event.entity';
 import { MatchEventModel } from '../model/MatchEventModel';
 
 
-export class MatchEventRepository implements IRepository<MatchEvent> {
+export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
     public async findAll(ruid: string, paginationOrMatchId?: any): Promise<MatchEvent[]> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         // Si se pasa un string, es matchId (compatibilidad vieja)
@@ -84,5 +84,114 @@ export class MatchEventRepository implements IRepository<MatchEvent> {
         } else {
             await repository.remove(event);
         }
+    }
+
+    public async getTopScorersGlobal(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+        const repository: Repository<MatchEvent> = getRepository(MatchEvent);
+        const result = await repository
+            .createQueryBuilder('event')
+            .select('event.playerId', 'playerId')
+            .addSelect('COUNT(*)', 'count')
+            .where('event.ruid = :ruid', { ruid })
+            .andWhere('event.eventType = :eventType', { eventType: 'goal' })
+            .groupBy('event.playerId')
+            .orderBy('count', 'DESC')
+            .limit(5)
+            .getRawMany();
+        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
+    }
+
+    public async getTopScorersMonthly(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+        const repository: Repository<MatchEvent> = getRepository(MatchEvent);
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const startTimestamp = startOfMonth.getTime();
+        
+        const result = await repository
+            .createQueryBuilder('event')
+            .select('event.playerId', 'playerId')
+            .addSelect('COUNT(*)', 'count')
+            .where('event.ruid = :ruid', { ruid })
+            .andWhere('event.eventType = :eventType', { eventType: 'goal' })
+            .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
+            .groupBy('event.playerId')
+            .orderBy('count', 'DESC')
+            .limit(5)
+            .getRawMany();
+        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
+    }
+
+    public async getTopScorersDaily(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+        const repository: Repository<MatchEvent> = getRepository(MatchEvent);
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const startTimestamp = startOfDay.getTime();
+        
+        const result = await repository
+            .createQueryBuilder('event')
+            .select('event.playerId', 'playerId')
+            .addSelect('COUNT(*)', 'count')
+            .where('event.ruid = :ruid', { ruid })
+            .andWhere('event.eventType = :eventType', { eventType: 'goal' })
+            .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
+            .groupBy('event.playerId')
+            .orderBy('count', 'DESC')
+            .limit(5)
+            .getRawMany();
+        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
+    }
+
+    public async getTopAssistersGlobal(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+        const repository: Repository<MatchEvent> = getRepository(MatchEvent);
+        const result = await repository
+            .createQueryBuilder('event')
+            .select('event.playerId', 'playerId')
+            .addSelect('COUNT(*)', 'count')
+            .where('event.eventType = :eventType', { eventType: 'assist' })
+            .groupBy('event.playerId')
+            .orderBy('count', 'DESC')
+            .limit(5)
+            .getRawMany();
+        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
+    }
+
+    public async getTopAssistersMonthly(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+        const repository: Repository<MatchEvent> = getRepository(MatchEvent);
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const startTimestamp = startOfMonth.getTime();
+        
+        const result = await repository
+            .createQueryBuilder('event')
+            .select('event.playerId', 'playerId')
+            .addSelect('COUNT(*)', 'count')
+            .where('event.eventType = :eventType', { eventType: 'assist' })
+            .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
+            .groupBy('event.playerId')
+            .orderBy('count', 'DESC')
+            .limit(5)
+            .getRawMany();
+        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
+    }
+
+    public async getTopAssistersDaily(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+        const repository: Repository<MatchEvent> = getRepository(MatchEvent);
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const startTimestamp = startOfDay.getTime();
+        
+        const result = await repository
+            .createQueryBuilder('event')
+            .select('event.playerId', 'playerId')
+            .addSelect('COUNT(*)', 'count')
+            .where('event.eventType = :eventType', { eventType: 'assist' })
+            .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
+            .groupBy('event.playerId')
+            .orderBy('count', 'DESC')
+            .limit(5)
+            .getRawMany();
+        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
     }
 }

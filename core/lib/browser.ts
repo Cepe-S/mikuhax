@@ -234,6 +234,14 @@ export class HeadlessBrowser {
         await page.exposeFunction('_deleteBanlistDB', dbUtilityInject.deleteBanlistDB);
         await page.exposeFunction('_createMatchEventDB', dbUtilityInject.createMatchEventDB);
         await page.exposeFunction('_createMatchSummaryDB', dbUtilityInject.createMatchSummaryDB);
+        
+        // Top scorers functions
+        await page.exposeFunction('_getTopScorersGlobalDB', dbUtilityInject.getTopScorersGlobalDB);
+        await page.exposeFunction('_getTopScorersMonthlyDB', dbUtilityInject.getTopScorersMonthlyDB);
+        await page.exposeFunction('_getTopScorersDailyDB', dbUtilityInject.getTopScorersDailyDB);
+        await page.exposeFunction('_getTopAssistersGlobalDB', dbUtilityInject.getTopAssistersGlobalDB);
+        await page.exposeFunction('_getTopAssistersMonthlyDB', dbUtilityInject.getTopAssistersMonthlyDB);
+        await page.exposeFunction('_getTopAssistersDailyDB', dbUtilityInject.getTopAssistersDailyDB);
         // ================================================================================
 
         await page.addScriptTag({ // add and load bot script

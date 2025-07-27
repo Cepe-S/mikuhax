@@ -1,4 +1,5 @@
 - arreglar problemas de balance de equipos al comenzarse nuevas partidas
+- ✅ optimizar el top goleadores/asistidores (FIXED: Added missing function injections and interface definitions)
 - habilitar íconos libres
 - agregar webhooks de:
 	. llamar admin

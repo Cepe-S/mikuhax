@@ -127,6 +127,8 @@ const commandsSchema = Joi.object().keys({
     _helpMansuper: Joi.string().required(),
     _helpMannotice: Joi.string().required(),
     _helpManpowershotadmin: Joi.string().required(),
+    _helpMangoleadores: Joi.string().required(),
+    _helpManasistidores: Joi.string().required(),
 
     _listSubafk: Joi.string().required(),
     _listSubmute: Joi.string().required(),
@@ -159,6 +161,8 @@ const commandsSchema = Joi.object().keys({
     tier: Joi.string().required(),
     notice: Joi.string().required(),
     powershotadmin: Joi.string().required(),
+    goleadores: Joi.string().required(),
+    asistidores: Joi.string().required(),
 });
 
 const configHEloSchema = Joi.object().keys({
