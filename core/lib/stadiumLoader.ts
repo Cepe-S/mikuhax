@@ -9,20 +9,53 @@ import * as mapFutx7 from "./stadium/futx7.hbs"
 * load stadium map (JSON stringified).
 */
 export function loadStadiumData(mapName: string): string {
+    let stadiumText: string;
+    
     // LINK MAP FILE
     switch (mapName) {
         case 'futx2':
-            return mapFutx2.stadiumText;
+            stadiumText = mapFutx2.stadiumText;
+            break;
         case 'futx3':
-            return mapFutx3.stadiumText;
+            stadiumText = mapFutx3.stadiumText;
+            break;
         case 'futx4':
-            return mapFutx4.stadiumText;
+            stadiumText = mapFutx4.stadiumText;
+            break;
         case 'futx5':
-            return mapFutx5.stadiumText;
+            stadiumText = mapFutx5.stadiumText;
+            break;
         case 'futx7':
-            return mapFutx7.stadiumText;
-
+            stadiumText = mapFutx7.stadiumText;
+            break;
         default:
-            return mapFutx4.stadiumText;
+            stadiumText = mapFutx4.stadiumText;
+            break;
     }
+    
+    // Replace ball configuration placeholders with settings values
+    // Use default values if settings are not available
+    let ballRadius = '6.4';
+    let ballColor = '0';
+    let ballBCoeff = '0.4';
+    let ballInvMass = '1.5';
+    let ballDamping = '0.99';
+    
+    if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.config && window.gameRoom.config.settings) {
+        const settings = window.gameRoom.config.settings;
+        ballRadius = settings.ballRadius.toString();
+        ballColor = settings.ballColor.toString();
+        ballBCoeff = settings.ballBCoeff.toString();
+        ballInvMass = settings.ballInvMass.toString();
+        ballDamping = settings.ballDamping.toString();
+    }
+    
+    stadiumText = stadiumText
+        .replace(/%BALL_RADIUS%/g, ballRadius)
+        .replace(/%BALL_COLOR%/g, ballColor)
+        .replace(/%BALL_BCOEFF%/g, ballBCoeff)
+        .replace(/%BALL_INVMASS%/g, ballInvMass)
+        .replace(/%BALL_DAMPING%/g, ballDamping);
+    
+    return stadiumText;
 }

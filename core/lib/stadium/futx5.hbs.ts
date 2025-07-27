@@ -327,7 +327,7 @@ export var stadiumText: string = `{
 	],
 
 	"discs" : [
-		{"radius":6.4,"color":"0","bCoef":0.4,"invMass":1.5,"damping":0.99,"cGroup":["ball","kick","score"]},
+		{"radius":%BALL_RADIUS%,"color":"%BALL_COLOR%","bCoef":%BALL_BCOEFF%,"invMass":%BALL_INVMASS%,"damping":%BALL_DAMPING%,"cGroup":["ball","kick","score"]},
 		{"pos":[-5,-1],"radius":0.7,"invMass":1e+300,"color":"0","cMask":[],"cGroup":[]},
 		{"pos":[5,-1],"radius":0.7,"invMass":1e+300,"color":"0","cMask":[],"cGroup":[]},
 		{"pos":[0,-5],"radius":0.7,"invMass":1e+300,"color":"0","cMask":[],"cGroup":[]},

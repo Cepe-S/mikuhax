@@ -26,7 +26,7 @@ export class KickStack {
         activationThreshold: 100, // we don't know hom many seconds are :c
         normalColor: 0xFFFFFF,     // White
         powershotColor: 0xFF4500,  // Red-orange
-        normalInvMass: 1.0,        // Normal ball physics
+        normalInvMass: 1.5,        // Normal ball physics (will be updated from settings)
         powershotInvMass: 2.0,     // Double the power (higher invMass = more power for kicks)
         timerInterval: null as NodeJS.Timeout | null,
         lastBallPos: { x: 0, y: 0 }, // To detect if ball is moving
@@ -172,6 +172,7 @@ export class KickStack {
             this.powershot.activationThreshold = settings.powershotActivationTime || 100;
             this.powershot.normalColor = settings.powershotNormalColor || 0xFFFFFF;
             this.powershot.powershotColor = settings.powershotActiveColor || 0xFF4500;
+            this.powershot.normalInvMass = settings.ballInvMass || 1.5;
             this.powershot.powershotInvMass = settings.powershotInvMassFactor || 2.0;
             this.powershot.stickDistance = settings.powershotStickDistance || 26;
         }
@@ -276,6 +277,7 @@ export class KickStack {
             const settings = window.gameRoom.config.settings;
             this.powershot.normalColor = settings.powershotNormalColor || 0xFFFFFF;
             this.powershot.powershotColor = settings.powershotActiveColor || 0xFF4500;
+            this.powershot.normalInvMass = settings.ballInvMass || 1.5;
             this.powershot.powershotInvMass = settings.powershotInvMassFactor || 2.0;
         }
 

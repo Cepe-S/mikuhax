@@ -64,6 +64,13 @@ export interface GameRoomSettings {
     nicknameTextFilter: boolean
     chatTextFilter: boolean
 
+    // Ball physics settings
+    ballRadius: number
+    ballColor: string
+    ballBCoeff: number
+    ballInvMass: number
+    ballDamping: number
+
     // Powershot system settings
     powershotEnabled: boolean
     powershotActivationTime: number  // Time in deciseconds (10 = 1 second)

@@ -99,6 +99,12 @@ const roomSettingSchema = Joi.object().keys({
     ,nicknameTextFilter: Joi.boolean().required()
     ,chatTextFilter: Joi.boolean().required()
     
+    ,ballRadius: Joi.number().required()
+    ,ballColor: Joi.string().required()
+    ,ballBCoeff: Joi.number().required()
+    ,ballInvMass: Joi.number().required()
+    ,ballDamping: Joi.number().required()
+    
     ,powershotEnabled: Joi.boolean().required()
     ,powershotActivationTime: Joi.number().required()
     ,powershotNormalColor: Joi.number().required()

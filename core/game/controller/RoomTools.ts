@@ -5,10 +5,19 @@ import { convertTeamID2Name, TeamID } from "../model/GameObject/TeamID";
 
 export function setDefaultStadiums(): void {
     // set stadium maps as default setting
-    if (window.gameRoom.config.rules.statsRecord === true && window.gameRoom.isStatRecord === true) {
-        window.gameRoom._room.setCustomStadium(window.gameRoom.stadiumData.default); // if game mode is 'stats'
-    } else {
-        window.gameRoom._room.setCustomStadium(window.gameRoom.stadiumData.training); // if game mode is 'ready'
+    try {
+        if (window.gameRoom.config.rules.statsRecord === true && window.gameRoom.isStatRecord === true) {
+            window.gameRoom._room.setCustomStadium(window.gameRoom.stadiumData.default); // if game mode is 'stats'
+            window.gameRoom.logger.i('setDefaultStadiums', 'Default stadium loaded successfully');
+        } else {
+            window.gameRoom._room.setCustomStadium(window.gameRoom.stadiumData.training); // if game mode is 'ready'
+            window.gameRoom.logger.i('setDefaultStadiums', 'Training stadium loaded successfully');
+        }
+    } catch (error) {
+        window.gameRoom.logger.e('setDefaultStadiums', `Failed to load stadium: ${error}`);
+        // Fallback to a basic stadium if loading fails
+        window.gameRoom._room.setCustomStadium('{"name":"Basic Stadium","width":420,"height":200,"spawnDistance":180,"bg":{"type":"","width":0,"height":0,"kickOffRadius":80,"cornerRadius":0},"vertexes":[{"x":-420,"y":-200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"x":-420,"y":200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"x":420,"y":200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"x":420,"y":-200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]}],"segments":[{"v0":0,"v1":1,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"v0":1,"v1":2,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"v0":2,"v1":3,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"v0":3,"v1":0,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]}],"goals":[{"p0":[-420,-60],"p1":[-420,60],"team":"red"},{"p0":[420,60],"p1":[420,-60],"team":"blue"}],"discs":[{"radius":6.4,"color":"0","bCoef":0.4,"invMass":1.5,"damping":0.99,"cGroup":["ball","kick","score"]}],"planes":[{"normal":[0,1],"dist":-200,"bCoef":1},{"normal":[0,-1],"dist":-200,"bCoef":1},{"normal":[1,0],"dist":-420,"bCoef":1},{"normal":[-1,0],"dist":-420,"bCoef":1}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"],"cGroup":["ball"]}},"playerPhysics":{"bCoef":0,"acceleration":0.11,"kickingAcceleration":0.083,"kickStrength":5},"ballPhysics":"disc0"}');
+        window.gameRoom.logger.i('setDefaultStadiums', 'Fallback basic stadium loaded');
     }
 }
 

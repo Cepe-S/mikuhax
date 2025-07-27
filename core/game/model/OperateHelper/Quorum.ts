@@ -57,26 +57,36 @@ export function recuritBothTeamFully() {
  * Asigna un jugador al equipo con menos jugadores o aleatoriamente si están balanceados
  */
 export function assignPlayerToBalancedTeam(playerId: number) {
-    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
+    // Verificar que el jugador existe en la lista
+    if (!window.gameRoom.playerList.has(playerId)) {
+        window.gameRoom.logger.w('assignPlayerToBalancedTeam', `Player ${playerId} not found in playerList`);
+        return;
+    }
+    
+    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.has(player.id) && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
     
     const redPlayersCount: number = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
     const bluePlayersCount: number = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue).length;
     
     window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Before assignment - Red: ${redPlayersCount}, Blue: ${bluePlayersCount}, Total players: ${activePlayersList.length}`);
     
-    if (redPlayersCount < bluePlayersCount) {
-        // Equipo rojo tiene menos jugadores
-        window.gameRoom._room.setPlayerTeam(playerId, TeamID.Red);
-        window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned to Red team (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
-    } else if (bluePlayersCount < redPlayersCount) {
-        // Equipo azul tiene menos jugadores
-        window.gameRoom._room.setPlayerTeam(playerId, TeamID.Blue);
-        window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned to Blue team (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
-    } else {
-        // Los equipos están balanceados, asignar aleatoriamente
-        const randomTeam = Math.random() < 0.5 ? TeamID.Red : TeamID.Blue;
-        window.gameRoom._room.setPlayerTeam(playerId, randomTeam);
-        window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned randomly to ${randomTeam === TeamID.Red ? 'Red' : 'Blue'} team (both teams balanced: ${redPlayersCount})`);
+    try {
+        if (redPlayersCount < bluePlayersCount) {
+            // Equipo rojo tiene menos jugadores
+            window.gameRoom._room.setPlayerTeam(playerId, TeamID.Red);
+            window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned to Red team (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
+        } else if (bluePlayersCount < redPlayersCount) {
+            // Equipo azul tiene menos jugadores
+            window.gameRoom._room.setPlayerTeam(playerId, TeamID.Blue);
+            window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned to Blue team (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
+        } else {
+            // Los equipos están balanceados, asignar aleatoriamente
+            const randomTeam = Math.random() < 0.5 ? TeamID.Red : TeamID.Blue;
+            window.gameRoom._room.setPlayerTeam(playerId, randomTeam);
+            window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned randomly to ${randomTeam === TeamID.Red ? 'Red' : 'Blue'} team (both teams balanced: ${redPlayersCount})`);
+        }
+    } catch (error) {
+        window.gameRoom.logger.e('assignPlayerToBalancedTeam', `Failed to assign player ${playerId} to team: ${error}`);
     }
 }
 
