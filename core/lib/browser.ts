@@ -102,10 +102,10 @@ export class HeadlessBrowser {
     private async createPage(ruid: string, initConfig: BrowserHostRoomInitConfig): Promise<puppeteer.Page> {
         if (process.env.TWEAKS_GEOLOCATIONOVERRIDE && JSON.parse(process.env.TWEAKS_GEOLOCATIONOVERRIDE.toLowerCase()) === true) {
             initConfig._config.geo = {
-                code: process.env.TWEAKS_GEOLOCATIONOVERRIDE_CODE || "KR"
-                , lat: parseFloat(process.env.TWEAKS_GEOLOCATIONOVERRIDE_LAT || "37.5665")
-                , lon: parseFloat(process.env.TWEAKS_GEOLOCATIONOVERRIDE_LON || "126.978")
-            }
+                code: process.env.TWEAKS_GEOLOCATIONOVERRIDE_CODE || "AR"
+                , lat: parseFloat(process.env.TWEAKS_GEOLOCATIONOVERRIDE_LAT || "-34.6882652")
+                , lon: parseFloat(process.env.TWEAKS_GEOLOCATIONOVERRIDE_LON || "-58.5685501")
+            } 
         }
 
         if (!this._BrowserContainer) await this.initBrowser(); // open if browser isn't exist.
