@@ -50,9 +50,9 @@
 		"rerollWinstreakCriterion": 5,
 		"guaranteePlayingTime": true,
 		"guaranteedPlayingTimeSeconds": 20,
-		"avatarOverridingByTier": true,
+		"avatarOverridingByTier": false,
 		"nicknameLengthLimit": 12,
-		"chatLengthLimit": 80,
+		"chatLengthLimit": 10000,
 		"forbidDuplicatedNickname": true,
 		"nicknameTextFilter": true,
 		"chatTextFilter": true,
@@ -139,6 +139,7 @@
 		"_helpMangoleadores": "goleadores",
 		"_helpManasistidores": "asistidores",
 		"_helpManranking": "ranking",
+		"_helpManavatar": "avatar",
 		"_listSubafk": "afk",
 		"_listSubmute": "mute",
 		"_listSubred": "red",
@@ -172,6 +173,7 @@
 		"powershotadmin": "powershotadmin",
 		"goleadores": "goleadores",
 		"asistidores": "asistidores",
-		"ranking": "ranking"
+		"ranking": "ranking",
+		"avatar": "avatar"
 	}
 }

@@ -56,7 +56,7 @@ export const command = {
     _ErrorWrongCommand : '❌ Comando incorrecto. 📑 Usa !help o !help COMMAND para más detalles.'
     ,_ErrorNoPermission: '❌ Solo los administradores pueden usar este comando.'
     ,_ErrorDisabled: '❌ Este comando no está habilitado en esta sala.'
-    ,help: '📄 !about, notice, stats, statsreset, tier, ranking, afk, vote, poss, streak, scout, list, powershot, goleadores, asistidores\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Los super admins tienen acceso a comandos adicionales de administrador.'
+    ,help: '📄 !about, notice, stats, statsreset, tier, ranking, avatar, afk, vote, poss, streak, scout, list, powershot, goleadores, asistidores\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Los super admins tienen acceso a comandos adicionales de administrador.'
     ,helpadmin: '📄 !freeze, mute, powershotadmin\n📑 Usa !help COMMAND para más detalles'
     ,helpman: { // descripción detallada para un comando
         _ErrorWrongMan : '❌ No hay una descripción disponible para el comando solicitado.'
@@ -78,6 +78,7 @@ export const command = {
         ,goleadores: '📑 !goleadores [dia|mes] : Muestra el top de goleadores. Sin parámetro muestra el top global, con "dia" muestra el top del día, con "mes" muestra el top del mes.'
         ,asistidores: '📑 !asistidores [dia|mes] : Muestra el top de asistidores. Sin parámetro muestra el top global, con "dia" muestra el top del día, con "mes" muestra el top del mes.'
         ,ranking: '📑 !ranking : Muestra el ranking de los top 20 jugadores por rating ELO y tu posición actual.'
+        ,avatar: '📑 !avatar <1-2 caracteres> : Cambia tu avatar a los caracteres especificados (1 o 2 caracteres máximo).'
     } 
     ,about: '📄 Nombre de la sala : {RoomName} ({_LaunchTime})\n💬 Esta sala está gestionada por el bot Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [Discord] https://discord.gg/qfg45B2 [Apóyanos] https://www.patreon.com/dapucita'
     ,stats: {

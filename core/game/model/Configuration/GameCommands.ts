@@ -20,6 +20,7 @@ export interface GameCommands {
     _helpMangoleadores: string
     _helpManasistidores: string
     _helpManranking: string
+    _helpManavatar: string
 
     _listSubafk: string
     _listSubmute: string
@@ -55,4 +56,5 @@ export interface GameCommands {
     goleadores: string
     asistidores: string
     ranking: string
+    avatar: string
 }
