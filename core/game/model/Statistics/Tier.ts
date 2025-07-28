@@ -60,21 +60,21 @@ export function getAvatarByTier(tier: Tier, playerId?: number): string {
 }
 
 export function getTierName(tier: Tier, playerId?: number): string {
-    if(tier === Tier.TierNew) return "[PLACEMENT]";
-    if(tier === Tier.Tier1) return "[BRONZE]";
-    if(tier === Tier.Tier2) return "[SILVER]";
-    if(tier === Tier.Tier3) return "[GOLD]";
-    if(tier === Tier.Tier4) return "[PLATINUM]";
-    if(tier === Tier.Tier5) return "[EMERALD]";
-    if(tier === Tier.Tier6) return "[DIAMOND]";
-    if(tier === Tier.Tier7) return "[MASTER]";
-    if(tier === Tier.Challenger) return "[CHALLENGER]";
-    
-    if(tier >= Tier.Tier8 && tier <= Tier.Tier27 && playerId) {
+    if (tier === Tier.TierNew)      return "⌈⚪⌋ Placement";
+    if (tier === Tier.Tier1)        return "⌈🟤⌋ Bronce";
+    if (tier === Tier.Tier2)        return "⌈⚪⌋ Plata";
+    if (tier === Tier.Tier3)        return "⌈🟡⌋ Oro";
+    if (tier === Tier.Tier4)        return "【⌈🟦⌋】 Platino";
+    if (tier === Tier.Tier5)        return "【⌈🟩⌋】 Esmeralda";
+    if (tier === Tier.Tier6)        return "【⌈✨💎✨⌋】 Diamante";
+    if (tier === Tier.Tier7)        return "【⌈✨👑✨⌋】 Maestro";
+    if (tier === Tier.Challenger)   return "【⌈✨🚀✨⌋】 Challenger";
+
+    if (tier >= Tier.Tier8 && tier <= Tier.Tier27 && playerId) {
         const rank = getPlayerRank(playerId);
-        return `[TOP ${rank}]`;
+        return `【⌈✨🌸✨⌋】 TOP ${rank}`;
     }
-    
+
     return "[UNKNOWN]";
 }
 

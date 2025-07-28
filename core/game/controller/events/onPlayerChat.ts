@@ -8,17 +8,17 @@ import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { isIncludeBannedWords } from "../TextFilter";
 import { decideTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
 
-function getTierEmoji(tier: Tier): string {
-    if(tier === Tier.TierNew) return '⚪'; // Placement
-    if(tier === Tier.Tier1) return '🥉'; // Bronze
-    if(tier === Tier.Tier2) return '🥈'; // Silver
-    if(tier === Tier.Tier3) return '🥇'; // Gold
-    if(tier === Tier.Tier4) return '💙'; // Platinum
-    if(tier === Tier.Tier5) return '💚'; // Emerald
-    if(tier === Tier.Tier6) return '💎'; // Diamond
-    if(tier === Tier.Tier7) return '🏆'; // Master
-    if(tier === Tier.Challenger) return '🚀'; // Challenger
-    if(tier >= Tier.Tier8 && tier <= Tier.Tier27) return '🔥'; // Top Rankings
+function getTierTitle(tier: Tier): string {
+    if(tier === Tier.TierNew) return '⌈⚪⌋'; // Placement
+    if(tier === Tier.Tier1) return '⌈🟤⌋'; // Bronze
+    if(tier === Tier.Tier2) return '⌈⚪⌋'; // Silver
+    if(tier === Tier.Tier3) return '⌈🟡⌋'; // Gold
+    if(tier === Tier.Tier4) return '【⌈🟦⌋】'; // Platinum
+    if(tier === Tier.Tier5) return '【⌈🟩⌋】'; // Emerald
+    if(tier === Tier.Tier6) return '【⌈✨💎✨⌋】'; // Diamond
+    if(tier === Tier.Tier7) return '【⌈✨👑✨⌋】'; // Master
+    if(tier === Tier.Challenger) return '【⌈✨🚀✨⌋】'; // Challenger
+    if(tier >= Tier.Tier8 && tier <= Tier.Tier27) return '【⌈✨🌸✨⌋】'; // Top Rankings
     return '❓'; // Unknown
 }
 
@@ -118,12 +118,16 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                 const teamEmoji = player.team === TeamID.Red ? '🔴' : player.team === TeamID.Blue ? '🔵' : '⚪';
                 
                 const playerTier = decideTier(playerData.stats.rating, player.id);
-                const tierEmoji = getTierEmoji(playerTier);
+                const tierEmoji = getTierTitle(playerTier);
                 const adminIndicator = player.admin ? '⭐' : '';
                 const superAdminIndicator = playerData.permissions.superadmin ? '👑' : '';
                 
-                const customMessage = `${tierEmoji} ${playerData.stats.rating} ➤ 🆔${player.id} » ${teamEmoji} ~ ${superAdminIndicator}${adminIndicator}${player.name}: ${message}`;
-                window.gameRoom._room.sendAnnouncement(customMessage, null, 0xFFFFFF, "normal", 0);
+                const customMessage = `${tierEmoji} elo.${playerData.stats.rating} 🆔:${player.id} » ${teamEmoji} ~ ${superAdminIndicator}${adminIndicator}${player.name}: ${message}`;
+                let msgColor = 0xFFFFFF; // default white
+                if (player.team === TeamID.Red) msgColor = 0xFF3333; // rojo
+                else if (player.team === TeamID.Blue) msgColor = 0x3399FF; // azul
+                else if (player.team === TeamID.Spec) msgColor = 0x222222; // gris oscuro
+                window.gameRoom._room.sendAnnouncement(customMessage, null, msgColor, "normal", 0);
                 return false; // Bloquear el mensaje original
             }
         }

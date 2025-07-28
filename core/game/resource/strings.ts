@@ -161,7 +161,17 @@ export const command = {
         ,voteStatus : '🗳️ Actualmente hay una votación de expulsión para {targetName}#{targetID}.'
         ,voteAutoNotify: '🗳️ Actualmente está en curso una votación de expulsión: {voteList}'
     }
-    ,tier: '📄 Sistema de Tiers Competitivo - Basado en tu rating ELO\n📑 [PLACEMENT] Partidas de colocación ({placementMatches} partidas)\n📑 [BRONZE] < {tierCutoff1} pts | [SILVER] {tierCutoff1}-{tierCutoff2} pts\n📑 [GOLD] {tierCutoff2}-{tierCutoff3} pts | [PLATINUM] {tierCutoff3}-{tierCutoff4} pts\n📑 [EMERALD] {tierCutoff4}-{tierCutoff5} pts | [DIAMOND] {tierCutoff5}-{tierCutoff6} pts\n📑 [MASTER] {tierCutoff6}+ pts | [CHALLENGER] & [TOP 1-20] Rankings especiales\n📊 Los tiers se muestran en colores distintivos. Usa !stats para ver tu tier actual'
+    ,tier: '📄 Sistema de Tiers Competitivo - Basado en tu rating ELO\n' +
+           '📑 ⌈⚪⌋ Placement: ({placementMatches} partidas)\n' +
+           '📑 ⌈🟤⌋ Bronce: < {tierCutoff1} pts\n' +
+           '📑 ⌈⚪⌋ Plata: {tierCutoff1}-{tierCutoff2} pts\n' +
+           '📑 ⌈🟡⌋ Oro: {tierCutoff2}-{tierCutoff3} pts\n' +
+           '📑 【⌈🟦⌋】 Platino: {tierCutoff3}-{tierCutoff4} pts\n' +
+           '📑 【⌈🟩⌋】 Esmeralda: {tierCutoff4}-{tierCutoff5} pts\n' +
+           '📑 【⌈✨💎✨⌋】 Diamante: {tierCutoff5}-{tierCutoff6} pts\n' +
+           '📑 【⌈✨👑✨⌋】 Maestro: {tierCutoff6}+ pts\n' +
+           '📑 【⌈✨🚀✨⌋】 Challenger & 【⌈✨🌸✨⌋】 Top 1-20: Rankings especiales\n' +
+           '📊 Los tiers se muestran en colores distintivos. Usa !stats para ver tu tier actual'
     ,notice: {
         _ErrorNoMessage: '❌ No hay avisos disponibles actualmente.'
     }
