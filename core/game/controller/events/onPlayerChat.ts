@@ -108,7 +108,7 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                 const adminIndicator = player.admin ? '⭐' : '';
                 const superAdminIndicator = playerData.permissions.superadmin ? '👑' : '';
                 
-                const customMessage = `${tierEmoji} 🆔:${player.id} » ${teamEmoji} ~ ${superAdminIndicator}${adminIndicator}${player.name}: ${message}`;
+                const customMessage = `${tierEmoji} « 🆔:${player.id} » ${teamEmoji} ~ ${superAdminIndicator}${adminIndicator}${player.name}: ${message}`;
                 let msgColor = 0xFFFFFF; // default white
                 if (player.team === TeamID.Red) msgColor = 0xFF3333; // rojo
                 else if (player.team === TeamID.Blue) msgColor = 0x3399FF; // azul

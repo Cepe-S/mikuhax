@@ -53,9 +53,7 @@ export function cmdStats(byPlayer: PlayerObject, message?: string): void {
                 let resultMsg: string = (isOnMatchNow(targetStatsID))
                     ? Tst.maketext(LangRes.command.stats.statsMsg + '\n' + LangRes.command.stats.matchAnalysis, placeholder)
                     : Tst.maketext(LangRes.command.stats.statsMsg, placeholder)
-                const targetTier = decideTier(window.gameRoom.playerList.get(targetStatsID)!.stats.rating, targetStatsID);
-                const targetTierColor = getTierColor(targetTier);
-                window.gameRoom._room.sendAnnouncement(resultMsg, byPlayer.id, targetTierColor, "normal", 1);
+                window.gameRoom._room.sendAnnouncement(resultMsg, byPlayer.id, 0x00AA00, "normal", 1);
             } else {
                 window.gameRoom._room.sendAnnouncement(LangRes.command.stats._ErrorNoPlayer, byPlayer.id, 0xFF7777, "normal", 2);
             }
@@ -98,8 +96,6 @@ export function cmdStats(byPlayer: PlayerObject, message?: string): void {
             ? Tst.maketext(LangRes.command.stats.statsMsg + '\n' + LangRes.command.stats.matchAnalysis, placeholder)
             : Tst.maketext(LangRes.command.stats.statsMsg, placeholder)
 
-        const playerTier = decideTier(window.gameRoom.playerList.get(byPlayer.id)!.stats.rating, byPlayer.id);
-        const playerTierColor = getTierColor(playerTier);
-        window.gameRoom._room.sendAnnouncement(resultMsg, byPlayer.id, playerTierColor, "normal", 1);
+        window.gameRoom._room.sendAnnouncement(resultMsg, byPlayer.id, 0x00AA00, "normal", 1);
     }
 }

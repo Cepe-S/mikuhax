@@ -78,7 +78,7 @@ makeRoom();
 // set scheduling timers
 
 var scheduledTimer60 = setInterval(() => {
-    window.gameRoom._room.sendAnnouncement(LangRes.scheduler.advertise, null, 0x777777, "normal", 0); // advertisement
+    window.gameRoom._room.sendAnnouncement(LangRes.scheduler.advertise, null, 0x7289DA, "normal", 0); // advertisement
 
     refreshBanVoteCache(); // update banvote status cache
     if (window.gameRoom.banVoteCache.length >= 1) { // if there are some votes (include top voted players only)

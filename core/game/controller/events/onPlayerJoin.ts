@@ -208,15 +208,95 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         window.gameRoom._room.setPlayerAvatar(player.id, getAvatarByTier(playerTierForAvatar, player.id));
     }
 
-    // send welcome message to new player. other players cannot read this message.
+    // send welcome message to new player with delays
     const playerData = window.gameRoom.playerList.get(player.id)!;
     const playerTier = decideTier(playerData.stats.rating, player.id);
     const tierName = getTierName(playerTier, player.id);
     const tierColor = getTierColor(playerTier);
     const adminIndicator = player.admin ? '⭐' : '';
     const superAdminIndicator = playerData.permissions.superadmin ? '👑' : '';
-    const welcomeMessage = `📢 ¡Bienvenido ${superAdminIndicator}${adminIndicator}${player.name}#${player.id}! ${tierName} 📄 Usa !help para ver los comandos de ayuda.`;
-    window.gameRoom._room.sendAnnouncement(welcomeMessage, player.id, tierColor, "normal", 0);
+    
+    // Select random ASCII banner from strings and send immediately
+    const randomIndex = Math.floor(Math.random() * LangRes.welcomeSystem.asciiWelcomeBanners.length);
+    const asciiWelcome = LangRes.welcomeSystem.asciiWelcomeBanners[randomIndex];
+    window.gameRoom._room.sendAnnouncement(asciiWelcome, player.id, 0x00FFFF, "normal", 0);
+    
+    // Player stats calculations
+    const winRate = playerData.stats.totals > 0 ? Math.round((playerData.stats.wins / playerData.stats.totals) * 100) : 0;
+    const goalsPerGame = playerData.stats.totals > 0 ? (playerData.stats.goals / playerData.stats.totals).toFixed(1) : '0.0';
+    const assistsPerGame = playerData.stats.totals > 0 ? (playerData.stats.assists / playerData.stats.totals).toFixed(1) : '0.0';
+    
+    // Motivational message based on tier
+    let motivationalMsg = '';
+    switch(playerTier) {
+        case Tier.TierNew:
+            const remainingMatches = window.gameRoom.config.HElo.factor.placement_match_chances - playerData.stats.totals;
+            motivationalMsg = LangRes.welcomeSystem.motivationalMessages.tierNew.replace('{remainingMatches}', remainingMatches.toString());
+            break;
+        case Tier.Tier1:
+            motivationalMsg = LangRes.welcomeSystem.motivationalMessages.tier1;
+            break;
+        case Tier.Tier2:
+            motivationalMsg = LangRes.welcomeSystem.motivationalMessages.tier2;
+            break;
+        case Tier.Tier3:
+            motivationalMsg = LangRes.welcomeSystem.motivationalMessages.tier3;
+            break;
+        case Tier.Tier4:
+            motivationalMsg = LangRes.welcomeSystem.motivationalMessages.tier4;
+            break;
+        case Tier.Tier5:
+            motivationalMsg = LangRes.welcomeSystem.motivationalMessages.tier5;
+            break;
+        case Tier.Tier6:
+            motivationalMsg = LangRes.welcomeSystem.motivationalMessages.tier6;
+            break;
+        case Tier.Tier7:
+            motivationalMsg = LangRes.welcomeSystem.motivationalMessages.tier7;
+            break;
+        case Tier.Challenger:
+            motivationalMsg = LangRes.welcomeSystem.motivationalMessages.challenger;
+            break;
+        default:
+            if(playerTier >= Tier.Tier8 && playerTier <= Tier.Tier27) {
+                const rank = playerTier - Tier.Tier8 + 1;
+                motivationalMsg = LangRes.welcomeSystem.motivationalMessages.topRanked.replace('{rank}', rank.toString());
+            } else {
+                motivationalMsg = LangRes.welcomeSystem.motivationalMessages.default;
+            }
+    }
+    
+    // Send welcome messages with delays
+    
+    setTimeout(() => {
+        const welcomeMsg = `🎉 ¡Bienvenido ${player.name}! Prepárate para la acción ⚽`;
+        window.gameRoom._room.sendAnnouncement(welcomeMsg, player.id, 0x00FF88, "bold", 0);
+    }, 1000);
+    
+    setTimeout(() => {
+        const playerInfo = `👤 ${superAdminIndicator}${adminIndicator}${player.name}#${player.id} | ${tierName} | ELO: ${playerData.stats.rating}`;
+        const statsHeader = `📊 Estas son tus estadísticas actuales: ${playerInfo}`;
+        window.gameRoom._room.sendAnnouncement(statsHeader, player.id, tierColor, "bold", 0);
+    }, 2000);
+    
+    setTimeout(() => {
+        const statsInfo = `⚽ Partidos: ${playerData.stats.totals} | Victorias: ${playerData.stats.wins} (${winRate}%) | Goles: ${playerData.stats.goals} (${goalsPerGame}/partido) | Asistencias: ${playerData.stats.assists} (${assistsPerGame}/partido)`;
+        window.gameRoom._room.sendAnnouncement(statsInfo, player.id, 0x00AA00, "normal", 0);
+    }, 4000);
+    
+    setTimeout(() => {
+        window.gameRoom._room.sendAnnouncement(motivationalMsg, player.id, 0xFF69B4, "normal", 0);
+    }, 5000);
+    
+    setTimeout(() => {
+        const commandsInfo = `🎮 Comandos esenciales: !help !stats !ranking !afk !discord`;
+        window.gameRoom._room.sendAnnouncement(commandsInfo, player.id, 0x00BFFF, "normal", 0);
+    }, 9000);
+    
+    setTimeout(() => {
+        const discordInfo = `💬 ¡Únete a nuestra comunidad en Discord! Conoce otros jugadores, participa en torneos y mantente al día con las novedades: https://discord.gg/qfg45B2`;
+        window.gameRoom._room.sendAnnouncement(discordInfo, player.id, 0x7289DA, "normal", 0);
+    }, 13000);
 
     // send notice
     if(window.gameRoom.notice !== '') {
