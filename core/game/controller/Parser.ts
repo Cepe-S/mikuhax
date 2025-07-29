@@ -21,6 +21,7 @@ import { cmdGoleadores } from "./commands/goleadores";
 import { cmdAsistidores } from "./commands/asistidores";
 import { cmdRanking } from "./commands/ranking";
 import { cmdAvatar } from "./commands/avatar";
+import { cmdMap } from "./commands/map";
 
 // Check if given string is a command chat. Returns true if it is, false otherwise.
 export function isCommandString(message: string): boolean {
@@ -164,6 +165,14 @@ export function parseCommand(byPlayer: PlayerObject, message: string): void {
         }
         case window.gameRoom.config.commands.avatar: {
             cmdAvatar(byPlayer, message);
+            break;
+        }
+        case window.gameRoom.config.commands.map: {
+            if(msgChunk[1] !== undefined) {
+                cmdMap(byPlayer, msgChunk[1]);
+            } else {
+                cmdMap(byPlayer);
+            }
             break;
         }
         default: {

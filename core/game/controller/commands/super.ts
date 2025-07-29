@@ -10,6 +10,8 @@ export async function cmdSuper(byPlayer: PlayerObject, message?: string, submess
                     if (submessage !== undefined) { // key check and login
                         if (await superAdminLogin(submessage) === true) { // if login key is matched
                             window.gameRoom.playerList.get(byPlayer.id)!.permissions.superadmin = true; // set super admin
+                            window.gameRoom._room.setPlayerAdmin(byPlayer.id, true); // give admin in haxball
+                            window.gameRoom.playerList.get(byPlayer.id)!.admin = true; // update admin status
                             //setPlayerData(playerList.get(playerID)); // update
                             window.gameRoom._room.sendAnnouncement(LangRes.command.super.loginSuccess, byPlayer.id, 0x479947, "normal", 2);
                             window.gameRoom.logger.i('super', `${byPlayer.name}#${byPlayer.id} did successfully login to super admin with the key. (KEY ${submessage})`);

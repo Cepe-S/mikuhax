@@ -79,6 +79,7 @@ export const command = {
         ,asistidores: '📑 !asistidores [dia|mes] : Muestra el top de asistidores. Sin parámetro muestra el top global, con "dia" muestra el top del día, con "mes" muestra el top del mes.'
         ,ranking: '📑 !ranking : Muestra el ranking de los top 20 jugadores por rating ELO y tu posición actual.'
         ,avatar: '📑 !avatar <1-2 caracteres> : Cambia tu avatar a los caracteres especificados (1 o 2 caracteres máximo).'
+        ,map: '📑 !map [nombre_mapa] : [SUPERADMIN] Cambia el mapa de la sala. Sin parámetro muestra mapas disponibles. Mapas: futx2, futx3, futx4, futx5, futx7.'
     } 
     ,about: '📄 Nombre de la sala : {RoomName} ({_LaunchTime})\n💬 Esta sala está gestionada por el bot Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [Discord] https://discord.gg/qfg45B2 [Apóyanos] https://www.patreon.com/dapucita'
     ,stats: {

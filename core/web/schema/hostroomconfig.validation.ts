@@ -137,6 +137,7 @@ const commandsSchema = Joi.object().keys({
     _helpManasistidores: Joi.string().required(),
     _helpManranking: Joi.string().required(),
     _helpManavatar: Joi.string().required(),
+    _helpManmap: Joi.string().required(),
 
     _listSubafk: Joi.string().required(),
     _listSubmute: Joi.string().required(),
@@ -173,6 +174,7 @@ const commandsSchema = Joi.object().keys({
     asistidores: Joi.string().required(),
     ranking: Joi.string().required(),
     avatar: Joi.string().required(),
+    map: Joi.string().required(),
 });
 
 const configHEloSchema = Joi.object().keys({

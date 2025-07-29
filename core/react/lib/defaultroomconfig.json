@@ -83,7 +83,8 @@
 		"autoOperating": true,
 		"statsRecord": true,
 		"defaultMapName": "futx4",
-		"readyMapName": "futx2"
+		"readyMapName": "futx2",
+		"customJSONOptions": ""
 	},
 	"helo": {
 		"factor": {
@@ -140,6 +141,7 @@
 		"_helpManasistidores": "asistidores",
 		"_helpManranking": "ranking",
 		"_helpManavatar": "avatar",
+		"_helpManmap": "map",
 		"_listSubafk": "afk",
 		"_listSubmute": "mute",
 		"_listSubred": "red",
@@ -174,6 +176,7 @@
 		"goleadores": "goleadores",
 		"asistidores": "asistidores",
 		"ranking": "ranking",
-		"avatar": "avatar"
+		"avatar": "avatar",
+		"map": "map"
 	}
 }
