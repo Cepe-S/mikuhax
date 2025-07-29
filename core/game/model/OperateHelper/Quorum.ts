@@ -20,98 +20,190 @@ export function fetchActiveSpecPlayers(): PlayerObject[] {
     return window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false && player.team === TeamID.Spec);
 }
 
-export function recuritByOne() {
+function recruitPlayers() {
     const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
     const activeSpecPlayersList: PlayerObject[] = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Spec);
 
-    const redInsufficiency: number = window.gameRoom.config.rules.requisite.eachTeamPlayers - activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
-    const blueInsufficiency: number = window.gameRoom.config.rules.requisite.eachTeamPlayers - activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue).length;
+    const redCount = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
+    const blueCount = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue).length;
+    const requiredPerTeam = window.gameRoom.config.rules.requisite.eachTeamPlayers;
 
-    if(redInsufficiency >= blueInsufficiency && redInsufficiency > 0) {
-        window.gameRoom._room.setPlayerTeam(activeSpecPlayersList[0].id, TeamID.Red);
+    const redNeeded = Math.max(0, requiredPerTeam - redCount);
+    const blueNeeded = Math.max(0, requiredPerTeam - blueCount);
+
+    let specIndex = 0;
+    for(let i = 0; i < redNeeded && specIndex < activeSpecPlayersList.length; i++) {
+        window.gameRoom._room.setPlayerTeam(activeSpecPlayersList[specIndex++].id, TeamID.Red);
     }
-    if(redInsufficiency < blueInsufficiency && blueInsufficiency > 0) {
-        window.gameRoom._room.setPlayerTeam(activeSpecPlayersList[0].id, TeamID.Blue);
+    for(let i = 0; i < blueNeeded && specIndex < activeSpecPlayersList.length; i++) {
+        window.gameRoom._room.setPlayerTeam(activeSpecPlayersList[specIndex++].id, TeamID.Blue);
+    }
+}
+
+export function assignPlayerToBalancedTeam(playerId: number) {
+    if (!window.gameRoom.playerList.has(playerId)) return;
+    
+    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.has(player.id) && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
+    
+    const redCount = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
+    const blueCount = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue).length;
+    
+    const targetTeam = redCount < blueCount ? TeamID.Red : 
+                     blueCount < redCount ? TeamID.Blue : 
+                     Math.random() < 0.5 ? TeamID.Red : TeamID.Blue;
+    
+    window.gameRoom._room.setPlayerTeam(playerId, targetTeam);
+}
+
+export function shuffleTeamsByElo() {
+    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList()
+        .filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.has(player.id) && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
+    
+    if (activePlayersList.length < 2) return;
+    
+    const sortedPlayers = activePlayersList.sort((a, b) => 
+        window.gameRoom.playerList.get(b.id)!.stats.rating - window.gameRoom.playerList.get(a.id)!.stats.rating
+    );
+    
+    sortedPlayers.forEach(player => window.gameRoom._room.setPlayerTeam(player.id, TeamID.Spec));
+    
+    setTimeout(() => {
+        sortedPlayers.forEach((player, index) => {
+            const team = index % 2 === 0 ? TeamID.Red : TeamID.Blue;
+            window.gameRoom._room.setPlayerTeam(player.id, team);
+        });
+    }, 100);
+}
+
+export function balanceTeams() {
+    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.has(player.id) && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
+    
+    const redPlayers = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red);
+    const bluePlayers = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue);
+    const specPlayers = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Spec);
+    
+    const redCount = redPlayers.length;
+    const blueCount = bluePlayers.length;
+    const teamDifference = Math.abs(redCount - blueCount);
+    
+    if (teamDifference <= 1) return; // Solo balancear si hay diferencia de más de 1
+    
+    if (specPlayers.length > 0) {
+        // Mover espectador al equipo con menos jugadores
+        const targetTeam = redCount < blueCount ? TeamID.Red : TeamID.Blue;
+        window.gameRoom._room.setPlayerTeam(specPlayers[0].id, targetTeam);
+        window.gameRoom.logger.i('balanceTeams', `Moved spectator ${specPlayers[0].name} to ${targetTeam === TeamID.Red ? 'Red' : 'Blue'} team`);
+    } else {
+        // Mover jugador entre equipos solo si la diferencia es significativa
+        if (redCount > blueCount + 1) {
+            const playerToMove = redPlayers[Math.floor(Math.random() * redPlayers.length)];
+            window.gameRoom._room.setPlayerTeam(playerToMove.id, TeamID.Blue);
+            window.gameRoom.logger.i('balanceTeams', `Moved ${playerToMove.name} from Red to Blue team`);
+        } else if (blueCount > redCount + 1) {
+            const playerToMove = bluePlayers[Math.floor(Math.random() * bluePlayers.length)];
+            window.gameRoom._room.setPlayerTeam(playerToMove.id, TeamID.Red);
+            window.gameRoom.logger.i('balanceTeams', `Moved ${playerToMove.name} from Blue to Red team`);
+        }
+    }
+}
+
+/**
+ * Obtiene información de ELO de los equipos para mostrar
+ */
+export function getTeamsEloInfo(): { redElo: number, blueElo: number, redCount: number, blueCount: number } {
+    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList()
+        .filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.has(player.id) && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
+    
+    const redPlayers = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red);
+    const bluePlayers = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue);
+    
+    const redElo = redPlayers.reduce((total, player) => total + window.gameRoom.playerList.get(player.id)!.stats.rating, 0);
+    const blueElo = bluePlayers.reduce((total, player) => total + window.gameRoom.playerList.get(player.id)!.stats.rating, 0);
+    
+    return {
+        redElo,
+        blueElo,
+        redCount: redPlayers.length,
+        blueCount: bluePlayers.length
+    };
+}
+
+export function recuritByOne() {
+    const activeSpecPlayersList: PlayerObject[] = fetchActiveSpecPlayers();
+    if (activeSpecPlayersList.length > 0) {
+        assignPlayerToBalancedTeam(activeSpecPlayersList[0].id);
     }
 }
 
 export function recuritBothTeamFully() {
-    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
-    let activeSpecPlayersList: PlayerObject[] = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Spec);
+    recruitPlayers();
+}
 
-    const redInsufficiency: number = window.gameRoom.config.rules.requisite.eachTeamPlayers - activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
-    const blueInsufficiency: number = window.gameRoom.config.rules.requisite.eachTeamPlayers - activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue).length;
+export function balanceTeamsAfterLeave() {
+    setTimeout(() => {
+        smartTeamBalance();
+    }, 500); // Usar la nueva función de balanceo inteligente
+}
 
-    for(let i=0; i < redInsufficiency && i < activeSpecPlayersList.length; i++) {
-        window.gameRoom._room.setPlayerTeam(activeSpecPlayersList[i].id, TeamID.Red);
-    }
-
-    activeSpecPlayersList = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false && player.team === TeamID.Spec);
-
-    for(let i=0; i < blueInsufficiency && i < activeSpecPlayersList.length; i++) {
-        window.gameRoom._room.setPlayerTeam(activeSpecPlayersList[i].id, TeamID.Blue);
-    }
+export function forceTeamBalance() {
+    balanceTeams();
 }
 
 /**
- * Asigna un jugador al equipo con menos jugadores o aleatoriamente si están balanceados
+ * Función mejorada para balancear equipos después de eventos de desconexión
+ * Incluye verificaciones adicionales y logging detallado
  */
-export function assignPlayerToBalancedTeam(playerId: number) {
-    // Verificar que el jugador existe en la lista
-    if (!window.gameRoom.playerList.has(playerId)) {
-        window.gameRoom.logger.w('assignPlayerToBalancedTeam', `Player ${playerId} not found in playerList`);
+export function smartTeamBalance() {
+    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList()
+        .filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.has(player.id) && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
+    
+    const redPlayers = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red);
+    const bluePlayers = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue);
+    const specPlayers = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Spec);
+    
+    const redCount = redPlayers.length;
+    const blueCount = bluePlayers.length;
+    const teamDifference = Math.abs(redCount - blueCount);
+    
+    window.gameRoom.logger.i('smartTeamBalance', `Current teams - Red: ${redCount}, Blue: ${blueCount}, Spec: ${specPlayers.length}, Difference: ${teamDifference}`);
+    
+    if (teamDifference <= 1) {
+        window.gameRoom.logger.i('smartTeamBalance', 'Teams are balanced, no action needed');
         return;
     }
     
-    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.has(player.id) && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
-    
-    const redPlayersCount: number = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
-    const bluePlayersCount: number = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue).length;
-    
-    window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Before assignment - Red: ${redPlayersCount}, Blue: ${bluePlayersCount}, Total players: ${activePlayersList.length}`);
-    
-    try {
-        if (redPlayersCount < bluePlayersCount) {
-            // Equipo rojo tiene menos jugadores
-            window.gameRoom._room.setPlayerTeam(playerId, TeamID.Red);
-            window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned to Red team (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
-        } else if (bluePlayersCount < redPlayersCount) {
-            // Equipo azul tiene menos jugadores
-            window.gameRoom._room.setPlayerTeam(playerId, TeamID.Blue);
-            window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned to Blue team (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
-        } else {
-            // Los equipos están balanceados, asignar aleatoriamente
-            const randomTeam = Math.random() < 0.5 ? TeamID.Red : TeamID.Blue;
-            window.gameRoom._room.setPlayerTeam(playerId, randomTeam);
-            window.gameRoom.logger.i('assignPlayerToBalancedTeam', `Player ${playerId} assigned randomly to ${randomTeam === TeamID.Red ? 'Red' : 'Blue'} team (both teams balanced: ${redPlayersCount})`);
-        }
-    } catch (error) {
-        window.gameRoom.logger.e('assignPlayerToBalancedTeam', `Failed to assign player ${playerId} to team: ${error}`);
-    }
-}
-
-/**
- * Balancea los equipos después de que un jugador salga
- */
-export function balanceTeamsAfterLeave() {
-    const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
-    const activeSpecPlayersList: PlayerObject[] = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Spec);
-    
-    const redPlayersCount: number = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
-    const bluePlayersCount: number = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue).length;
-    
-    const teamDifference = Math.abs(redPlayersCount - bluePlayersCount);
-    
-    // Solo balancear si hay una diferencia de más de 1 jugador y hay espectadores disponibles
-    if (teamDifference > 1 && activeSpecPlayersList.length > 0) {
-        if (redPlayersCount > bluePlayersCount) {
-            // Mover un espectador al equipo azul
-            window.gameRoom._room.setPlayerTeam(activeSpecPlayersList[0].id, TeamID.Blue);
-            window.gameRoom.logger.i('balanceTeamsAfterLeave', `Moved player ${activeSpecPlayersList[0].id} to Blue team to balance (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
-        } else if (bluePlayersCount > redPlayersCount) {
-            // Mover un espectador al equipo rojo
-            window.gameRoom._room.setPlayerTeam(activeSpecPlayersList[0].id, TeamID.Red);
-            window.gameRoom.logger.i('balanceTeamsAfterLeave', `Moved player ${activeSpecPlayersList[0].id} to Red team to balance (Red: ${redPlayersCount}, Blue: ${bluePlayersCount})`);
+    // Intentar balancear con espectadores primero
+    if (specPlayers.length > 0) {
+        const targetTeam = redCount < blueCount ? TeamID.Red : TeamID.Blue;
+        const playerToMove = specPlayers[0];
+        window.gameRoom._room.setPlayerTeam(playerToMove.id, targetTeam);
+        window.gameRoom.logger.i('smartTeamBalance', `Moved spectator ${playerToMove.name}#${playerToMove.id} to ${targetTeam === TeamID.Red ? 'Red' : 'Blue'} team`);
+        
+        // Anunciar el balanceo
+        window.gameRoom._room.sendAnnouncement(
+            `⚖️ Se han balanceado los equipos automáticamente ⚖️`,
+            null, 0x00FFFF, "normal", 1
+        );
+    } else if (teamDifference > 1) {
+        // Mover jugador entre equipos activos solo si la diferencia es mayor a 1
+        if (redCount > blueCount + 1) {
+            const playerToMove = redPlayers[Math.floor(Math.random() * redPlayers.length)];
+            window.gameRoom._room.setPlayerTeam(playerToMove.id, TeamID.Blue);
+            window.gameRoom.logger.i('smartTeamBalance', `Moved ${playerToMove.name}#${playerToMove.id} from Red to Blue team`);
+            
+            window.gameRoom._room.sendAnnouncement(
+                `⚖️ Se han balanceado los equipos automáticamente ⚖️`,
+                null, 0x00FFFF, "normal", 1
+            );
+        } else if (blueCount > redCount + 1) {
+            const playerToMove = bluePlayers[Math.floor(Math.random() * bluePlayers.length)];
+            window.gameRoom._room.setPlayerTeam(playerToMove.id, TeamID.Red);
+            window.gameRoom.logger.i('smartTeamBalance', `Moved ${playerToMove.name}#${playerToMove.id} from Blue to Red team`);
+            
+            window.gameRoom._room.sendAnnouncement(
+                `⚖️ Se han balanceado los equipos automáticamente ⚖️`,
+                null, 0x00FFFF, "normal", 1
+            );
         }
     }
 }

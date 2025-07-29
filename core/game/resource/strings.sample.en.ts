@@ -142,7 +142,7 @@ export const command = {
     }
     ,scout: {
         _ErrorNoMode : '❌ There are not enough players for calculating winning expectation.'
-        ,scouting: '📊 Pythagorean Expectation : Red {teamExpectationRed}%, Blue {teamExpectationBlue}%, Spec {teamExpectationSpec}%.'
+        ,scouting: '📊 ELO-based team analysis - Use !scout for detailed information.'
     }
     ,vote: {
         _ErrorNoPlayer: '❌ ❌ Wrong player ID. You can only target numeric ID. (eg: !vote #12)'
@@ -200,7 +200,7 @@ export const onTeamChange = {
 export const onStart = {
     startRecord: '📊 Enough players has joined, so the game\'s result will be recorded from now.'
     ,stopRecord: '📊 Need more players. The game\'s result will not be recorded from now. (needs {gameRuleNeedMin} players at least)'
-    ,expectedWinRate: '📊 The red team \'s expectation is {teamExpectationRed}%, and the blue\'s is {teamExpectationBlue}%. (Pythagorean Expectation)'
+    ,expectedWinRate: '📊 Team information displayed at match start.'
 }
 
 export const onStop = {

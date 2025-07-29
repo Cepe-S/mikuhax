@@ -142,6 +142,7 @@
 		"_helpManranking": "ranking",
 		"_helpManavatar": "avatar",
 		"_helpManmap": "map",
+		"_helpManbalance": "balance",
 		"_listSubafk": "afk",
 		"_listSubmute": "mute",
 		"_listSubred": "red",
@@ -177,6 +178,7 @@
 		"asistidores": "asistidores",
 		"ranking": "ranking",
 		"avatar": "avatar",
-		"map": "map"
+		"map": "map",
+		"balance": "balance"
 	}
 }

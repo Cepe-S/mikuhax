@@ -22,6 +22,7 @@ export interface GameCommands {
     _helpManranking: string
     _helpManavatar: string
     _helpManmap: string
+    _helpManbalance: string
 
     _listSubafk: string
     _listSubmute: string
@@ -59,4 +60,5 @@ export interface GameCommands {
     ranking: string
     avatar: string
     map: string
+    balance: string
 }

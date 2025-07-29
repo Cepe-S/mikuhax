@@ -57,7 +57,7 @@ export const command = {
     ,_ErrorNoPermission: '❌ Solo los administradores pueden usar este comando.'
     ,_ErrorDisabled: '❌ Este comando no está habilitado en esta sala.'
     ,help: '📄 !about, notice, stats, statsreset, tier, ranking, avatar, afk, vote, poss, streak, scout, list, powershot, goleadores, asistidores\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Los super admins tienen acceso a comandos adicionales de administrador.'
-    ,helpadmin: '📄 !freeze, mute, powershotadmin\n📑 Usa !help COMMAND para más detalles'
+    ,helpadmin: '📄 !freeze, mute, powershotadmin, balance\n📑 Usa !help COMMAND para más detalles'
     ,helpman: { // descripción detallada para un comando
         _ErrorWrongMan : '❌ No hay una descripción disponible para el comando solicitado.'
         ,help: '📑 !help COMMAND : Muestra detalles sobre el comando COMMAND.'
@@ -80,6 +80,7 @@ export const command = {
         ,ranking: '📑 !ranking : Muestra el ranking de los top 20 jugadores por rating ELO y tu posición actual.'
         ,avatar: '📑 !avatar <1-2 caracteres> : Cambia tu avatar a los caracteres especificados (1 o 2 caracteres máximo).'
         ,map: '📑 !map [nombre_mapa] : [SUPERADMIN] Cambia el mapa de la sala. Sin parámetro muestra mapas disponibles. Mapas: futx2, futx3, futx4, futx5, futx7.'
+        ,balance: '📑 !balance : [ADMIN] Fuerza el balanceo inmediato de equipos. Muestra el estado actual y balancea si es necesario.'
     } 
     ,about: '📄 Nombre de la sala : {RoomName} ({_LaunchTime})\n💬 Esta sala está gestionada por el bot Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [Discord] https://discord.gg/qfg45B2 [Apóyanos] https://www.patreon.com/dapucita'
     ,stats: {
@@ -150,7 +151,7 @@ export const command = {
     }
     ,scout: {
         _ErrorNoMode : '❌ No hay suficientes jugadores para calcular las probabilidades de victoria.'
-        ,scouting: '📊 Probabilidad de victoria Pythagorean: Equipo Red {teamExpectationRed}%, Equipo Blue {teamExpectationBlue}%, Espectadores {teamExpectationSpec}%.'
+        ,scouting: '📊 Análisis de equipos basado en ELO - Usa !scout para ver información detallada.'
     }
     ,vote: {
         _ErrorNoPlayer: '❌ No estás conectado. Debes especificar en el formato #ID (ej: !vote #12)'
@@ -218,7 +219,7 @@ export const onTeamChange = {
 export const onStart = {
     startRecord: '📊 Se ha reunido suficiente gente. A partir de ahora, los registros se guardarán.'
     ,stopRecord: '📊 Se necesitan al menos {gameRuleNeedMin} jugadores. Actualmente, no se están registrando estadísticas.'
-    ,expectedWinRate: '📊 La tasa de ganancia esperada para el equipo rojo es {teamExpectationRed}%, y para el equipo azul es {teamExpectationBlue}%. (No es una comparación entre ambos equipos)'
+    ,expectedWinRate: '📊 Información de equipos mostrada al inicio del partido.'
 }
 
 export const onStop = {

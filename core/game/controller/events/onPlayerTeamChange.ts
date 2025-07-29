@@ -2,6 +2,7 @@ import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
+import { balanceTeamsAfterLeave, smartTeamBalance } from "../../model/OperateHelper/Quorum";
 
 export function onPlayerTeamChangeListener(changedPlayer: PlayerObject, byPlayer: PlayerObject): void {
     // Event called when a player team is changed.
@@ -38,6 +39,14 @@ export function onPlayerTeamChangeListener(changedPlayer: PlayerObject, byPlayer
 
         window.gameRoom.playerList.get(changedPlayer.id)!.team = changedPlayer.team;
         window.gameRoom.logger.i('onPlayerTeamChange', `${changedPlayer.name}#${changedPlayer.id} is moved team to ${convertTeamID2Name(changedPlayer.team)}.`);
+        
+        // Si un jugador se mueve a espectadores durante una partida, intentar balancear
+        if (window.gameRoom.config.rules.autoOperating === true && window.gameRoom.isGamingNow === true && changedPlayer.team === TeamID.Spec && byPlayer !== null && byPlayer.id === changedPlayer.id) {
+            setTimeout(() => {
+                balanceTeamsAfterLeave();
+                window.gameRoom.logger.i('onPlayerTeamChange', `Player moved to spec, attempting team balance`);
+            }, 500); // Delay aumentado para consistencia
+        }
     }
 
     window._emitSIOPlayerStatusChangeEvent(changedPlayer.id);

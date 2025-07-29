@@ -1,9 +1,9 @@
 import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
-import { getTeamWinningExpectation, getUnixTimestamp } from "../Statistics";
+import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { roomTeamPlayersNumberCheck } from "../../model/OperateHelper/Quorum";
+import { roomTeamPlayersNumberCheck, shuffleTeamsByElo, getTeamsEloInfo } from "../../model/OperateHelper/Quorum";
 import { decideTier, getAvatarByTier, Tier } from "../../model/Statistics/Tier";
 import { setBanlistDataToDB } from "../Storage";
 
@@ -22,9 +22,7 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
         possTeamRed: window.gameRoom.ballStack.possCalculate(TeamID.Red),
         possTeamBlue: window.gameRoom.ballStack.possCalculate(TeamID.Blue),
         streakTeamName: convertTeamID2Name(window.gameRoom.winningStreak.teamID),
-        streakTeamCount: window.gameRoom.winningStreak.count,
-        teamExpectationRed: 0,
-        teamExpectationBlue: 0
+        streakTeamCount: window.gameRoom.winningStreak.count
     };
 
     let allPlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList(); // all list
@@ -85,17 +83,40 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
                     } // or default value is Normal match
                 });
 
-        // start game
-        let expectations: number[] = getTeamWinningExpectation();
-
-        placeholderStart.teamExpectationRed = expectations[1];
-        placeholderStart.teamExpectationBlue = expectations[2];
-
-        window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.startRecord, placeholderStart), null, 0x00FF00, "normal", 0);
-        window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.expectedWinRate, placeholderStart), null, 0x00FF00, "normal", 0);
+        // Mezclar equipos por ELO antes de iniciar
+        if (window.gameRoom.config.rules.autoOperating === true) {
+            shuffleTeamsByElo();
+            
+            // Esperar un momento para que se complete el shuffle
+            setTimeout(() => {
+                const teamsInfo = getTeamsEloInfo();
+                
+                // Mostrar información de ELO de equipos en lugar de expectativas
+                const redEloMsg = `🔴 Equipo Rojo: ${teamsInfo.redCount} jugadores | ELO Total: ${teamsInfo.redElo} | Promedio: ${teamsInfo.redCount > 0 ? Math.round(teamsInfo.redElo / teamsInfo.redCount) : 0}`;
+                const blueEloMsg = `🔵 Equipo Azul: ${teamsInfo.blueCount} jugadores | ELO Total: ${teamsInfo.blueElo} | Promedio: ${teamsInfo.blueCount > 0 ? Math.round(teamsInfo.blueElo / teamsInfo.blueCount) : 0}`;
+                const balanceMsg = `⚖️ Diferencia de ELO: ${Math.abs(teamsInfo.redElo - teamsInfo.blueElo)} puntos`;
+                
+                window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.startRecord, placeholderStart), null, 0x00FF00, "normal", 0);
+                window.gameRoom._room.sendAnnouncement(redEloMsg, null, 0xFF3333, "normal", 0);
+                window.gameRoom._room.sendAnnouncement(blueEloMsg, null, 0x3399FF, "normal", 0);
+                window.gameRoom._room.sendAnnouncement(balanceMsg, null, 0xFFFF00, "normal", 0);
+            }, 200);
+        } else {
+            // Modo manual - solo mostrar información de equipos
+            const teamsInfo = getTeamsEloInfo();
+            const redEloMsg = `🔴 Equipo Rojo: ${teamsInfo.redCount} jugadores | ELO Total: ${teamsInfo.redElo} | Promedio: ${teamsInfo.redCount > 0 ? Math.round(teamsInfo.redElo / teamsInfo.redCount) : 0}`;
+            const blueEloMsg = `🔵 Equipo Azul: ${teamsInfo.blueCount} jugadores | ELO Total: ${teamsInfo.blueElo} | Promedio: ${teamsInfo.blueCount > 0 ? Math.round(teamsInfo.blueElo / teamsInfo.blueCount) : 0}`;
+            
+            window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.startRecord, placeholderStart), null, 0x00FF00, "normal", 0);
+            window.gameRoom._room.sendAnnouncement(redEloMsg, null, 0xFF3333, "normal", 0);
+            window.gameRoom._room.sendAnnouncement(blueEloMsg, null, 0x3399FF, "normal", 0);
+        }
 
         if(window.gameRoom.config.rules.autoOperating === true) { // if game rule is set as auto operating mode
-            window.gameRoom._room.pauseGame(true); // pause (and will call onGamePause event)
+            // Pausar después del shuffle para dar tiempo a que se vean los equipos
+            setTimeout(() => {
+                window.gameRoom._room.pauseGame(true); // pause (and will call onGamePause event)
+            }, 500);
         }
     } else {
         window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.stopRecord, placeholderStart), null, 0x00FF00, "normal", 0);

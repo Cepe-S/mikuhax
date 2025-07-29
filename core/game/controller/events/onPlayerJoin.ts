@@ -6,7 +6,7 @@ import { convertToPlayerStorage, getBanlistDataFromDB, getPlayerDataFromDB, remo
 import { getUnixTimestamp } from "../Statistics";
 import { setDefaultStadiums, updateAdmins } from "../RoomTools";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, assignPlayerToBalancedTeam } from "../../model/OperateHelper/Quorum";
+import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, assignPlayerToBalancedTeam, getTeamsEloInfo } from "../../model/OperateHelper/Quorum";
 import { decideTier, getAvatarByTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
 import { isExistNickname, isIncludeBannedWords } from "../TextFilter";
 
@@ -243,30 +243,30 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
 
     // when auto emcee mode is enabled
     if (window.gameRoom.config.rules.autoOperating === true) {
-        // Usar la nueva función de balanceo automático con delay
         setTimeout(() => {
+            // Siempre asignar a equipos balanceados, independientemente del estado del juego
             assignPlayerToBalancedTeam(player.id);
             
-            // Verificar si se debe iniciar el juego automáticamente
-            setTimeout(() => {
-                const currentPlayers = window.gameRoom._room.getPlayerList().filter(p => p.id !== 0);
-                const redPlayers = currentPlayers.filter(p => p.team === TeamID.Red);
-                const bluePlayers = currentPlayers.filter(p => p.team === TeamID.Blue);
-                
-                window.gameRoom.logger.i('onPlayerJoin', `Current teams after assignment - Red: ${redPlayers.length}, Blue: ${bluePlayers.length}, Total: ${currentPlayers.length}`);
-                
-                // Iniciar juego si no está en curso y hay al menos 1 jugador por equipo
-                if (window.gameRoom._room.getScores() === null && redPlayers.length > 0 && bluePlayers.length > 0) {
-                    setDefaultStadiums(); // set stadium
-                    setTimeout(() => {
-                        window.gameRoom._room.startGame();
-                        window.gameRoom.logger.i('onPlayerJoin', `Game started automatically (Red: ${redPlayers.length}, Blue: ${bluePlayers.length})`);
-                    }, 500); // Delay adicional para asegurar que el estadio se cargue
-                } else {
-                    window.gameRoom.logger.i('onPlayerJoin', `Game not started - needs players in both teams (Red: ${redPlayers.length}, Blue: ${bluePlayers.length})`);
-                }
-            }, 500); // Delay para verificar equipos después de la asignación
-        }, 500); // Delay inicial para asegurar que el jugador esté completamente inicializado
+            // Solo iniciar juego automáticamente si no hay partida en curso
+            if (window.gameRoom._room.getScores() === null) {
+                setTimeout(() => {
+                    const teamsInfo = getTeamsEloInfo();
+                    
+                    window.gameRoom.logger.i('onPlayerJoin', `Current teams after assignment - Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount}`);
+                    
+                    // Iniciar juego si hay al menos 1 jugador por equipo
+                    if (teamsInfo.redCount > 0 && teamsInfo.blueCount > 0) {
+                        setDefaultStadiums();
+                        setTimeout(() => {
+                            window.gameRoom._room.startGame();
+                            window.gameRoom.logger.i('onPlayerJoin', `Game started automatically (Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount})`);
+                        }, 500);
+                    }
+                }, 500);
+            } else {
+                window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} assigned to balanced team - game in progress`);
+            }
+        }, 500);
     }
 
     // emit websocket event

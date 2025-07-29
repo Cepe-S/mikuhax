@@ -4,7 +4,7 @@ import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { updateAdmins } from "../RoomTools";
 import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, balanceTeamsAfterLeave } from "../../model/OperateHelper/Quorum";
+import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, balanceTeamsAfterLeave, forceTeamBalance } from "../../model/OperateHelper/Quorum";
 import { convertToPlayerStorage, getBanlistDataFromDB, setBanlistDataToDB, setPlayerDataToDB } from "../Storage";
 
 export async function onPlayerLeaveListener(player: PlayerObject): Promise<void> {
@@ -54,9 +54,11 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
         // when auto emcee mode is enabled
         if(window.gameRoom.config.rules.autoOperating === true && window.gameRoom.isGamingNow === true) {
             if(player.team !== TeamID.Spec) {
-                // Usar el nuevo sistema de balanceo automático
-                balanceTeamsAfterLeave();
-                window.gameRoom.logger.i('onPlayerLeave', `Player ${player.id} left from team, attempting to balance teams`);
+                // Usar el nuevo sistema de balanceo mejorado con delay mayor
+                setTimeout(() => {
+                    balanceTeamsAfterLeave();
+                    window.gameRoom.logger.i('onPlayerLeave', `Player ${player.name}#${player.id} left from ${player.team === TeamID.Red ? 'Red' : 'Blue'} team, attempting balance`);
+                }, 600); // Delay aumentado para asegurar procesamiento completo
             }
         }
     } else {
