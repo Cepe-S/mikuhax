@@ -90,15 +90,18 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const result = await repository
             .createQueryBuilder('event')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
             .select('event.playerId', 'playerId')
+            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
             .groupBy('event.playerId')
+            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
+        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
     public async getTopScorersMonthly(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
@@ -110,16 +113,19 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
             .select('event.playerId', 'playerId')
+            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
             .groupBy('event.playerId')
+            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
+        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
     public async getTopScorersDaily(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
@@ -130,30 +136,37 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
             .select('event.playerId', 'playerId')
+            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
             .groupBy('event.playerId')
+            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
+        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
     public async getTopAssistersGlobal(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const result = await repository
             .createQueryBuilder('event')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
             .select('event.playerId', 'playerId')
+            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
             .addSelect('COUNT(*)', 'count')
-            .where('event.eventType = :eventType', { eventType: 'assist' })
+            .where('event.ruid = :ruid', { ruid })
+            .andWhere('event.eventType = :eventType', { eventType: 'assist' })
             .groupBy('event.playerId')
+            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
+        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
     public async getTopAssistersMonthly(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
@@ -165,15 +178,19 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
             .select('event.playerId', 'playerId')
+            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
             .addSelect('COUNT(*)', 'count')
-            .where('event.eventType = :eventType', { eventType: 'assist' })
+            .where('event.ruid = :ruid', { ruid })
+            .andWhere('event.eventType = :eventType', { eventType: 'assist' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
             .groupBy('event.playerId')
+            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
+        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
     public async getTopAssistersDaily(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
@@ -184,14 +201,18 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
             .select('event.playerId', 'playerId')
+            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
             .addSelect('COUNT(*)', 'count')
-            .where('event.eventType = :eventType', { eventType: 'assist' })
+            .where('event.ruid = :ruid', { ruid })
+            .andWhere('event.eventType = :eventType', { eventType: 'assist' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
             .groupBy('event.playerId')
+            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: `Player #${r.playerId}`, count: parseInt(r.count) }));
+        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
     }
 }

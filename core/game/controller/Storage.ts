@@ -106,3 +106,8 @@ export async function getTopAssistersMonthlyFromDB(): Promise<{playerId: number,
 export async function getTopAssistersDailyFromDB(): Promise<{playerId: number, playerName: string, count: number}[]> {
     return await window._getTopAssistersDailyDB(window.gameRoom.config._RUID);
 }
+
+// Get all players from database
+export async function getAllPlayersFromDB(): Promise<PlayerStorage[]> {
+    return await window._getAllPlayersFromDB(window.gameRoom.config._RUID);
+}

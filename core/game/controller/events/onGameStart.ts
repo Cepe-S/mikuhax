@@ -112,12 +112,7 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
             window.gameRoom._room.sendAnnouncement(blueEloMsg, null, 0x3399FF, "normal", 0);
         }
 
-        if(window.gameRoom.config.rules.autoOperating === true) { // if game rule is set as auto operating mode
-            // Pausar después del shuffle para dar tiempo a que se vean los equipos
-            setTimeout(() => {
-                window.gameRoom._room.pauseGame(true); // pause (and will call onGamePause event)
-            }, 500);
-        }
+        // Auto-pause removed - game starts immediately
     } else {
         window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.stopRecord, placeholderStart), null, 0x00FF00, "normal", 0);
     }

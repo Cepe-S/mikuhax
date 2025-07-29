@@ -8,20 +8,6 @@ import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { isIncludeBannedWords } from "../TextFilter";
 import { decideTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
 
-function getTierTitle(tier: Tier): string {
-    if(tier === Tier.TierNew) return '⌈⚪⌋'; // Placement
-    if(tier === Tier.Tier1) return '⌈🟤⌋'; // Bronze
-    if(tier === Tier.Tier2) return '⌈⚪⌋'; // Silver
-    if(tier === Tier.Tier3) return '⌈🟡⌋'; // Gold
-    if(tier === Tier.Tier4) return '【⌈🟦⌋】'; // Platinum
-    if(tier === Tier.Tier5) return '【⌈🟩⌋】'; // Emerald
-    if(tier === Tier.Tier6) return '【⌈✨💎✨⌋】'; // Diamond
-    if(tier === Tier.Tier7) return '【⌈✨👑✨⌋】'; // Master
-    if(tier === Tier.Challenger) return '【⌈✨🚀✨⌋】'; // Challenger
-    if(tier >= Tier.Tier8 && tier <= Tier.Tier27) return '【⌈✨🌸✨⌋】'; // Top Rankings
-    return '❓'; // Unknown
-}
-
 export function onPlayerChatListener(player: PlayerObject, message: string): boolean {
     // Event called when a player sends a chat message.
     // The event function can return false in order to filter the chat message.
@@ -118,7 +104,7 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                 const teamEmoji = player.team === TeamID.Red ? '🔴' : player.team === TeamID.Blue ? '🔵' : '⚪';
                 
                 const playerTier = decideTier(playerData.stats.rating, player.id);
-                const tierEmoji = getTierTitle(playerTier);
+                const tierEmoji = getTierName(playerTier);
                 const adminIndicator = player.admin ? '⭐' : '';
                 const superAdminIndicator = playerData.permissions.superadmin ? '👑' : '';
                 

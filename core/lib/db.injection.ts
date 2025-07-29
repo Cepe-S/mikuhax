@@ -353,3 +353,38 @@ export async function getTopAssistersDailyDB(ruid: string): Promise<{playerId: n
         return [];
     }
 }
+
+// Get all players from database
+export async function getAllPlayersFromDB(ruid: string): Promise<PlayerStorage[]> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/player`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`200 Succeed on getAllPlayersFromDB`);
+            return result.data.map((data: any) => ({
+                auth: data.auth,
+                conn: data.conn,
+                name: data.name,
+                rating: data.rating,
+                totals: data.totals,
+                disconns: data.disconns,
+                wins: data.wins,
+                goals: data.goals,
+                assists: data.assists,
+                ogs: data.ogs,
+                losePoints: data.losePoints,
+                balltouch: data.balltouch,
+                passed: data.passed,
+                mute: data.mute,
+                muteExpire: data.muteExpire,
+                rejoinCount: data.rejoinCount,
+                joinDate: data.joinDate,
+                leftDate: data.leftDate,
+                malActCount: data.malActCount
+            }));
+        }
+        return [];
+    } catch (error) {
+        winstonLogger.error(`Error caught on getAllPlayersFromDB: ${error}`);
+        return [];
+    }
+}

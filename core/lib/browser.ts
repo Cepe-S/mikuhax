@@ -242,6 +242,7 @@ export class HeadlessBrowser {
         await page.exposeFunction('_getTopAssistersGlobalDB', dbUtilityInject.getTopAssistersGlobalDB);
         await page.exposeFunction('_getTopAssistersMonthlyDB', dbUtilityInject.getTopAssistersMonthlyDB);
         await page.exposeFunction('_getTopAssistersDailyDB', dbUtilityInject.getTopAssistersDailyDB);
+        await page.exposeFunction('_getAllPlayersFromDB', dbUtilityInject.getAllPlayersFromDB);
         // ================================================================================
 
         await page.addScriptTag({ // add and load bot script

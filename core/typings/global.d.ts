@@ -9,6 +9,7 @@ import { Room } from "../game/model/RoomObject/RoomObject";
 import { BanList } from "../game/model/PlayerBan/BanList";
 import { PlayerStorage } from "../game/model/GameObject/PlayerObject";
 import { MatchEvent } from "../game/model/GameObject/MatchEvent";
+import { MatchSummary } from "../game/model/GameObject/MatchSummary";
 
 declare global {
     interface Window {
@@ -111,6 +112,8 @@ declare global {
         _getTopAssistersGlobalDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
         _getTopAssistersMonthlyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
         _getTopAssistersDailyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
+        // Get all players from DB
+        _getAllPlayersFromDB(ruid: string): Promise<PlayerStorage[]>;
 
         // ==============================
         // Haxball Headless Initial Methods
