@@ -13,7 +13,7 @@
         "url": "https://github.com/dapucita/haxbotron.git"
     },
     "scripts": {
-        "clean": "if exist core\\out rmdir /s /q core\\out && if exist core\\public\\out rmdir /s /q core\\public\\out && if exist db\\out rmdir /s /q db\\out",
+        "clean": "rimraf core/out core/public/out db/out",
         "quick:install": "npm run install:packages",
         "quick:build": "npm run build",
         "quick:start:core": "cd core && npm start",
@@ -39,5 +39,8 @@
     },
     "dependencies": {
         "redis": "^5.6.1"
+    },
+    "devDependencies": {
+        "rimraf": "^3.0.2"
     }
 }
