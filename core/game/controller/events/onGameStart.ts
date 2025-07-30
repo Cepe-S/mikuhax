@@ -6,6 +6,7 @@ import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { roomTeamPlayersNumberCheck, shuffleTeamsByElo, getTeamsEloInfo } from "../../model/OperateHelper/Quorum";
 import { decideTier, getAvatarByTier, Tier } from "../../model/Statistics/Tier";
 import { setBanlistDataToDB } from "../Storage";
+import { getRandomMatch } from "../../resource/realTeams";
 
 export function onGameStartListener(byPlayer: PlayerObject | null): void {
     // Reiniciar almacenamiento temporal de eventos de partido
@@ -115,6 +116,16 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
         // Auto-pause removed - game starts immediately
     } else {
         window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.stopRecord, placeholderStart), null, 0x00FF00, "normal", 0);
+    }
+
+    // Cambiar camisetas de equipos
+    const match = getRandomMatch();
+    if (match) {
+        window.gameRoom._room.setTeamColors(TeamID.Red, match.red.angle, match.red.textColour, [match.red.teamColour1, match.red.teamColour2, match.red.teamColour3]);
+        window.gameRoom._room.setTeamColors(TeamID.Blue, match.blue.angle, match.blue.textColour, [match.blue.teamColour1, match.blue.teamColour2, match.blue.teamColour3]);
+        
+        // Mostrar nombres de equipos en el chat
+        window.gameRoom._room.sendAnnouncement(`⚽ ${match.red.name} vs ${match.blue.name}`, null, 0xFFFFFF, "bold", 1);
     }
 
     // replay record start

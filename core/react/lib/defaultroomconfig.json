@@ -179,6 +179,7 @@
 		"ranking": "ranking",
 		"avatar": "avatar",
 		"map": "map",
-		"balance": "balance"
+		"balance": "balance",
+		"camisetas": "camisetas"
 	}
 }

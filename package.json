@@ -13,6 +13,7 @@
         "url": "https://github.com/dapucita/haxbotron.git"
     },
     "scripts": {
+        "clean": "if exist core\\out rmdir /s /q core\\out && if exist core\\public\\out rmdir /s /q core\\public\\out && if exist db\\out rmdir /s /q db\\out",
         "quick:install": "npm run install:packages",
         "quick:build": "npm run build",
         "quick:start:core": "cd core && npm start",
@@ -21,8 +22,11 @@
         "install:packages:core": "cd core && npm install",
         "install:packages:db": "cd db && npm install",
         "build": "npm run build:core && npm run build:db",
+        "buildwin": "npm run install:packages && npm run buildwin:core && npm run buildwin:db",
         "build:core": "cd core && NODE_OPTIONS='--openssl-legacy-provider' npm run build",
+        "buildwin:core": "cd core && npx --node-options=--openssl-legacy-provider tsc && npx --node-options=--openssl-legacy-provider npm run build:bot && npx --node-options=--openssl-legacy-provider npm run build:web",
         "build:db": "cd db && npm run build",
+        "buildwin:db": "cd db && npx tsc",
         "build:force": "cd core && NODE_OPTIONS='--openssl-legacy-provider' npx tsc --noEmitOnError false && NODE_OPTIONS='--openssl-legacy-provider' npm run build:bot && NODE_OPTIONS='--openssl-legacy-provider' npm run build:web && cd ../db && npx tsc --noEmitOnError false",
         "setup:linux": "chmod +x utilities/setup-linux.sh && ./utilities/setup-linux.sh",
         "setup:firewall": "chmod +x utilities/firewall-setup.sh && ./utilities/firewall-setup.sh",

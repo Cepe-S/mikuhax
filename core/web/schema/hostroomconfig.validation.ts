@@ -177,6 +177,7 @@ const commandsSchema = Joi.object().keys({
     avatar: Joi.string().required(),
     map: Joi.string().required(),
     balance: Joi.string().required(),
+    camisetas: Joi.string().required(),
 });
 
 const configHEloSchema = Joi.object().keys({

@@ -23,6 +23,7 @@ import { cmdRanking } from "./commands/ranking";
 import { cmdAvatar } from "./commands/avatar";
 import { cmdMap } from "./commands/map";
 import { cmdBalance } from "./commands/balance";
+import { cmdCamisetas } from "./commands/camisetas";
 
 // Check if given string is a command chat. Returns true if it is, false otherwise.
 export function isCommandString(message: string): boolean {
@@ -178,6 +179,10 @@ export function parseCommand(byPlayer: PlayerObject, message: string): void {
         }
         case window.gameRoom.config.commands.balance: {
             cmdBalance(byPlayer);
+            break;
+        }
+        case window.gameRoom.config.commands.camisetas: {
+            cmdCamisetas(byPlayer);
             break;
         }
         default: {

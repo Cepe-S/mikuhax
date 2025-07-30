@@ -100,12 +100,15 @@ jspm_packages/
 # parcel-bundler cache (https://parceljs.org/)
 .parcel-cache
 
-# Keep webpack configs and important files
-!webpack.config.js
-!webpack.config.*.js
-!.env.sample
-!.env.example
-
 # developing documentation
 IAchanges
 TODO_LIST.txt
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyc
+
+# Root logs directory
+logs/

@@ -1,10 +1,12 @@
-- arreglar problemas de balance de equipos al comenzarse nuevas partidas
-- mejorar visualización de admins en el chat
 - optimizar el top goleadores/asistidores
-- habilitar íconos libres
+- arreglar arte ascci de la bienvenida
+- cambiar sistema de elo para que tenga en cuenta la cantidad de personas en total
+- darle información interesante a los jugadores cuando entran y al comienzo de cada partido
 - agregar webhooks de:
 	. llamar admin
 	. boletero
 	. server open
 	. chat
 	. entradas y salidas
+
+- los admins pierden el color en el chat, empiezan a escribir de color blanco

@@ -61,4 +61,5 @@ export interface GameCommands {
     avatar: string
     map: string
     balance: string
+    camisetas: string
 }
