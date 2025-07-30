@@ -14,6 +14,7 @@
     },
     "scripts": {
         "clean": "rm -rf core/out core/public/out db/out || rmdir /s /q core\\out core\\public\\out db\\out 2>nul || true",
+        "fullbuild": "npm run clean && npm run quick:install && npm run build",
         "quick:install": "npm run install:packages",
         "quick:build": "npm run build",
         "quick:start:core": "cd core && npm start",

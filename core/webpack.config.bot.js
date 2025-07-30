@@ -11,7 +11,7 @@ module.exports = {
         new CopyWebpackPlugin({
             patterns: [
                 {
-                    from: 'game/resource/*.json',
+                    from: 'out/game/resource/*.json',
                     to: 'game/resource/[name][ext]'
                 }
             ]
