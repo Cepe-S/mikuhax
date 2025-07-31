@@ -11,8 +11,14 @@ module.exports = {
         new CopyWebpackPlugin({
             patterns: [
                 {
-                    from: 'out/game/resource/*.json',
-                    to: 'game/resource/[name][ext]'
+                    from: path.resolve(__dirname, 'game/resource/*.json'),
+                    to: path.resolve(__dirname, 'out/game/resource/[name][ext]'),
+                    noErrorOnMissing: true
+                },
+                {
+                    from: path.resolve(__dirname, 'react/lib/defaultroomconfig.json'),
+                    to: path.resolve(__dirname, 'out/react/lib/[name][ext]'),
+                    noErrorOnMissing: true
                 }
             ]
         })

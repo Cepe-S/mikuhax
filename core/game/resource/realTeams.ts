@@ -1,16 +1,6 @@
-// Import JSON data with fallback
-let realTeamsData: any;
-let realMatchesData: any;
-
-try {
-    realTeamsData = require('./real_teams.json');
-    realMatchesData = require('./real_matches.json');
-} catch (error) {
-    console.error('Failed to load JSON files:', error);
-    // Fallback to empty objects to prevent crashes
-    realTeamsData = {};
-    realMatchesData = {};
-}
+// Import JSON data directly
+import * as realTeamsData from './real_teams.json';
+import * as realMatchesData from './real_matches.json';
 
 export interface TeamColors {
     angle: number;
@@ -57,8 +47,8 @@ class RealTeamsLoader {
                 throw new Error('Failed to load matches data from real_matches.json');
             }
             
-            this.data = realTeamsData as { [teamName: string]: TeamKit };
-            this.matchesData = realMatchesData as MatchData;
+            this.data = realTeamsData as any as { [teamName: string]: TeamKit };
+            this.matchesData = realMatchesData as any as MatchData;
             
             const allTeams = Object.keys(this.data);
             console.log(`Successfully loaded ${allTeams.length} teams from real_teams.json`);

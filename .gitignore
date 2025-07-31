@@ -112,3 +112,5 @@ __pycache__/
 
 # Root logs directory
 logs/
+core/package-lock.json
+jerseyImporter.py
