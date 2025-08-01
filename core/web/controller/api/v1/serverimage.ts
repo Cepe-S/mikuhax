@@ -46,12 +46,11 @@ export async function createServerImage(ctx: Context) {
  * Create server image from existing room configuration
  */
 export async function createServerImageFromRoom(ctx: Context) {
-    const { ruid } = ctx.params;
+    const { ruid: paramRuid } = ctx.params;
     
     const validationResult = Joi.object().keys({
         name: Joi.string().required().min(1).max(100),
-        description: Joi.string().required().min(1).max(500),
-        ruid: Joi.string().required().min(1).max(50).pattern(/^[a-zA-Z0-9_-]+$/)
+        description: Joi.string().required().min(1).max(500)
     }).validate(ctx.request.body);
     
     if (validationResult.error) {
@@ -60,7 +59,8 @@ export async function createServerImageFromRoom(ctx: Context) {
         return;
     }
     
-    const { name, description, ruid } = ctx.request.body;
+    const { name, description } = ctx.request.body;
+    const ruid = paramRuid;
 
     if (!browser.checkExistRoom(ruid)) {
         ctx.status = 404;
@@ -180,14 +180,14 @@ export async function deployFromImage(ctx: Context) {
         return;
     }
 
-    if (browser.checkExistRoom(imageData.ruid)) {
-        ctx.status = 409;
-        ctx.body = { error: 'Room already exists' };
-        return;
-    }
-
     try {
         const imageData: ServerImage = JSON.parse(fs.readFileSync(imagePath, 'utf8'));
+        
+        if (browser.checkExistRoom(imageData.ruid)) {
+            ctx.status = 409;
+            ctx.body = { error: 'Room already exists' };
+            return;
+        }
         
         // Apply overrides if provided
         const config = { ...imageData.config, token: deployRequest.token };

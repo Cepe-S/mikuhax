@@ -195,6 +195,7 @@ const defaultConfig = {
 export function createDefaultImage() {
     const serverImage: ServerImage = {
         ...defaultConfig,
+        ruid: `default_${Date.now()}`,
         version: "1.0.0",
         createdAt: new Date()
     };
