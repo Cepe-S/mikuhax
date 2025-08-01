@@ -9,6 +9,8 @@ import List from '@material-ui/core/List';
 import Divider from '@material-ui/core/Divider';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import DashboardIcon from '@material-ui/icons/Dashboard';
+import ImageIcon from '@material-ui/icons/Image';
+import AddPhotoAlternateIcon from '@material-ui/icons/AddPhotoAlternate';
 
 export default function RoomListSideMenu() {
     return (
@@ -38,6 +40,18 @@ export default function RoomListSideMenu() {
                             <AddCircleIcon />
                         </ListItemIcon>
                         <ListItemText primary="New Room" />
+                    </ListItem>
+                    <ListItem button component={RouterLink} to="/admin/serverimages">
+                        <ListItemIcon>
+                            <ImageIcon />
+                        </ListItemIcon>
+                        <ListItemText primary="Server Images" />
+                    </ListItem>
+                    <ListItem button component={RouterLink} to="/admin/newimage">
+                        <ListItemIcon>
+                            <AddPhotoAlternateIcon />
+                        </ListItemIcon>
+                        <ListItemText primary="New Image" />
                     </ListItem>
                 </div>
             </List>

@@ -10,7 +10,8 @@ import { teamColourSchema } from "../../../schema/teamcolour.validation";
 const browser = HeadlessBrowser.getInstance();
 
 /**
- * create new room
+ * create new room (legacy method - deprecated)
+ * Use deployFromImage instead for new deployments
  */
 export async function createRoom(ctx: Context) {
     const validationResult = nestedHostRoomConfigSchema.validate(ctx.request.body);
@@ -18,6 +19,13 @@ export async function createRoom(ctx: Context) {
     if (validationResult.error) {
         ctx.status = 400;
         ctx.body = validationResult.error;
+        return;
+    }
+
+    // Check if token is provided in the request
+    if (!ctx.request.body._config.token) {
+        ctx.status = 400;
+        ctx.body = { error: 'Headless token is required for room creation' };
         return;
     }
 
@@ -38,8 +46,14 @@ export async function createRoom(ctx: Context) {
     if (!browser.checkExistRoom(newRoomConfig._RUID)) {
         await browser.openNewRoom(newRoomConfig._RUID, newRoomConfig);
         ctx.status = 201;
+        ctx.body = { 
+            message: 'Room created successfully (legacy method)',
+            ruid: newRoomConfig._RUID,
+            note: 'Consider using server images for future deployments'
+        };
     } else {
         ctx.status = 409;
+        ctx.body = { error: 'Room already exists' };
     }
 }
 

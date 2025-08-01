@@ -8,7 +8,8 @@
     "build": "npm run build:ts && npm run build:bot && npm run build:web",
     "build:ts": "tsc",
     "build:bot": "webpack --config webpack.config.bot.js",
-    "build:web": "webpack --config webpack.config.react.js"
+    "build:web": "webpack --config webpack.config.react.js",
+    "create-default-image": "npx ts-node utilities/migrate-to-images.ts"
   },
   "author": "dapucita",
   "license": "MIT",

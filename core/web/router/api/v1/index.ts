@@ -8,6 +8,7 @@ import { superadminRouter } from "./superadmin";
 import { ruidlistRouter } from "./ruidlist";
 import { banlistRouter } from "./banlist";
 import { playerlistRouter } from "./playerlist";
+import { serverImageRouter } from "../../v1.serverimage.router";
 
 export const indexAPIRouter = new Router();
 
@@ -23,4 +24,5 @@ indexAPIRouter
     .use('/ruidlist', ruidlistRouter.routes())
     .use('/banlist', banlistRouter.routes())
     .use('/playerlist', playerlistRouter.routes())
-    .use('/system', systemRouter.routes());
+    .use('/system', systemRouter.routes())
+    .use('/images', serverImageRouter.routes());

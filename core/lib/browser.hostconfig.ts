@@ -123,6 +123,12 @@ export interface BrowserHostRoomSettings {
     powershotInvMassFactor: number
     powershotCooldown: number
     powershotStickDistance: number
+
+    ballRadius: number
+    ballBCoeff: number
+    ballInvMass: number
+    ballDamping: number
+    ballColor: string
 }
 
 export interface BrowserHostRoomHEloConfig {

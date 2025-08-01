@@ -30,7 +30,7 @@ const gameRuleSchema = Joi.object().keys({
     ,statsRecord: Joi.boolean().required()
     ,defaultMapName: Joi.string().required()
     ,readyMapName: Joi.string().required()
-    ,customJSONOptions: Joi.string().optional().allow(null, '')
+    ,customJSONOptions: Joi.string().optional().allow(null, '').default('{}')
 });
 
 const roomSettingSchema = Joi.object().keys({

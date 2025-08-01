@@ -35,6 +35,8 @@ import RoomPlayerList from './RoomPlayerList';
 import RoomSocial from './RoomSocial';
 import RoomTextFilter from './RoomTextFilter';
 import RoomAssets from './RoomAssets';
+import ServerImages from './ServerImages';
+import ServerImageCreate from './ServerImageCreate';
 
 const drawerWidth = 240;
 
@@ -213,6 +215,8 @@ function Dashboard({ match }: RouteComponentProps) {
                     <Route path={match.path} exact><MainboardSideMenu /></Route>
                     <Route path={`${match.path}/roomlist`}><RoomListSideMenu /></Route>
                     <Route path={`${match.path}/newroom`}><RoomListSideMenu /></Route>
+                    <Route path={`${match.path}/serverimages`}><RoomListSideMenu /></Route>
+                    <Route path={`${match.path}/newimage`}><RoomListSideMenu /></Route>
                     <Route path={`${match.path}/serverinfo`}><MainboardSideMenu /></Route>
                     <Route path={`${match.path}/superadmin/:ruid`} component={RoomInfoSideMenu} />
                     <Route path={`${match.path}/banlist/:ruid`} component={RoomInfoSideMenu} />
@@ -226,6 +230,8 @@ function Dashboard({ match }: RouteComponentProps) {
                     <Route path={match.path} render={()=><Mainboard styleClass={styleClass} />} exact />
                     <Route path={`${match.path}/roomlist`} render={()=><RoomList styleClass={styleClass} />} />
                     <Route path={`${match.path}/newroom`} render={()=><RoomCreate styleClass={styleClass} />} />
+                    <Route path={`${match.path}/serverimages`} render={()=><ServerImages styleClass={styleClass} />} />
+                    <Route path={`${match.path}/newimage`} render={()=><ServerImageCreate styleClass={styleClass} />} />
                     <Route path={`${match.path}/serverinfo`} render={()=><ServerInfo styleClass={styleClass} />} />
                     <Route path={`${match.path}/superadmin/:ruid`}><RoomSuperAdmin styleClass={styleClass} /></Route>
                     <Route path={`${match.path}/banlist/:ruid`} exact><RoomBanList styleClass={styleClass} /></Route>
