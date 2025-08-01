@@ -9,6 +9,7 @@ import { Room } from "../game/model/RoomObject/RoomObject";
 import { BanList } from "../game/model/PlayerBan/BanList";
 import { PlayerStorage } from "../game/model/GameObject/PlayerObject";
 import { MatchEvent } from "../game/model/GameObject/MatchEvent";
+import { MatchEventHolder } from "../game/model/GameObject/MatchEventHolder";
 import { MatchSummary } from "../game/model/GameObject/MatchSummary";
 
 declare global {
@@ -23,8 +24,7 @@ declare global {
             social: {
                 discordWebhook: {
                     feed: boolean;
-                    id: string;
-                    token: string;
+                    url: string;
                     replayUpload: boolean;
                 }
             };
@@ -75,12 +75,7 @@ declare global {
                 ban(playerID: number, msg?: string): void;
                 password(password?: string): void;
             };
-            matchEventsHolder: {
-                type: 'goal' | 'assist' | 'ownGoal';
-                playerId: number;
-                matchTime: number;
-                playerTeamId: TeamID;
-            } []
+            matchEventsHolder: MatchEventHolder[]
         };
 
         // ==============================
@@ -88,7 +83,7 @@ declare global {
         _emitSIOLogEvent(origin: string, type: string, message: string): void;
         _emitSIOPlayerInOutEvent(playerID: number): void;
         _emitSIOPlayerStatusChangeEvent(playerID: number): void;
-        _feedSocialDiscordWebhook(id: string, token: string, type: string, content: any): void;
+        _feedSocialDiscordWebhook(webhookUrl: string, type: string, content: any): void;
         // CRUD with DB Server via REST API
         _createPlayerDB(ruid: string, player: PlayerStorage): Promise<void>;
         _readPlayerDB(ruid: string, playerAuth: string): Promise<PlayerStorage | undefined>;

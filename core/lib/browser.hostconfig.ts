@@ -6,6 +6,7 @@ export interface BrowserHostRoomInitConfig {
     rules: BrowserHostRoomGameRule; // game playing rule
     HElo: BrowserHostRoomHEloConfig; // configuration for HElo rating and tier system
     commands: BrowserHostRoomCommands; // game commands configuration
+    webhooks?: BrowserHostRoomWebhooks; // webhook configurations
 }
 
 export interface ReactHostRoomInfo {
@@ -15,6 +16,16 @@ export interface ReactHostRoomInfo {
     rules: BrowserHostRoomGameRule; // game playing rule
     helo: BrowserHostRoomHEloConfig; // configuration for HElo rating and tier system
     commands: BrowserHostRoomCommands; // game commands configuration
+    webhooks?: BrowserHostRoomWebhooks; // webhook configurations
+}
+
+export interface BrowserHostRoomWebhooks {
+    discord?: {
+        feed: boolean;
+        url?: string;
+        replayUpload: boolean;
+    };
+    [key: string]: any;
 }
 
 export interface BrowserHostRoomConfig {

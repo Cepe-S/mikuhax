@@ -29,10 +29,9 @@ window.gameRoom = {
     ,link: ''
     ,social: {
         discordWebhook: {
-            feed: false
-            ,replayUpload: false
-            ,id: ''
-            ,token: ''
+            feed: false,
+            url: '',
+            replayUpload: false
         }
     }
     ,stadiumData: {

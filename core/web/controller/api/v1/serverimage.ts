@@ -93,6 +93,9 @@ export async function createServerImageFromRoom(ctx: Context) {
             stadiums: {
                 default: roomDetailInfo._rules.defaultMapName,
                 ready: roomDetailInfo._rules.readyMapName
+            },
+            webhooks: {
+                discord: await browser.getDiscordWebhookConfig(ruid)
             }
         };
 
@@ -205,7 +208,8 @@ export async function deployFromImage(ctx: Context) {
             settings: imageData.settings,
             rules: imageData.rules,
             HElo: imageData.helo,
-            commands: imageData.commands
+            commands: imageData.commands,
+            webhooks: imageData.webhooks
         };
 
         if (newRoomConfig._config.password === "") {
@@ -213,6 +217,17 @@ export async function deployFromImage(ctx: Context) {
         }
 
         await browser.openNewRoom(imageData.ruid, newRoomConfig);
+        
+        // Configure webhooks if present in image
+        if (imageData.webhooks?.discord && (imageData.webhooks.discord.feed || imageData.webhooks.discord.replayUpload)) {
+            if (imageData.webhooks.discord.url) {
+                await browser.setDiscordWebhookConfig(imageData.ruid, {
+                    feed: imageData.webhooks.discord.feed,
+                    url: imageData.webhooks.discord.url,
+                    replayUpload: imageData.webhooks.discord.replayUpload
+                });
+            }
+        }
         
         ctx.status = 201;
         ctx.body = { 

@@ -6,8 +6,11 @@ import * as dbUtilityInject from "./db.injection";
 import { loadStadiumData } from "./stadiumLoader";
 import { Server as SIOserver, Socket as SIOsocket } from "socket.io";
 import { TeamID } from "../game/model/GameObject/TeamID";
-import Discord from 'discord.js';
-import { DiscordWebhookConfig } from "./browser.interface";
+import axios from "axios";
+import FormData from "form-data";
+import * as Tst from "../game/controller/Translator";
+import * as LangRes from "../game/resource/strings";
+
 
 function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
     return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
@@ -173,33 +176,7 @@ export class HeadlessBrowser {
         page.addListener('_SIO.StatusChange', (event: any) => {
             this._SIOserver?.sockets.emit('statuschange', { ruid: ruid, playerID: event.playerID });
         });
-        page.addListener('_SOCIAL.DiscordWebhook', (event: any) => {
-            winstonLogger.info(`[${ruid}] 🎯 Discord Webhook Event Received: ${event.type}, ID: ${event.id}`);
-            const webhookClient = new Discord.WebhookClient(event.id, event.token);
 
-            switch (event.type as string) {
-                case "replay": {
-                    try {
-                        winstonLogger.info(`[${ruid}] 📤 Sending replay to Discord...`);
-                        const bufferData = Buffer.from(JSON.parse(event.content.data));
-                        const date = new Date().toLocaleString();
-                        const attachment = new Discord.MessageAttachment(
-                            bufferData
-                            , `${date}.hbr2`);
-                        webhookClient.send(event.content.message, {
-                            files: [attachment],
-                        }).then(() => {
-                            winstonLogger.info(`[${ruid}] ✅ Replay sent successfully to Discord`);
-                        }).catch((error) => {
-                            winstonLogger.error(`[${ruid}] ❌ Error sending replay to Discord: ${error}`);
-                        });
-                    } catch (error) {
-                        winstonLogger.error(`[${ruid}] ❌ Error processing replay: ${error}`);
-                    }
-                    break;
-                }
-            }
-        });
         // ================================================================================
 
         // ================================================================================
@@ -213,9 +190,7 @@ export class HeadlessBrowser {
         await page.exposeFunction('_emitSIOPlayerStatusChangeEvent', (playerID: number) => {
             page.emit('_SIO.StatusChange', { playerID: playerID });
         });
-        await page.exposeFunction('_feedSocialDiscordWebhook', (id: string, token: string, type: string, content: any) => {
-            page.emit('_SOCIAL.DiscordWebhook', { id: id, token: token, type: type, content: content });
-        });
+
 
         // inject functions for CRUD with DB Server ====================================
         await page.exposeFunction('_createSuperadminDB', dbUtilityInject.createSuperadminDB);
@@ -243,11 +218,28 @@ export class HeadlessBrowser {
         await page.exposeFunction('_getTopAssistersMonthlyDB', dbUtilityInject.getTopAssistersMonthlyDB);
         await page.exposeFunction('_getTopAssistersDailyDB', dbUtilityInject.getTopAssistersDailyDB);
         await page.exposeFunction('_getAllPlayersFromDB', dbUtilityInject.getAllPlayersFromDB);
+        
+        // inject webhook function
+        await page.exposeFunction('_feedSocialDiscordWebhook', this.feedSocialDiscordWebhook.bind(this));
         // ================================================================================
 
         await page.addScriptTag({ // add and load bot script
             path: './out/bot_bundle.js'
         });
+
+        // Initialize social configuration after bot script loads
+        await page.waitForFunction(() => window.gameRoom !== undefined);
+        await page.evaluate((webhookConfig: any) => {
+            if (window.gameRoom) {
+                window.gameRoom.social = {
+                    discordWebhook: {
+                        feed: webhookConfig?.discord?.feed || false,
+                        url: webhookConfig?.discord?.url || '',
+                        replayUpload: webhookConfig?.discord?.replayUpload || false
+                    }
+                };
+            }
+        }, initConfig.webhooks || {});
 
         await page.waitForFunction(() => window.gameRoom.link !== undefined && window.gameRoom.link.length > 0); // wait for 30secs(default) until room link is created
 
@@ -668,26 +660,211 @@ export class HeadlessBrowser {
     }
 
     /**
-     * Get discord webhook configuration
-     * @param ruid ruid Game room's UID
-     * @returns discord webhook configuration
+     * Get Discord webhook configuration
+     * @param ruid Game room's UID
      */
     public async getDiscordWebhookConfig(ruid: string) {
         return await this._PageContainer.get(ruid)!.evaluate(() => {
-            return window.gameRoom.social.discordWebhook as DiscordWebhookConfig;
+            return window.gameRoom.social.discordWebhook;
         });
     }
 
     /**
-     * Set discord webhook configuration
-     * @param ruid ruid Game room's UID
-     * @param config discord webhook configuration
+     * Set Discord webhook configuration
+     * @param ruid Game room's UID
+     * @param config Webhook configuration
      */
-    public async setDiscordWebhookConfig(ruid: string, config: DiscordWebhookConfig) {
-        await this._PageContainer.get(ruid)!.evaluate((config: DiscordWebhookConfig) => {
+    public async setDiscordWebhookConfig(ruid: string, config: { feed: boolean; url: string; replayUpload: boolean }) {
+        await this._PageContainer.get(ruid)!.evaluate((config: any) => {
             window.gameRoom.social.discordWebhook = config;
+            window.gameRoom.logger.i('system', `[Webhook] Discord webhook configuration updated.`);
         }, config);
     }
+
+    /**
+     * Send webhook to Discord
+     * @param webhookUrl Complete Discord webhook URL
+     * @param type Type of webhook (replay)
+     * @param content Content to send
+     */
+    private async feedSocialDiscordWebhook(webhookUrl: string, type: string, content: any) {
+        try {
+            if (type === 'replay') {
+                const formData = new FormData();
+                const detailedMessage = await this.generateDetailedMatchMessage(content.ruid);
+                formData.append('content', detailedMessage);
+                
+                const replayData = typeof content.data === 'string' ? content.data : JSON.stringify(content.data);
+                formData.append('file', Buffer.from(replayData), {
+                    filename: `replay_${Date.now()}.hbr2`,
+                    contentType: 'application/octet-stream'
+                });
+                
+                const response = await axios.post(webhookUrl, formData, {
+                    headers: formData.getHeaders(),
+                    timeout: 30000
+                });
+                
+                if (response.status === 200 || response.status === 204) {
+                    winstonLogger.info(`[webhook] Successfully sent replay to Discord webhook`);
+                } else {
+                    winstonLogger.warn(`[webhook] Discord webhook responded with status: ${response.status}`);
+                }
+            }
+        } catch (error: any) {
+            if (error.response) {
+                winstonLogger.error(`[webhook] Discord webhook error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+            } else {
+                winstonLogger.error(`[webhook] Error sending Discord webhook: ${error.message}`);
+            }
+        }
+    }
+
+    /**
+     * Generate detailed match message for Discord webhook
+     * @param ruid Game room's UID
+     */
+    private async generateDetailedMatchMessage(ruid: string): Promise<string> {
+        return await this._PageContainer.get(ruid)!.evaluate(() => {
+            const scores = window.gameRoom._room.getScores();
+            if (!scores) return '🎮 Repetición de partido';
+
+            const redScore = scores.red;
+            const blueScore = scores.blue;
+            const matchTime = Math.floor((scores.time || 0) / 60) + ':' + String(Math.floor((scores.time || 0) % 60)).padStart(2, '0');
+            
+            // Get team names from current match
+            const redTeamName = 'RIVER PLATE';
+            const blueTeamName = 'BOCA JRS.';
+            
+            // Get players by team
+            const allPlayers = window.gameRoom._room.getPlayerList();
+            const redPlayers = allPlayers.filter(p => p.team === 1 && p.id !== 0);
+            const bluePlayers = allPlayers.filter(p => p.team === 2 && p.id !== 0);
+            
+            // Get possession data
+            const redPoss = window.gameRoom.ballStack.possCalculate(1);
+            const bluePoss = window.gameRoom.ballStack.possCalculate(2);
+            
+            // Get room configuration
+            const roomName = window.gameRoom.config._config.roomName;
+            const roomLink = window.gameRoom.link;
+            // Extract clean stadium name
+            let mapName = 'Estadio Desconocido';
+            try {
+                const stadiumData = window.gameRoom.stadiumData.default;
+                // Remove JavaScript-style comments before parsing JSON
+                const cleanedData = stadiumData.replace(/\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\//g, '');
+                const parsed = JSON.parse(cleanedData);
+                mapName = parsed.name || 'Estadio Desconocido';
+            } catch (e) {
+                mapName = 'Estadio Desconocido';
+                window.gameRoom.logger.w('system', `[core] Invalid stadium data: ${e.message}`);
+            }
+            const scoreLimit = window.gameRoom.config.rules.requisite.scoreLimit;
+            const timeLimit = Math.floor(window.gameRoom.config.rules.requisite.timeLimit / 60) + ':' + String(window.gameRoom.config.rules.requisite.timeLimit % 60).padStart(2, '0');
+            
+            // Get admins
+            const admins = allPlayers.filter(p => p.admin && p.id !== 0).map(p => p.name).join(', ') || 'Ninguno';
+            
+            // Find top scorer (MVP)
+            let topScorer = 'Ninguno';
+            let maxGoals = 0;
+            allPlayers.forEach(player => {
+                const playerData = window.gameRoom.playerList.get(player.id);
+                if (playerData && playerData.matchRecord.goals > maxGoals) {
+                    maxGoals = playerData.matchRecord.goals;
+                    topScorer = player.name;
+                }
+            });
+            
+            // Calculate ball possession in field
+            const totalPoss = redPoss + bluePoss;
+            const redFieldPoss = totalPoss > 0 ? (redPoss / totalPoss * 100) : 50;
+            const blueFieldPoss = totalPoss > 0 ? (bluePoss / totalPoss * 100) : 50;
+            
+            // Build match events summary with proper scoring tracking
+            let eventsSummary = '';
+            let currentRedScore = 0;
+            let currentBlueScore = 0;
+            
+            window.gameRoom.matchEventsHolder.forEach((event) => {
+                const player = allPlayers.find(p => p.id === event.playerId);
+                const playerName = player ? player.name : 'Desconocido';
+                const eventTime = Math.floor(event.matchTime / 60) + ':' + String(Math.floor(event.matchTime % 60)).padStart(2, '0');
+                
+                // Update scores based on event
+                if (event.type === 'goal') {
+                    if (event.playerTeamId === 1) {
+                        currentRedScore++;
+                    } else {
+                        currentBlueScore++;
+                    }
+                } else if (event.type === 'ownGoal') {
+                    // Own goal scores for the opposite team
+                    if (event.playerTeamId === 1) {
+                        currentBlueScore++;
+                    } else {
+                        currentRedScore++;
+                    }
+                }
+                
+                // Format event
+                eventsSummary += `🟥 ${redTeamName} ${currentRedScore}️⃣\n`;
+                eventsSummary += `🟦 ${blueTeamName} ${currentBlueScore}️⃣\n`;
+                
+                if (event.type === 'goal') {
+                    const assist = event.assistPlayerId ? allPlayers.find(p => p.id === event.assistPlayerId)?.name : null;
+                    if (assist) {
+                        eventsSummary += `🕒 ${eventTime} ⚊ ⚽💥 ¡GOL de ${playerName}! (👥⚽ ¡PASE de ${assist}!)\n\n`;
+                    } else {
+                        eventsSummary += `🕒 ${eventTime} ⚊ ⚽💥 ¡GOL de ${playerName}!\n\n`;
+                    }
+                } else if (event.type === 'ownGoal') {
+                    eventsSummary += `🕒 ${eventTime} ⚊ 💀 ¡AUTOGOL de ${playerName}!\n\n`;
+                }
+            });
+            
+            // Build final message
+            let message = `🏆 RESULTADO FINAL:\n` +
+                `🟥 ${redTeamName} ${redScore}\n` +
+                `🟦 ${blueTeamName} ${blueScore}\n` +
+                `Formación ${redTeamName} 🔴\n` +
+                `${redPlayers.map(p => p.name).join('\n')}\n` +
+                `Formación ${blueTeamName} 🔵\n` +
+                `${bluePlayers.map(p => p.name).join('\n')}\n` +
+                `🌟 Figura del partido:\n` +
+                `${topScorer}\n` +
+                `📊 ESTADÍSTICAS\n` +
+                `⚽️ Posesión de balón:\n` +
+                `🔴 ${redTeamName}: ${redPoss.toFixed(2)}%\n` +
+                `🔵 ${blueTeamName}: ${bluePoss.toFixed(2)}%\n\n` +
+                `🔄 Pelota en campo:\n` +
+                `🔴 ${redTeamName}: ${redFieldPoss.toFixed(0)}%\n` +
+                `🔵 ${blueTeamName}: ${blueFieldPoss.toFixed(0)}%\n\n` +
+                `⏰ Tiempo Jugado: ${matchTime}\n` +
+                `🛠️ CONFIGURACIÓN\n` +
+                `🎮 Nombre de la Sala:\n` +
+                `${roomName}\n\n` +
+                `👑 Administradores: ${admins}\n\n` +
+                `📍 Ubicación del Host: Argentina 🇦🇷\n\n` +
+                `🔗 Link de la Sala:\n` +
+                `${roomLink}\n\n` +
+                `🏟️ Mapa Colocado: ${mapName}\n\n` +
+                `⚽️ Límite de Goles: ${scoreLimit}\n\n` +
+                `⏱️ Límite de Tiempo: ${timeLimit}\n` +
+                `📜 RESUMEN DEL PARTIDO:\n` +
+                `${eventsSummary}`;
+            
+            // Truncate message if it exceeds Discord's 2000 character limit
+            if (message.length > 2000) {
+                message = message.substring(0, 1997) + '...';
+            }
+            
+            return message;
+        });
+    }
+
 }
 
 

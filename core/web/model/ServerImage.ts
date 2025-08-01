@@ -191,6 +191,13 @@ export interface ServerImage {
         default: string;
         ready: string;
     };
+    webhooks?: {
+        discord?: {
+            feed: boolean;
+            url?: string;
+            replayUpload: boolean;
+        };
+    };
 }
 
 export interface DeployRequest {

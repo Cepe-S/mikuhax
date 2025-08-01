@@ -1,6 +1,7 @@
 import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
 import { MatchEvent } from "../../model/GameObject/MatchEvent";
+import { MatchEventHolder } from "../../model/GameObject/MatchEventHolder";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { ScoresObject } from "../../model/GameObject/ScoresObject";
@@ -59,12 +60,18 @@ export async function onTeamGoalListener(team: TeamID): Promise<void> {
             placeholderGoal.scorerID = window.gameRoom.playerList.get(touchPlayer)!.id;
             placeholderGoal.scorerName = window.gameRoom.playerList.get(touchPlayer)!.name;
             window.gameRoom.playerList.get(touchPlayer)!.matchRecord.goals++; // record goal in match record
-            window.gameRoom.matchEventsHolder.push({
+            const goalEvent: MatchEventHolder = {
                 type: 'goal',
                 playerId: window.gameRoom.playerList.get(touchPlayer)!.id,
                 playerTeamId: team,
                 matchTime: matchTime
-            });
+            };
+            
+            if (assistPlayer !== undefined && touchPlayer != assistPlayer && window.gameRoom.playerList.get(assistPlayer)!.team === team) {
+                goalEvent.assistPlayerId = window.gameRoom.playerList.get(assistPlayer)!.id;
+            }
+            
+            window.gameRoom.matchEventsHolder.push(goalEvent);
             var goalMsg: string = Tst.maketext(LangRes.onGoal.goal, placeholderGoal);
             if (assistPlayer !== undefined && touchPlayer != assistPlayer && window.gameRoom.playerList.get(assistPlayer)!.team === team) {
                 // records assist when the player who assists is not same as the player goaled, and is not other team.

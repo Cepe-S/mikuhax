@@ -38,7 +38,14 @@ export const createImageSchema = Joi.object().keys({
     stadiums: Joi.object().keys({
         default: Joi.string().required(),
         ready: Joi.string().required()
-    }).required()
+    }).required(),
+    webhooks: Joi.object().keys({
+        discord: Joi.object().keys({
+            feed: Joi.boolean().required(),
+            url: Joi.string().optional().allow(null, '').pattern(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/),
+            replayUpload: Joi.boolean().required()
+        }).optional()
+    }).optional()
 });
 
 export const deployRequestSchema = Joi.object().keys({
