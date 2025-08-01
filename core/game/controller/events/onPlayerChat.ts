@@ -36,13 +36,14 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
         parseCommand(player, message); // evaluate it
         return false; // and show this message for only him/herself
     } else { // if this message is normal chat
-        if (player.admin === true) { // if this player is admin
-            return true; // admin can chat regardless of mute
-        } else {
-            if (window.gameRoom.isMuteAll === true || window.gameRoom.playerList.get(player.id)!.permissions['mute'] === true) { // if this player is muted or whole chat is frozen
-                window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onChat.mutedChat, placeholderChat), player.id, 0xFF0000, "bold", 2); // notify that fact
-                return false; // and hide this chat
-            } else {
+        // Check if player is muted (admins can bypass mute)
+        if (!player.admin && (window.gameRoom.isMuteAll === true || window.gameRoom.playerList.get(player.id)!.permissions['mute'] === true)) { // if this player is muted or whole chat is frozen
+            window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onChat.mutedChat, placeholderChat), player.id, 0xFF0000, "bold", 2); // notify that fact
+            return false; // and hide this chat
+        }
+        
+        // Continue with message processing for all players (including admins)
+        if (!player.admin) { // Only apply anti-flood and filters to non-admins
                 // Anti Chat Flood Checking - Intelligent Time-based Spam Detection
                 if (window.gameRoom.config.settings.antiChatFlood === true && window.gameRoom.isStatRecord === true) {
                     const currentTime = getUnixTimestamp() * 1000; // Convert to milliseconds for precision
@@ -98,24 +99,24 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                 if(window.gameRoom.config.settings.chatTextFilter === true && isIncludeBannedWords(window.gameRoom.bannedWordsPool.chat, message)) {
                     window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onChat.bannedWords, placeholderChat), player.id, 0xFF0000, "bold", 2); // notify that fact
                     return false;
-                }
-                // Interceptar mensaje y enviarlo con formato personalizado
+            }
+        }
+        
+        // Apply custom formatting to ALL players (including admins)
+        // Interceptar mensaje y enviarlo con formato personalizado
                 const playerData = window.gameRoom.playerList.get(player.id)!;
                 const teamEmoji = player.team === TeamID.Red ? '🔴' : player.team === TeamID.Blue ? '🔵' : '⚪';
                 
                 const playerTier = decideTier(playerData.stats.rating, player.id);
                 const tierEmoji = getTierName(playerTier);
-                const adminIndicator = player.admin ? '⭐' : '';
-                const superAdminIndicator = playerData.permissions.superadmin ? '👑' : '';
+                const adminIndicator = (player.admin || playerData.permissions.superadmin) ? '👑' : '';
                 
-                const customMessage = `${tierEmoji} « 🆔:${player.id} » ${teamEmoji} ~ ${superAdminIndicator}${adminIndicator}${player.name}: ${message}`;
+                const customMessage = `${tierEmoji} « 🆔:${player.id} » ${teamEmoji} ~ ${adminIndicator}${player.name}: ${message}`;
                 let msgColor = 0xFFFFFF; // default white
                 if (player.team === TeamID.Red) msgColor = 0xFF3333; // rojo
                 else if (player.team === TeamID.Blue) msgColor = 0x3399FF; // azul
                 else if (player.team === TeamID.Spec) msgColor = 0xC7C7C7; // gris
-                window.gameRoom._room.sendAnnouncement(customMessage, null, msgColor, "normal", 0);
-                return false; // Bloquear el mensaje original
-            }
-        }
+        window.gameRoom._room.sendAnnouncement(customMessage, null, msgColor, "normal", 0);
+        return false; // Bloquear el mensaje original
     }
 }

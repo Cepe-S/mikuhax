@@ -90,9 +90,9 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
             .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
+            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
@@ -113,9 +113,9 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
             .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
+            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
@@ -136,9 +136,9 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
             .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
+            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
@@ -155,9 +155,9 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
             .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
+            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'assist' })
@@ -178,9 +178,9 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
             .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
+            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'assist' })
@@ -201,9 +201,9 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.id = event.playerId')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
             .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, CONCAT("Player #", event.playerId))', 'playerName')
+            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'assist' })
