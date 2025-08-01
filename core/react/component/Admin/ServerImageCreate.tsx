@@ -50,7 +50,7 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
     // Image metadata
     const [imageName, setImageName] = useState('');
     const [imageDescription, setImageDescription] = useState('');
-    const [headlessToken, setHeadlessToken] = useState('');
+    const [imageRuid, setImageRuid] = useState('');
 
 
     // Room config states (simplified from original RoomCreate)
@@ -88,7 +88,7 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
-        if (!imageName || !imageDescription) {
+        if (!imageName || !imageDescription || !imageRuid) {
             setFlashMessage('Please fill in all required fields');
             setAlertStatus("error");
             setTimeout(() => setFlashMessage(''), 3000);
@@ -98,6 +98,7 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
         const serverImageData = {
             name: imageName,
             description: imageDescription,
+            ruid: imageRuid,
             version: "1.0.0",
             createdAt: new Date(),
             config: {
@@ -220,6 +221,21 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                                         rows={2}
                                         value={imageDescription}
                                         onChange={(e) => setImageDescription(e.target.value)}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        fullWidth
+                                        id="imageRuid"
+                                        name="imageRuid"
+                                        label="Room UID (RUID)"
+                                        variant="outlined"
+                                        margin="normal"
+                                        size="small"
+                                        required
+                                        value={imageRuid}
+                                        onChange={(e) => setImageRuid(e.target.value)}
+                                        helperText="Unique identifier for the room (alphanumeric, dash, underscore only)"
                                     />
                                 </Grid>
                             </Grid>

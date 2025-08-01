@@ -22,7 +22,8 @@ Content-Type: application/json
 
 {
   "name": "Mi Configuración",
-  "description": "Configuración personalizada para torneos"
+  "description": "Configuración personalizada para torneos",
+  "ruid": "mi-servidor-torneo"
 }
 ```
 
@@ -50,7 +51,6 @@ Content-Type: application/json
 
 {
   "imageId": "basic_default_1234567890",
-  "ruid": "mi-servidor-001",
   "token": "tu-headless-token-aqui",
   "overrides": {
     "roomName": "Sala Personalizada",
@@ -67,6 +67,7 @@ Content-Type: application/json
 {
   "name": "Nombre de la imagen",
   "description": "Descripción detallada",
+  "ruid": "mi-servidor-unico",
   "version": "1.0.0",
   "createdAt": "2024-01-01T00:00:00.000Z",
   "config": {
@@ -100,10 +101,10 @@ Content-Type: application/json
 3. La imagen se guarda con toda la configuración
 
 ### 2. Desplegar Servidor
-1. Selecciona la imagen que deseas usar
+1. Selecciona la imagen que deseas usar (que ya contiene el RUID)
 2. Proporciona el headless token
 3. Opcionalmente, especifica overrides para personalizar
-4. El servidor se despliega con la configuración de la imagen
+4. El servidor se despliega con la configuración y RUID de la imagen
 
 ### 3. Gestionar Imágenes
 - Lista todas las imágenes disponibles
@@ -117,6 +118,7 @@ Content-Type: application/json
 3. **Seguridad**: Los tokens no se almacenan en las imágenes
 4. **Flexibilidad**: Los overrides permiten personalización sin modificar la imagen base
 5. **Versionado**: Cada imagen tiene su versión y fecha de creación
+6. **RUID Integrado**: Cada imagen tiene su RUID único predefinido, evitando conflictos
 
 ## Migración desde el Sistema Anterior
 

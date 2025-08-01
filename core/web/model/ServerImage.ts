@@ -1,6 +1,7 @@
 export interface ServerImage {
     name: string;
     description: string;
+    ruid: string;
     version: string;
     createdAt: Date;
     config: {
@@ -194,7 +195,6 @@ export interface ServerImage {
 
 export interface DeployRequest {
     imageId: string;
-    ruid: string;
     token: string;
     overrides?: {
         roomName?: string;

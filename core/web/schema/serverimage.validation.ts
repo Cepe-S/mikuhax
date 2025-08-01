@@ -3,6 +3,7 @@ import Joi from 'joi';
 export const createImageSchema = Joi.object().keys({
     name: Joi.string().required().min(1).max(100),
     description: Joi.string().required().min(1).max(500),
+    ruid: Joi.string().required().min(1).max(50).pattern(/^[a-zA-Z0-9_-]+$/),
     version: Joi.string().optional().default('1.0.0'),
     createdAt: Joi.date().optional().default(() => new Date()),
     config: Joi.object().keys({
@@ -42,7 +43,6 @@ export const createImageSchema = Joi.object().keys({
 
 export const deployRequestSchema = Joi.object().keys({
     imageId: Joi.string().required(),
-    ruid: Joi.string().required(),
     token: Joi.string().required(),
     overrides: Joi.object().keys({
         roomName: Joi.string().optional(),

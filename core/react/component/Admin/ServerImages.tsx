@@ -24,6 +24,7 @@ interface ServerImage {
     id: string;
     name: string;
     description: string;
+    ruid: string;
     version: string;
     createdAt: Date;
 }
@@ -61,11 +62,10 @@ export default function ServerImages({ styleClass }: styleClass) {
     };
 
     const handleDeploy = async (image: ServerImage) => {
-        const ruid = prompt('Enter RUID for deployment:');
         const token = prompt('Enter Haxball token:');
         
-        if (!ruid || !token) {
-            setFlashMessage('RUID and token are required');
+        if (!token) {
+            setFlashMessage('Token is required');
             setAlertStatus("error");
             setTimeout(() => setFlashMessage(''), 3000);
             return;
@@ -76,7 +76,6 @@ export default function ServerImages({ styleClass }: styleClass) {
             setAlertStatus("info");
             const result = await client.post('/api/v1/images/deploy', {
                 imageId: image.id,
-                ruid,
                 token
             });
             if (result.status === 201) {
@@ -198,7 +197,7 @@ export default function ServerImages({ styleClass }: styleClass) {
                                 <ListItem key={image.id}>
                                     <ListItemText
                                         primary={image.name}
-                                        secondary={`${image.description} | Version: ${image.version} | Created: ${image.createdAt.toLocaleDateString()}`}
+                                        secondary={`${image.description} | RUID: ${image.ruid} | Version: ${image.version} | Created: ${image.createdAt.toLocaleDateString()}`}
                                     />
                                     <ListItemSecondaryAction>
                                         <IconButton onClick={() => handleDeploy(image)} color="primary">

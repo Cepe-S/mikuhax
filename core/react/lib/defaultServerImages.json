@@ -3,10 +3,10 @@
     "id": "futsal-competitive",
     "name": "Futsal Competitive",
     "description": "Competitive futsal setup with strict rules",
-    "headlessToken": "",
+    "ruid": "futsal-comp-server",
+    "version": "1.0.0",
+    "createdAt": "2024-01-01T00:00:00.000Z",
     "config": {
-      "ruid": "futsal-comp-server",
-      "_config": {
         "roomName": "🏆 Futsal Competitive Server 🏆",
         "playerName": "🤖",
         "password": "",
@@ -184,18 +184,20 @@
         "map": "map",
         "balance": "balance",
         "camisetas": "camisetas"
-      }
-    },
-    "createdAt": "2024-01-01T00:00:00.000Z"
+      },
+    "stadiums": {
+      "default": "futx4",
+      "ready": "futx2"
+    }
   },
   {
     "id": "futsal-casual",
     "name": "Futsal Casual",
     "description": "Relaxed futsal for fun games",
-    "headlessToken": "",
+    "ruid": "futsal-casual-server",
+    "version": "1.0.0",
+    "createdAt": "2024-01-01T00:00:00.000Z",
     "config": {
-      "ruid": "futsal-casual-server",
-      "_config": {
         "roomName": "⚽ Futsal Casual - Fun Games ⚽",
         "playerName": "🤖",
         "password": "",
@@ -373,8 +375,10 @@
         "map": "map",
         "balance": "balance",
         "camisetas": "camisetas"
-      }
-    },
-    "createdAt": "2024-01-01T00:00:00.000Z"
+      },
+    "stadiums": {
+      "default": "futx4",
+      "ready": "futx2"
+    }
   }
 ]

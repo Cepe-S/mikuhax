@@ -50,7 +50,8 @@ export async function createServerImageFromRoom(ctx: Context) {
     
     const validationResult = Joi.object().keys({
         name: Joi.string().required().min(1).max(100),
-        description: Joi.string().required().min(1).max(500)
+        description: Joi.string().required().min(1).max(500),
+        ruid: Joi.string().required().min(1).max(50).pattern(/^[a-zA-Z0-9_-]+$/)
     }).validate(ctx.request.body);
     
     if (validationResult.error) {
@@ -59,7 +60,7 @@ export async function createServerImageFromRoom(ctx: Context) {
         return;
     }
     
-    const { name, description } = ctx.request.body;
+    const { name, description, ruid } = ctx.request.body;
 
     if (!browser.checkExistRoom(ruid)) {
         ctx.status = 404;
@@ -73,6 +74,7 @@ export async function createServerImageFromRoom(ctx: Context) {
         const serverImage: ServerImage = {
             name,
             description,
+            ruid,
             version: "1.0.0",
             createdAt: new Date(),
             config: {
@@ -120,6 +122,7 @@ export function listServerImages(ctx: Context) {
                 id: file.replace('.json', ''),
                 name: imageData.name,
                 description: imageData.description,
+                ruid: imageData.ruid,
                 version: imageData.version,
                 createdAt: imageData.createdAt
             };
@@ -177,7 +180,7 @@ export async function deployFromImage(ctx: Context) {
         return;
     }
 
-    if (browser.checkExistRoom(deployRequest.ruid)) {
+    if (browser.checkExistRoom(imageData.ruid)) {
         ctx.status = 409;
         ctx.body = { error: 'Room already exists' };
         return;
@@ -197,7 +200,7 @@ export async function deployFromImage(ctx: Context) {
 
         const newRoomConfig: BrowserHostRoomInitConfig = {
             _LaunchDate: new Date(),
-            _RUID: deployRequest.ruid,
+            _RUID: imageData.ruid,
             _config: config,
             settings: imageData.settings,
             rules: imageData.rules,
@@ -209,12 +212,12 @@ export async function deployFromImage(ctx: Context) {
             newRoomConfig._config.password = undefined;
         }
 
-        await browser.openNewRoom(deployRequest.ruid, newRoomConfig);
+        await browser.openNewRoom(imageData.ruid, newRoomConfig);
         
         ctx.status = 201;
         ctx.body = { 
             message: 'Server deployed successfully',
-            ruid: deployRequest.ruid,
+            ruid: imageData.ruid,
             imageId: deployRequest.imageId
         };
     } catch (error) {
