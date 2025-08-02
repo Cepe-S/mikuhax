@@ -194,7 +194,9 @@ export interface ServerImage {
     webhooks?: {
         discord?: {
             feed: boolean;
-            url?: string;
+            url?: string; // Deprecated - for backward compatibility
+            replayUrl?: string;
+            adminCallUrl?: string;
             replayUpload: boolean;
         };
     };

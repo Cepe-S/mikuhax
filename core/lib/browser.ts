@@ -231,13 +231,19 @@ export class HeadlessBrowser {
         await page.waitForFunction(() => window.gameRoom !== undefined);
         await page.evaluate((webhookConfig: any) => {
             if (window.gameRoom) {
+                const discordConfig = webhookConfig?.discord || {};
                 window.gameRoom.social = {
                     discordWebhook: {
-                        feed: webhookConfig?.discord?.feed || false,
-                        url: webhookConfig?.discord?.url || '',
-                        replayUpload: webhookConfig?.discord?.replayUpload || false
+                        feed: discordConfig.feed || false,
+                        url: discordConfig.url || '', // General webhook URL (backward compatibility)
+                        replayUrl: discordConfig.replayUrl || '', // Specific URL for replays
+                        adminCallUrl: discordConfig.adminCallUrl || '', // Specific URL for admin calls
+                        replayUpload: discordConfig.replayUpload || false
                     }
                 };
+                
+                // Log webhook configuration for debugging
+                window.gameRoom.logger.i('system', `[Webhook] Configuration loaded - Feed: ${window.gameRoom.social.discordWebhook.feed}, ReplayURL: ${window.gameRoom.social.discordWebhook.replayUrl ? 'configured' : 'not configured'}, AdminCallURL: ${window.gameRoom.social.discordWebhook.adminCallUrl ? 'configured' : 'not configured'}`);
             }
         }, initConfig.webhooks || {});
 
@@ -674,20 +680,52 @@ export class HeadlessBrowser {
      * @param ruid Game room's UID
      * @param config Webhook configuration
      */
-    public async setDiscordWebhookConfig(ruid: string, config: { feed: boolean; url: string; replayUpload: boolean }) {
+    public async setDiscordWebhookConfig(ruid: string, config: { feed: boolean; url?: string; replayUrl?: string; adminCallUrl?: string; replayUpload: boolean }) {
         await this._PageContainer.get(ruid)!.evaluate((config: any) => {
-            window.gameRoom.social.discordWebhook = config;
+            window.gameRoom.social.discordWebhook = {
+                feed: config.feed,
+                url: config.url || '', // Backward compatibility
+                replayUrl: config.replayUrl || config.url || '',
+                adminCallUrl: config.adminCallUrl || config.url || '',
+                replayUpload: config.replayUpload
+            };
             window.gameRoom.logger.i('system', `[Webhook] Discord webhook configuration updated.`);
         }, config);
     }
 
     /**
      * Send webhook to Discord
-     * @param webhookUrl Complete Discord webhook URL
-     * @param type Type of webhook (replay)
+     * @param webhookUrl Complete Discord webhook URL (can be empty if using separate URLs)
+     * @param type Type of webhook (replay, admin_call)
      * @param content Content to send
      */
     private async feedSocialDiscordWebhook(webhookUrl: string, type: string, content: any) {
+        // Get the appropriate webhook URL based on type
+        let actualWebhookUrl = '';
+        
+        if (content.ruid) {
+            const webhookConfig = await this.getDiscordWebhookConfig(content.ruid);
+            
+            if (type === 'replay') {
+                // For replays, use replayUrl first, then fallback to general url
+                actualWebhookUrl = webhookConfig.replayUrl || webhookConfig.url || webhookUrl;
+            } else if (type === 'admin_call') {
+                // For admin calls, ONLY use adminCallUrl - no fallback to prevent mixing
+                actualWebhookUrl = webhookConfig.adminCallUrl || '';
+            } else {
+                // For other types, use general url
+                actualWebhookUrl = webhookConfig.url || webhookUrl;
+            }
+        } else {
+            actualWebhookUrl = webhookUrl;
+        }
+        
+        if (!actualWebhookUrl) {
+            winstonLogger.warn(`[webhook] No webhook URL configured for type: ${type}. Please configure the appropriate webhook URL.`);
+            return;
+        }
+        
+        winstonLogger.info(`[webhook] Sending ${type} webhook to: ${actualWebhookUrl.substring(0, 50)}...`);
         try {
             if (type === 'replay') {
                 const formData = new FormData();
@@ -700,13 +738,36 @@ export class HeadlessBrowser {
                     contentType: 'application/octet-stream'
                 });
                 
-                const response = await axios.post(webhookUrl, formData, {
+                const response = await axios.post(actualWebhookUrl, formData, {
                     headers: formData.getHeaders(),
                     timeout: 30000
                 });
                 
                 if (response.status === 200 || response.status === 204) {
                     winstonLogger.info(`[webhook] Successfully sent replay to Discord webhook`);
+                } else {
+                    winstonLogger.warn(`[webhook] Discord webhook responded with status: ${response.status}`);
+                }
+            } else if (type === 'admin_call') {
+                const adminCallMessage = `🚨 **SE NECESITAN ADMINISTRADORES** 🚨\n\n` +
+                    `🎮 **Sala:** ${content.roomName}\n` +
+                    `🔗 **Link:** ${content.roomLink}\n` +
+                    `📝 **Razón:** ${content.reason}\n` +
+                    `👤 **Solicitado por:** ${content.callerName} (#${content.callerId})`;
+                
+                const payload = {
+                    content: adminCallMessage
+                };
+                
+                const response = await axios.post(actualWebhookUrl, payload, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 30000
+                });
+                
+                if (response.status === 200 || response.status === 204) {
+                    winstonLogger.info(`[webhook] Successfully sent admin call to Discord webhook`);
                 } else {
                     winstonLogger.warn(`[webhook] Discord webhook responded with status: ${response.status}`);
                 }

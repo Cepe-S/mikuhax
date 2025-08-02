@@ -24,7 +24,9 @@ declare global {
             social: {
                 discordWebhook: {
                     feed: boolean;
-                    url: string;
+                    url: string; // Backward compatibility
+                    replayUrl: string;
+                    adminCallUrl: string;
                     replayUpload: boolean;
                 }
             };

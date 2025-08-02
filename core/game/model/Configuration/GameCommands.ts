@@ -23,6 +23,7 @@ export interface GameCommands {
     _helpManavatar: string
     _helpManmap: string
     _helpManbalance: string
+    _helpManllamaradmin: string
 
     _listSubafk: string
     _listSubmute: string
@@ -62,4 +63,5 @@ export interface GameCommands {
     map: string
     balance: string
     camisetas: string
+    llamaradmin: string
 }

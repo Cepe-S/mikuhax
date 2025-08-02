@@ -54,9 +54,8 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
     
     // Discord webhook states
     const [discordWebhook, setDiscordWebhook] = useState({
-        feed: false,
-        url: '',
-        replayUpload: false
+        replayUrl: '',
+        adminCallUrl: ''
     });
 
 
@@ -102,17 +101,15 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
             return;
         }
         
-        // Validate Discord webhook configuration
-        if ((discordWebhook.feed || discordWebhook.replayUpload) && !discordWebhook.url) {
-            setFlashMessage('Discord webhook URL is required when webhook features are enabled');
+        // Validate Discord webhook URL formats
+        if (discordWebhook.replayUrl && !discordWebhook.replayUrl.match(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/)) {
+            setFlashMessage('Invalid replay webhook URL format. Please use the complete webhook URL from Discord.');
             setAlertStatus("error");
             setTimeout(() => setFlashMessage(''), 3000);
             return;
         }
-        
-        // Validate Discord webhook URL format
-        if (discordWebhook.url && !discordWebhook.url.match(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/)) {
-            setFlashMessage('Invalid Discord webhook URL format. Please use the complete webhook URL from Discord.');
+        if (discordWebhook.adminCallUrl && !discordWebhook.adminCallUrl.match(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/)) {
+            setFlashMessage('Invalid admin call webhook URL format. Please use the complete webhook URL from Discord.');
             setAlertStatus("error");
             setTimeout(() => setFlashMessage(''), 3000);
             return;
@@ -148,10 +145,11 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                 ready: rulesFormField.readyMapName
             },
             webhooks: {
-                discord: discordWebhook.feed || discordWebhook.replayUpload ? {
-                    feed: discordWebhook.feed,
-                    url: discordWebhook.url || undefined,
-                    replayUpload: discordWebhook.replayUpload
+                discord: (discordWebhook.replayUrl || discordWebhook.adminCallUrl) ? {
+                    feed: !!discordWebhook.adminCallUrl,
+                    replayUrl: discordWebhook.replayUrl || undefined,
+                    adminCallUrl: discordWebhook.adminCallUrl || undefined,
+                    replayUpload: !!discordWebhook.replayUrl
                 } : undefined
             }
         };
@@ -887,48 +885,31 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                                     <Grid container spacing={2}>
                                         <Grid item xs={12}>
                                             <Typography variant="body2" color="textSecondary" gutterBottom>
-                                                Configure Discord webhook for game notifications and replay uploads
+                                                Configure Discord webhooks for different notifications. You can use the same URL for both or separate URLs.
                                             </Typography>
                                         </Grid>
-                                        <Grid item xs={6} sm={3}>
-                                            <FormControlLabel
-                                                control={
-                                                    <Switch
-                                                        checked={discordWebhook.feed}
-                                                        onChange={(e) => setDiscordWebhook({ ...discordWebhook, feed: e.target.checked })}
-                                                        size="small"
-                                                        color="primary"
-                                                    />
-                                                }
-                                                label="Game Feed"
-                                                labelPlacement="top"
-                                            />
-                                        </Grid>
-                                        <Grid item xs={6} sm={3}>
-                                            <FormControlLabel
-                                                control={
-                                                    <Switch
-                                                        checked={discordWebhook.replayUpload}
-                                                        onChange={(e) => setDiscordWebhook({ ...discordWebhook, replayUpload: e.target.checked })}
-                                                        size="small"
-                                                        color="primary"
-                                                    />
-                                                }
-                                                label="Replay Upload"
-                                                labelPlacement="top"
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                value={discordWebhook.replayUrl}
+                                                onChange={(e) => setDiscordWebhook({ ...discordWebhook, replayUrl: e.target.value })}
+                                                label="Replay Upload Webhook URL"
+                                                variant="outlined"
+                                                size="small"
+                                                placeholder="https://discord.com/api/webhooks/123456789/abcdefghijklmnop"
+                                                helperText="Webhook URL for automatic replay uploads after games (optional)"
                                             />
                                         </Grid>
                                         <Grid item xs={12}>
                                             <TextField
                                                 fullWidth
-                                                value={discordWebhook.url}
-                                                onChange={(e) => setDiscordWebhook({ ...discordWebhook, url: e.target.value })}
-                                                label="Discord Webhook URL"
+                                                value={discordWebhook.adminCallUrl}
+                                                onChange={(e) => setDiscordWebhook({ ...discordWebhook, adminCallUrl: e.target.value })}
+                                                label="Admin Call Webhook URL"
                                                 variant="outlined"
                                                 size="small"
-                                                disabled={!discordWebhook.feed && !discordWebhook.replayUpload}
                                                 placeholder="https://discord.com/api/webhooks/123456789/abcdefghijklmnop"
-                                                helperText={discordWebhook.feed || discordWebhook.replayUpload ? "Complete Discord webhook URL (required when webhook features are enabled)" : "Enable feed or replay upload to configure"}
+                                                helperText="Webhook URL for !llamaradmin command notifications (optional)"
                                             />
                                         </Grid>
                                     </Grid>

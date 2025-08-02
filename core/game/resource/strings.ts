@@ -56,7 +56,7 @@ export const command = {
     _ErrorWrongCommand : '❌ Comando incorrecto. 📑 Usa !help o !help COMMAND para más detalles.'
     ,_ErrorNoPermission: '❌ Solo los administradores pueden usar este comando.'
     ,_ErrorDisabled: '❌ Este comando no está habilitado en esta sala.'
-    ,help: '📄 !about, notice, stats, statsreset, tier, ranking, avatar, afk, vote, poss, streak, scout, list, powershot, goleadores, asistidores\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Los super admins tienen acceso a comandos adicionales de administrador.'
+    ,help: '📄 !about, notice, stats, statsreset, tier, ranking, avatar, afk, vote, poss, streak, scout, list, powershot, goleadores, asistidores, llamaradmin\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Los super admins tienen acceso a comandos adicionales de administrador.'
     ,helpadmin: '📄 !freeze, mute, powershotadmin, balance\n📑 Usa !help COMMAND para más detalles'
     ,helpman: { // descripción detallada para un comando
         _ErrorWrongMan : '❌ No hay una descripción disponible para el comando solicitado.'
@@ -81,6 +81,7 @@ export const command = {
         ,avatar: '📑 !avatar <1-2 caracteres> : Cambia tu avatar a los caracteres especificados (1 o 2 caracteres máximo).'
         ,map: '📑 !map [nombre_mapa] : [SUPERADMIN] Cambia el mapa de la sala. Sin parámetro muestra mapas disponibles. Mapas: futx2, futx3, futx4, futx5, futx7.'
         ,balance: '📑 !balance : [ADMIN] Fuerza el balanceo inmediato de equipos. Muestra el estado actual y balancea si es necesario.'
+        ,llamaradmin: '📑 !llamaradmin [razón] : Llama a un administrador con una razón opcional. Los administradores serán notificados.'
     } 
     ,about: '📄 Nombre de la sala : {RoomName} ({_LaunchTime})\n💬 Esta sala está gestionada por el bot Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [Discord] https://discord.gg/qfg45B2 [Apóyanos] https://www.patreon.com/dapucita'
     ,stats: {
@@ -176,6 +177,9 @@ export const command = {
            '📊 Los tiers se muestran en colores distintivos. Usa !stats para ver tu tier actual'
     ,notice: {
         _ErrorNoMessage: '❌ No hay avisos disponibles actualmente.'
+    }
+    ,llamaradmin: {
+        success: '📢 {playerName}#{playerID} ha llamado a un administrador. Razón: {reason}'
     }
 }
 

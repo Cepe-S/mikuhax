@@ -54,16 +54,17 @@ export function onGameStopListener(byPlayer: PlayerObject): void {
     const replay = window.gameRoom._room.stopRecording();
     
     window.gameRoom.logger.i('onGameStop', `🎮 Game stopped. Replay data: ${replay ? 'Available' : 'Not available'}`);
-    window.gameRoom.logger.i('onGameStop', `🔧 Discord config - feed: ${window.gameRoom.social.discordWebhook.feed}, replayUpload: ${window.gameRoom.social.discordWebhook.replayUpload}, url: ${window.gameRoom.social.discordWebhook.url ? 'Set' : 'Not set'}`);
+    const replayUrl = window.gameRoom.social.discordWebhook.replayUrl || window.gameRoom.social.discordWebhook.url;
+    window.gameRoom.logger.i('onGameStop', `🔧 Discord config - feed: ${window.gameRoom.social.discordWebhook.feed}, replayUpload: ${window.gameRoom.social.discordWebhook.replayUpload}, replayUrl: ${replayUrl ? 'Set' : 'Not set'}`);
     
-    if(replay && window.gameRoom.social.discordWebhook.feed && window.gameRoom.social.discordWebhook.replayUpload && window.gameRoom.social.discordWebhook.url) {
+    if(replay && window.gameRoom.social.discordWebhook.feed && window.gameRoom.social.discordWebhook.replayUpload && replayUrl) {
         window.gameRoom.logger.i('onGameStop', '📤 Attempting to send replay to Discord...');
         const placeholder = {
             roomName: window.gameRoom.config._config.roomName
             ,replayDate: Date().toLocaleString()
         }
 
-        window._feedSocialDiscordWebhook(window.gameRoom.social.discordWebhook.url, "replay", {
+        window._feedSocialDiscordWebhook('', "replay", {
             ruid: window.gameRoom.config._RUID,
             data: JSON.stringify(Array.from(replay))
         });
@@ -72,7 +73,7 @@ export function onGameStopListener(byPlayer: PlayerObject): void {
         if (!replay) missing.push('replay');
         if (!window.gameRoom.social.discordWebhook.feed) missing.push('feed');
         if (!window.gameRoom.social.discordWebhook.replayUpload) missing.push('replayUpload');
-        if (!window.gameRoom.social.discordWebhook.url) missing.push('url');
+        if (!replayUrl) missing.push('replayUrl');
         window.gameRoom.logger.w('onGameStop', `❌ Replay not sent. Missing: ${missing.join(', ')}`);
     }
 

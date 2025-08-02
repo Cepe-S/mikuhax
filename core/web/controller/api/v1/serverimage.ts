@@ -256,10 +256,10 @@ export async function deployFromImage(ctx: Context) {
         
         // Configure webhooks if present in image
         if (imageData.webhooks?.discord && (imageData.webhooks.discord.feed || imageData.webhooks.discord.replayUpload)) {
-            if (imageData.webhooks.discord.url) {
+            if (imageData.webhooks.discord.replayUrl) {
                 await browser.setDiscordWebhookConfig(imageData.ruid, {
                     feed: imageData.webhooks.discord.feed,
-                    url: imageData.webhooks.discord.url,
+                    url: imageData.webhooks.discord.replayUrl,
                     replayUpload: imageData.webhooks.discord.replayUpload
                 });
             }
