@@ -255,10 +255,13 @@ export async function deployFromImage(ctx: Context) {
         await browser.openNewRoom(imageData.ruid, newRoomConfig);
         
         // Configure webhooks if present in image
-        if (imageData.webhooks?.discord && imageData.webhooks.discord.replayUpload) {
+        if (imageData.webhooks?.discord) {
             await browser.setDiscordWebhookConfig(imageData.ruid, {
                 replayUrl: imageData.webhooks.discord.replayUrl || '',
                 adminCallUrl: imageData.webhooks.discord.adminCallUrl || '',
+                serverStatusUrl: imageData.webhooks.discord.serverStatusUrl || '',
+                dailyStatsUrl: imageData.webhooks.discord.dailyStatsUrl || '',
+                dailyStatsTime: imageData.webhooks.discord.dailyStatsTime || '20:00',
                 replayUpload: imageData.webhooks.discord.replayUpload
             });
         }

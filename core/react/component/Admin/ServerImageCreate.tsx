@@ -56,7 +56,9 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
     const [discordWebhook, setDiscordWebhook] = useState({
         replayUrl: '',
         adminCallUrl: '',
-        serverStatusUrl: ''
+        serverStatusUrl: '',
+        dailyStatsUrl: '',
+        dailyStatsTime: '20:00'
     });
 
 
@@ -121,6 +123,19 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
             setTimeout(() => setFlashMessage(''), 3000);
             return;
         }
+        if (discordWebhook.dailyStatsUrl && !discordWebhook.dailyStatsUrl.match(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/)) {
+            setFlashMessage('Invalid daily stats webhook URL format. Please use the complete webhook URL from Discord.');
+            setAlertStatus("error");
+            setTimeout(() => setFlashMessage(''), 3000);
+            return;
+        }
+        // Validate time format
+        if (discordWebhook.dailyStatsTime && !discordWebhook.dailyStatsTime.match(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)) {
+            setFlashMessage('Invalid time format. Please use HH:MM format (24-hour).');
+            setAlertStatus("error");
+            setTimeout(() => setFlashMessage(''), 3000);
+            return;
+        }
 
         const serverImageData = {
             name: imageName,
@@ -152,10 +167,12 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                 ready: rulesFormField.readyMapName
             },
             webhooks: {
-                discord: (discordWebhook.replayUrl || discordWebhook.adminCallUrl || discordWebhook.serverStatusUrl) ? {
+                discord: (discordWebhook.replayUrl || discordWebhook.adminCallUrl || discordWebhook.serverStatusUrl || discordWebhook.dailyStatsUrl) ? {
                     replayUrl: discordWebhook.replayUrl || undefined,
                     adminCallUrl: discordWebhook.adminCallUrl || undefined,
                     serverStatusUrl: discordWebhook.serverStatusUrl || undefined,
+                    dailyStatsUrl: discordWebhook.dailyStatsUrl || undefined,
+                    dailyStatsTime: discordWebhook.dailyStatsTime || '20:00',
                     replayUpload: !!discordWebhook.replayUrl
                 } : undefined
             }
@@ -929,6 +946,33 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                                                 size="small"
                                                 placeholder="https://discord.com/api/webhooks/123456789/abcdefghijklmnop"
                                                 helperText="Webhook URL for server start/stop notifications - goes to status channel (optional)"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={8}>
+                                            <TextField
+                                                fullWidth
+                                                value={discordWebhook.dailyStatsUrl}
+                                                onChange={(e) => setDiscordWebhook({ ...discordWebhook, dailyStatsUrl: e.target.value })}
+                                                label="Daily Stats Webhook URL"
+                                                variant="outlined"
+                                                size="small"
+                                                placeholder="https://discord.com/api/webhooks/123456789/abcdefghijklmnop"
+                                                helperText="Webhook URL for daily top 5 scorers and assisters - goes to stats channel (optional)"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                value={discordWebhook.dailyStatsTime}
+                                                onChange={(e) => setDiscordWebhook({ ...discordWebhook, dailyStatsTime: e.target.value })}
+                                                label="Daily Stats Time"
+                                                variant="outlined"
+                                                size="small"
+                                                placeholder="20:00"
+                                                helperText="Time to send daily stats (24-hour format: HH:MM)"
+                                                inputProps={{
+                                                    pattern: "^([01]?[0-9]|2[0-3]):[0-5][0-9]$"
+                                                }}
                                             />
                                         </Grid>
                                     </Grid>

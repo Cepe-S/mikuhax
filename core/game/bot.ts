@@ -32,6 +32,8 @@ window.gameRoom = {
             replayUrl: '',
             adminCallUrl: '',
             serverStatusUrl: '',
+            dailyStatsUrl: '',
+            dailyStatsTime: '',
             replayUpload: false
         }
     }

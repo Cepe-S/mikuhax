@@ -196,6 +196,8 @@ export interface ServerImage {
             replayUrl?: string;
             adminCallUrl?: string;
             serverStatusUrl?: string;
+            dailyStatsUrl?: string;
+            dailyStatsTime?: string;
             replayUpload: boolean;
         };
     };

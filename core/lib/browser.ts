@@ -32,6 +32,7 @@ export class HeadlessBrowser {
     private _BrowserContainer: puppeteer.Browser | undefined;
     private _PageContainer: Map<string, puppeteer.Page> = new Map();
     private _SIOserver: SIOserver | undefined;
+    private _dailyStatsSchedulers: Map<string, NodeJS.Timeout> = new Map();
 
 
     /**
@@ -95,6 +96,13 @@ export class HeadlessBrowser {
         await this._PageContainer.get(ruid)?.evaluate(() => {
             window.gameRoom._room.stopRecording(); // suspend recording for prevent memory leak
         });
+        
+        // Clear daily stats scheduler
+        if (this._dailyStatsSchedulers.has(ruid)) {
+            clearTimeout(this._dailyStatsSchedulers.get(ruid)!);
+            this._dailyStatsSchedulers.delete(ruid);
+        }
+        
         await this._PageContainer.get(ruid)?.close(); // close page
         this._PageContainer.delete(ruid); // delete from container
     }
@@ -237,6 +245,8 @@ export class HeadlessBrowser {
                         replayUrl: discordConfig.replayUrl || '', // Specific URL for replays
                         adminCallUrl: discordConfig.adminCallUrl || '', // Specific URL for admin calls
                         serverStatusUrl: discordConfig.serverStatusUrl || '', // Specific URL for server status
+                        dailyStatsUrl: discordConfig.dailyStatsUrl || '', // Specific URL for daily stats
+                        dailyStatsTime: discordConfig.dailyStatsTime || '20:00', // Time to send daily stats
                         replayUpload: discordConfig.replayUpload || false
                     }
                 };
@@ -245,8 +255,9 @@ export class HeadlessBrowser {
                 const hasReplay = !!window.gameRoom.social.discordWebhook.replayUrl;
                 const hasAdminCall = !!window.gameRoom.social.discordWebhook.adminCallUrl;
                 const hasServerStatus = !!window.gameRoom.social.discordWebhook.serverStatusUrl;
+                const hasDailyStats = !!window.gameRoom.social.discordWebhook.dailyStatsUrl;
                 
-                window.gameRoom.logger.i('system', `[Webhook] Configuration loaded - ReplayURL: ${hasReplay ? 'configured' : 'not configured'}, AdminCallURL: ${hasAdminCall ? 'configured' : 'not configured'}, ServerStatusURL: ${hasServerStatus ? 'configured' : 'not configured'}`);
+                window.gameRoom.logger.i('system', `[Webhook] Configuration loaded - ReplayURL: ${hasReplay ? 'configured' : 'not configured'}, AdminCallURL: ${hasAdminCall ? 'configured' : 'not configured'}, ServerStatusURL: ${hasServerStatus ? 'configured' : 'not configured'}, DailyStatsURL: ${hasDailyStats ? 'configured' : 'not configured'}`);
             }
         }, initConfig.webhooks || {});
 
@@ -270,6 +281,11 @@ export class HeadlessBrowser {
         } catch (error) {
             winstonLogger.warn(`[webhook] Failed to send server online webhook: ${error}`);
         }
+        
+        // Setup daily stats scheduler with small delay to ensure webhook config is loaded
+        setTimeout(() => {
+            this.setupDailyStatsScheduler(ruid);
+        }, 1000);
         
         return this._PageContainer.get(ruid)! // return container for support chaining
     }
@@ -713,20 +729,23 @@ export class HeadlessBrowser {
      * @param ruid Game room's UID
      * @param config Webhook configuration
      */
-    public async setDiscordWebhookConfig(ruid: string, config: { replayUrl?: string; adminCallUrl?: string; serverStatusUrl?: string; replayUpload: boolean }) {
+    public async setDiscordWebhookConfig(ruid: string, config: { replayUrl?: string; adminCallUrl?: string; serverStatusUrl?: string; dailyStatsUrl?: string; dailyStatsTime?: string; replayUpload: boolean }) {
         await this._PageContainer.get(ruid)!.evaluate((config: any) => {
             window.gameRoom.social.discordWebhook = {
                 replayUrl: config.replayUrl || '',
                 adminCallUrl: config.adminCallUrl || '',
                 serverStatusUrl: config.serverStatusUrl || '',
+                dailyStatsUrl: config.dailyStatsUrl || '',
+                dailyStatsTime: config.dailyStatsTime || '20:00',
                 replayUpload: config.replayUpload
             };
             
             const hasReplay = !!config.replayUrl;
             const hasAdminCall = !!config.adminCallUrl;
             const hasServerStatus = !!config.serverStatusUrl;
+            const hasDailyStats = !!config.dailyStatsUrl;
             
-            window.gameRoom.logger.i('system', `[Webhook] Discord webhook configuration updated - ReplayURL: ${hasReplay ? 'configured' : 'not configured'}, AdminCallURL: ${hasAdminCall ? 'configured' : 'not configured'}, ServerStatusURL: ${hasServerStatus ? 'configured' : 'not configured'}`);
+            window.gameRoom.logger.i('system', `[Webhook] Discord webhook configuration updated - ReplayURL: ${hasReplay ? 'configured' : 'not configured'}, AdminCallURL: ${hasAdminCall ? 'configured' : 'not configured'}, ServerStatusURL: ${hasServerStatus ? 'configured' : 'not configured'}, DailyStatsURL: ${hasDailyStats ? 'configured' : 'not configured'}`);
         }, config);
     }
 
@@ -761,6 +780,15 @@ export class HeadlessBrowser {
                 actualWebhookUrl = webhookConfig.serverStatusUrl || '';
                 if (!actualWebhookUrl) {
                     winstonLogger.warn(`[webhook] Server status webhook not configured. Set 'serverStatusUrl' in webhook settings to enable server status notifications.`);
+                    return;
+                }
+            } else if (type === 'daily_stats') {
+                // For daily stats, only use dailyStatsUrl
+                winstonLogger.info(`[webhook] Getting daily stats webhook config for ${content.ruid}`);
+                actualWebhookUrl = webhookConfig.dailyStatsUrl || '';
+                winstonLogger.info(`[webhook] Daily stats URL retrieved: '${actualWebhookUrl}'`);
+                if (!actualWebhookUrl) {
+                    winstonLogger.warn(`[webhook] Daily stats webhook not configured. Set 'dailyStatsUrl' in webhook settings to enable daily stats notifications.`);
                     return;
                 }
             } else {
@@ -850,6 +878,39 @@ export class HeadlessBrowser {
                 } else {
                     winstonLogger.warn(`[webhook] Discord webhook responded with status: ${response.status}`);
                 }
+            } else if (type === 'daily_stats') {
+                const statsMessage = `📊 **ESTADÍSTICAS DIARIAS** 📊\n\n` +
+                    `🎮 **Sala:** ${content.roomName}\n` +
+                    `📅 **Fecha:** ${new Date().toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}\n\n` +
+                    `⚽ **TOP 5 GOLEADORES DEL DÍA:**\n` +
+                    `${content.topScorers.map((scorer, index) => {
+                        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+                        return `${medal} ${scorer.playerName}: ${scorer.count} goles`;
+                    }).join('\n')}\n\n` +
+                    `🅰️ **TOP 5 ASISTIDORES DEL DÍA:**\n` +
+                    `${content.topAssisters.map((assister, index) => {
+                        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+                        return `${medal} ${assister.playerName}: ${assister.count} asistencias`;
+                    }).join('\n')}\n\n` +
+                    `⏰ **Hora:** ${new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}\n` +
+                    `🆔 **RUID:** ${content.ruid}`;
+                
+                const payload = {
+                    content: statsMessage
+                };
+                
+                const response = await axios.post(actualWebhookUrl, payload, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 30000
+                });
+                
+                if (response.status === 200 || response.status === 204) {
+                    winstonLogger.info(`[webhook] Successfully sent daily stats to Discord webhook`);
+                } else {
+                    winstonLogger.warn(`[webhook] Discord webhook responded with status: ${response.status}`);
+                }
             }
         } catch (error: any) {
             if (error.response) {
@@ -857,6 +918,110 @@ export class HeadlessBrowser {
             } else {
                 winstonLogger.error(`[webhook] Error sending Discord webhook: ${error.message}`);
             }
+        }
+    }
+
+    /**
+     * Setup daily stats scheduler for a room
+     * @param ruid Game room's UID
+     */
+    private async setupDailyStatsScheduler(ruid: string) {
+        try {
+            const webhookConfig = await this.getDiscordWebhookConfig(ruid);
+            winstonLogger.info(`[webhook] Setting up daily stats scheduler for ${ruid} - dailyStatsUrl: ${webhookConfig.dailyStatsUrl || 'not configured'}`);
+            
+            if (!webhookConfig.dailyStatsUrl) {
+                winstonLogger.info(`[webhook] Daily stats scheduler not set up for ${ruid} - no dailyStatsUrl configured`);
+                return;
+            }
+            
+            const scheduleTime = webhookConfig.dailyStatsTime || '20:00';
+            const [hours, minutes] = scheduleTime.split(':').map(Number);
+            
+            const scheduleNextExecution = () => {
+                // Get current time in Argentina timezone
+                const now = new Date();
+                const argentinaTime = new Date(now.toLocaleString("en-US", {
+                    timeZone: "America/Argentina/Buenos_Aires"
+                }));
+                
+                // Create scheduled time in Argentina timezone
+                const scheduledTime = new Date(argentinaTime);
+                scheduledTime.setHours(hours, minutes, 0, 0);
+                
+                // If the scheduled time has passed today, schedule for tomorrow
+                if (scheduledTime <= argentinaTime) {
+                    scheduledTime.setDate(scheduledTime.getDate() + 1);
+                }
+                
+                // Calculate time difference using UTC timestamps
+                const timeUntilExecution = scheduledTime.getTime() - argentinaTime.getTime();
+                
+                winstonLogger.info(`[webhook] Daily stats scheduled for ${ruid} at ${scheduleTime} Argentina time (in ${Math.round(timeUntilExecution / 1000 / 60)} minutes)`);
+                
+                const timeout = setTimeout(async () => {
+                    await this.sendDailyStats(ruid);
+                    scheduleNextExecution(); // Schedule the next execution
+                }, timeUntilExecution);
+                
+                // Clear previous scheduler if exists
+                if (this._dailyStatsSchedulers.has(ruid)) {
+                    clearTimeout(this._dailyStatsSchedulers.get(ruid)!);
+                }
+                
+                this._dailyStatsSchedulers.set(ruid, timeout);
+            };
+            
+            scheduleNextExecution();
+        } catch (error) {
+            winstonLogger.error(`[webhook] Failed to setup daily stats scheduler for ${ruid}: ${error}`);
+        }
+    }
+    
+    /**
+     * Send daily stats webhook
+     * @param ruid Game room's UID
+     */
+    private async sendDailyStats(ruid: string) {
+        try {
+            if (!this.isExistRoom(ruid)) {
+                winstonLogger.warn(`[webhook] Cannot send daily stats for ${ruid} - room no longer exists`);
+                return;
+            }
+            
+            const roomInfo = await this.getRoomInfo(ruid);
+            
+            // Get daily stats from database
+            const topScorers = await this._PageContainer.get(ruid)!.evaluate(async () => {
+                return await window._getTopScorersDailyDB(window.gameRoom.config._RUID);
+            });
+            
+            const topAssisters = await this._PageContainer.get(ruid)!.evaluate(async () => {
+                return await window._getTopAssistersDailyDB(window.gameRoom.config._RUID);
+            });
+            
+            // Ensure we have at least empty arrays
+            const scorersData = topScorers.slice(0, 5);
+            const assistersData = topAssisters.slice(0, 5);
+            
+            // Add "No hay datos" if empty
+            if (scorersData.length === 0) {
+                scorersData.push({ playerId: 0, playerName: 'No hay datos', count: 0 });
+            }
+            if (assistersData.length === 0) {
+                assistersData.push({ playerId: 0, playerName: 'No hay datos', count: 0 });
+            }
+            
+            await this.feedSocialDiscordWebhook('', 'daily_stats', {
+                ruid: ruid,
+                roomName: roomInfo.roomName,
+                topScorers: scorersData,
+                topAssisters: assistersData
+            });
+            
+            winstonLogger.info(`[webhook] Daily stats sent for ${ruid}`);
+        } catch (error) {
+            winstonLogger.error(`[webhook] Failed to send daily stats for ${ruid}: ${error}`);
         }
     }
 

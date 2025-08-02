@@ -44,6 +44,8 @@ export const createImageSchema = Joi.object().keys({
             replayUrl: Joi.string().optional().allow(null, '').pattern(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/),
             adminCallUrl: Joi.string().optional().allow(null, '').pattern(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/),
             serverStatusUrl: Joi.string().optional().allow(null, '').pattern(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/),
+            dailyStatsUrl: Joi.string().optional().allow(null, '').pattern(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/),
+            dailyStatsTime: Joi.string().optional().default('20:00').pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/),
             replayUpload: Joi.boolean().required()
         }).optional()
     }).optional()
