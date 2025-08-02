@@ -11,13 +11,18 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import { useHistory } from 'react-router-dom';
-import { Divider, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction } from '@material-ui/core';
+import { Divider, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction, Chip, Link } from '@material-ui/core';
 import client from '../../lib/client';
 import Alert, { AlertColor } from '../common/Alert';
 import DeleteIcon from '@material-ui/icons/Delete';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import PublishIcon from '@material-ui/icons/Publish';
+import StopIcon from '@material-ui/icons/Stop';
+import LinkIcon from '@material-ui/icons/Link';
+import PeopleIcon from '@material-ui/icons/People';
+import SecurityIcon from '@material-ui/icons/Security';
+import RefreshIcon from '@material-ui/icons/Refresh';
 
 
 interface ServerImage {
@@ -27,6 +32,12 @@ interface ServerImage {
     ruid: string;
     version: string;
     createdAt: Date;
+    isRunning: boolean;
+    roomInfo?: {
+        link: string;
+        onlinePlayers: number;
+        admins: number;
+    };
 }
 
 interface styleClass {
@@ -126,6 +137,24 @@ export default function ServerImages({ styleClass }: styleClass) {
         }
     };
 
+    const handleStop = async (image: ServerImage) => {
+        try {
+            setFlashMessage('Stopping server...');
+            setAlertStatus("info");
+            const result = await client.delete(`/api/v1/room/${image.ruid}`);
+            if (result.status === 204) {
+                setFlashMessage('Server stopped successfully');
+                setAlertStatus("success");
+                setTimeout(() => setFlashMessage(''), 2000);
+                loadImages(); // Reload the list
+            }
+        } catch (error) {
+            setFlashMessage('Failed to stop server');
+            setAlertStatus("error");
+            setTimeout(() => setFlashMessage(''), 3000);
+        }
+    };
+
     const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -188,25 +217,83 @@ export default function ServerImages({ styleClass }: styleClass) {
                                     </Button>
                                 </label>
                             </Grid>
+                            <Grid item xs={6} sm={3}>
+                                <Button 
+                                    fullWidth 
+                                    variant="outlined" 
+                                    onClick={loadImages}
+                                    startIcon={<RefreshIcon />}
+                                >
+                                    Refresh Status
+                                </Button>
+                            </Grid>
                         </Grid>
 
                         <Divider />
 
                         <List>
                             {images.map((image) => (
-                                <ListItem key={image.id}>
+                                <ListItem key={image.id} style={{ 
+                                    backgroundColor: image.isRunning ? '#e8f5e8' : 'transparent',
+                                    border: image.isRunning ? '1px solid #4caf50' : 'none',
+                                    borderRadius: '4px',
+                                    marginBottom: '8px'
+                                }}>
                                     <ListItemText
-                                        primary={image.name}
-                                        secondary={`${image.description} | RUID: ${image.ruid} | Version: ${image.version} | Created: ${image.createdAt.toLocaleDateString()}`}
+                                        primary={
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span>{image.name}</span>
+                                                <Chip 
+                                                    label={image.isRunning ? 'RUNNING' : 'STOPPED'} 
+                                                    color={image.isRunning ? 'primary' : 'default'}
+                                                    size="small"
+                                                    variant={image.isRunning ? 'default' : 'outlined'}
+                                                />
+                                            </div>
+                                        }
+                                        secondary={
+                                            <div>
+                                                <div>{`${image.description} | RUID: ${image.ruid} | Version: ${image.version} | Created: ${image.createdAt.toLocaleDateString()}`}</div>
+                                                {image.isRunning && image.roomInfo && (
+                                                    <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                            <LinkIcon fontSize="small" />
+                                                            <Link 
+                                                                href={image.roomInfo.link} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer"
+                                                                style={{ fontSize: '0.875rem' }}
+                                                            >
+                                                                Join Room
+                                                            </Link>
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                            <PeopleIcon fontSize="small" />
+                                                            <span style={{ fontSize: '0.875rem' }}>{image.roomInfo.onlinePlayers} players</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                            <SecurityIcon fontSize="small" />
+                                                            <span style={{ fontSize: '0.875rem' }}>{image.roomInfo.admins} admins</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        }
                                     />
                                     <ListItemSecondaryAction>
-                                        <IconButton onClick={() => handleDeploy(image)} color="primary">
-                                            <PlayArrowIcon />
-                                        </IconButton>
-                                        <IconButton onClick={() => handleExport(image)}>
+                                        {image.isRunning ? (
+                                            <IconButton onClick={() => handleStop(image)} color="secondary" title="Stop Server">
+                                                <StopIcon />
+                                            </IconButton>
+                                        ) : (
+                                            <IconButton onClick={() => handleDeploy(image)} color="primary" title="Deploy Server">
+                                                <PlayArrowIcon />
+                                            </IconButton>
+                                        )}
+                                        <IconButton onClick={() => handleExport(image)} title="Export Image">
                                             <GetAppIcon />
                                         </IconButton>
-                                        <IconButton onClick={() => handleDelete(image.id)} color="secondary">
+                                        <IconButton onClick={() => handleDelete(image.id)} color="secondary" title="Delete Image">
                                             <DeleteIcon />
                                         </IconButton>
                                     </ListItemSecondaryAction>
@@ -222,7 +309,7 @@ export default function ServerImages({ styleClass }: styleClass) {
 
                         {images.length > 0 && (
                             <Typography variant="caption" color="textSecondary" style={{ marginTop: 16, display: 'block' }}>
-                                Total images: {images.length}
+                                Total images: {images.length} | Running: {images.filter(img => img.isRunning).length} | Stopped: {images.filter(img => !img.isRunning).length}
                             </Typography>
                         )}
                     </Paper>

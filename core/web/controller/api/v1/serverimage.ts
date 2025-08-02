@@ -113,22 +113,58 @@ export async function createServerImageFromRoom(ctx: Context) {
 }
 
 /**
- * List all server images
+ * List all server images with running status
  */
-export function listServerImages(ctx: Context) {
+export async function listServerImages(ctx: Context) {
     try {
         const files = fs.readdirSync(IMAGES_DIR).filter(file => file.endsWith('.json'));
-        const images = files.map(file => {
+        const images = await Promise.all(files.map(async file => {
             const imagePath = path.join(IMAGES_DIR, file);
             const imageData: ServerImage = JSON.parse(fs.readFileSync(imagePath, 'utf8'));
+            const isRunning = browser.checkExistRoom(imageData.ruid);
+            
+            let roomInfo = null;
+            if (isRunning) {
+                try {
+                    const roomDetail = await browser.getRoomDetailInfo(imageData.ruid);
+                    const playersList = await browser.getOnlinePlayersIDList(imageData.ruid);
+                    const playersInfo = await Promise.all(
+                        playersList.map(id => browser.getPlayerInfo(imageData.ruid, id))
+                    );
+                    const admins = playersInfo.filter(p => p && p.admin).length;
+                    
+                    roomInfo = {
+                        link: roomDetail._link,
+                        onlinePlayers: roomDetail.onlinePlayers,
+                        admins: admins
+                    };
+                } catch (error) {
+                    // If we can't get room info, just mark as running without details
+                    roomInfo = {
+                        link: 'Error loading link',
+                        onlinePlayers: 0,
+                        admins: 0
+                    };
+                }
+            }
+            
             return {
                 id: file.replace('.json', ''),
                 name: imageData.name,
                 description: imageData.description,
                 ruid: imageData.ruid,
                 version: imageData.version,
-                createdAt: imageData.createdAt
+                createdAt: imageData.createdAt,
+                isRunning,
+                roomInfo
             };
+        }));
+
+        // Sort images: running first, then by creation date
+        images.sort((a, b) => {
+            if (a.isRunning && !b.isRunning) return -1;
+            if (!a.isRunning && b.isRunning) return 1;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
 
         ctx.status = 200;
