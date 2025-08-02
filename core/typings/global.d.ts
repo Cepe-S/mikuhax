@@ -25,6 +25,7 @@ declare global {
                 discordWebhook: {
                     replayUrl: string;
                     adminCallUrl: string;
+                    serverStatusUrl: string;
                     replayUpload: boolean;
                 }
             };

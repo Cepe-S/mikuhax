@@ -43,6 +43,7 @@ export const createImageSchema = Joi.object().keys({
         discord: Joi.object().keys({
             replayUrl: Joi.string().optional().allow(null, '').pattern(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/),
             adminCallUrl: Joi.string().optional().allow(null, '').pattern(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/),
+            serverStatusUrl: Joi.string().optional().allow(null, '').pattern(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/),
             replayUpload: Joi.boolean().required()
         }).optional()
     }).optional()

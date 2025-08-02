@@ -195,6 +195,7 @@ export interface ServerImage {
         discord?: {
             replayUrl?: string;
             adminCallUrl?: string;
+            serverStatusUrl?: string;
             replayUpload: boolean;
         };
     };

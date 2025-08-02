@@ -31,6 +31,7 @@ window.gameRoom = {
         discordWebhook: {
             replayUrl: '',
             adminCallUrl: '',
+            serverStatusUrl: '',
             replayUpload: false
         }
     }

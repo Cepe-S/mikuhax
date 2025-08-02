@@ -55,7 +55,8 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
     // Discord webhook states
     const [discordWebhook, setDiscordWebhook] = useState({
         replayUrl: '',
-        adminCallUrl: ''
+        adminCallUrl: '',
+        serverStatusUrl: ''
     });
 
 
@@ -114,6 +115,12 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
             setTimeout(() => setFlashMessage(''), 3000);
             return;
         }
+        if (discordWebhook.serverStatusUrl && !discordWebhook.serverStatusUrl.match(/^https:\/\/discord\.com\/api\/webhooks\/\d+\/[a-zA-Z0-9_-]+$/)) {
+            setFlashMessage('Invalid server status webhook URL format. Please use the complete webhook URL from Discord.');
+            setAlertStatus("error");
+            setTimeout(() => setFlashMessage(''), 3000);
+            return;
+        }
 
         const serverImageData = {
             name: imageName,
@@ -145,9 +152,10 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                 ready: rulesFormField.readyMapName
             },
             webhooks: {
-                discord: (discordWebhook.replayUrl || discordWebhook.adminCallUrl) ? {
+                discord: (discordWebhook.replayUrl || discordWebhook.adminCallUrl || discordWebhook.serverStatusUrl) ? {
                     replayUrl: discordWebhook.replayUrl || undefined,
                     adminCallUrl: discordWebhook.adminCallUrl || undefined,
+                    serverStatusUrl: discordWebhook.serverStatusUrl || undefined,
                     replayUpload: !!discordWebhook.replayUrl
                 } : undefined
             }
@@ -909,6 +917,18 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                                                 size="small"
                                                 placeholder="https://discord.com/api/webhooks/123456789/abcdefghijklmnop"
                                                 helperText="Webhook URL for !llamaradmin command notifications - goes to admin channel (optional)"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                value={discordWebhook.serverStatusUrl}
+                                                onChange={(e) => setDiscordWebhook({ ...discordWebhook, serverStatusUrl: e.target.value })}
+                                                label="Server Status Webhook URL"
+                                                variant="outlined"
+                                                size="small"
+                                                placeholder="https://discord.com/api/webhooks/123456789/abcdefghijklmnop"
+                                                helperText="Webhook URL for server start/stop notifications - goes to status channel (optional)"
                                             />
                                         </Grid>
                                     </Grid>

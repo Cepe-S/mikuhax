@@ -236,6 +236,7 @@ export class HeadlessBrowser {
                     discordWebhook: {
                         replayUrl: discordConfig.replayUrl || '', // Specific URL for replays
                         adminCallUrl: discordConfig.adminCallUrl || '', // Specific URL for admin calls
+                        serverStatusUrl: discordConfig.serverStatusUrl || '', // Specific URL for server status
                         replayUpload: discordConfig.replayUpload || false
                     }
                 };
@@ -243,8 +244,9 @@ export class HeadlessBrowser {
                 // Log webhook configuration for debugging
                 const hasReplay = !!window.gameRoom.social.discordWebhook.replayUrl;
                 const hasAdminCall = !!window.gameRoom.social.discordWebhook.adminCallUrl;
+                const hasServerStatus = !!window.gameRoom.social.discordWebhook.serverStatusUrl;
                 
-                window.gameRoom.logger.i('system', `[Webhook] Configuration loaded - ReplayURL: ${hasReplay ? 'configured' : 'not configured'}, AdminCallURL: ${hasAdminCall ? 'configured' : 'not configured'}`);
+                window.gameRoom.logger.i('system', `[Webhook] Configuration loaded - ReplayURL: ${hasReplay ? 'configured' : 'not configured'}, AdminCallURL: ${hasAdminCall ? 'configured' : 'not configured'}, ServerStatusURL: ${hasServerStatus ? 'configured' : 'not configured'}`);
             }
         }, initConfig.webhooks || {});
 
@@ -252,6 +254,23 @@ export class HeadlessBrowser {
 
         this._PageContainer.set(ruid, page) // save container
         this._SIOserver?.sockets.emit('roomct', { ruid: ruid }); // emit websocket event for room create/terminate
+        
+        // Send server online webhook
+        try {
+            const roomInfo = await this.getRoomInfo(ruid);
+            const roomLink = await this.getRoomLink(ruid);
+            await this.feedSocialDiscordWebhook('', 'server_status', {
+                ruid: ruid,
+                status: 'online',
+                roomName: roomInfo.roomName,
+                roomLink: roomLink,
+                maxPlayers: initConfig._config.maxPlayers,
+                isPublic: initConfig._config.public
+            });
+        } catch (error) {
+            winstonLogger.warn(`[webhook] Failed to send server online webhook: ${error}`);
+        }
+        
         return this._PageContainer.get(ruid)! // return container for support chaining
     }
 
@@ -310,6 +329,19 @@ export class HeadlessBrowser {
     public async closeRoom(ruid: string) {
         if (this.isExistRoom(ruid)) {
             winstonLogger.info(`[core] The game room '${ruid}' will be closed.`);
+            
+            // Send server offline webhook before closing
+            try {
+                const roomInfo = await this.getRoomInfo(ruid);
+                await this.feedSocialDiscordWebhook('', 'server_status', {
+                    ruid: ruid,
+                    status: 'offline',
+                    roomName: roomInfo.roomName
+                });
+            } catch (error) {
+                winstonLogger.warn(`[webhook] Failed to send server offline webhook: ${error}`);
+            }
+            
             await this.closePage(ruid);
         } else {
             throw Error(`The room '${ruid}' is not exist.`);
@@ -681,18 +713,20 @@ export class HeadlessBrowser {
      * @param ruid Game room's UID
      * @param config Webhook configuration
      */
-    public async setDiscordWebhookConfig(ruid: string, config: { replayUrl?: string; adminCallUrl?: string; replayUpload: boolean }) {
+    public async setDiscordWebhookConfig(ruid: string, config: { replayUrl?: string; adminCallUrl?: string; serverStatusUrl?: string; replayUpload: boolean }) {
         await this._PageContainer.get(ruid)!.evaluate((config: any) => {
             window.gameRoom.social.discordWebhook = {
                 replayUrl: config.replayUrl || '',
                 adminCallUrl: config.adminCallUrl || '',
+                serverStatusUrl: config.serverStatusUrl || '',
                 replayUpload: config.replayUpload
             };
             
             const hasReplay = !!config.replayUrl;
             const hasAdminCall = !!config.adminCallUrl;
+            const hasServerStatus = !!config.serverStatusUrl;
             
-            window.gameRoom.logger.i('system', `[Webhook] Discord webhook configuration updated - ReplayURL: ${hasReplay ? 'configured' : 'not configured'}, AdminCallURL: ${hasAdminCall ? 'configured' : 'not configured'}`);
+            window.gameRoom.logger.i('system', `[Webhook] Discord webhook configuration updated - ReplayURL: ${hasReplay ? 'configured' : 'not configured'}, AdminCallURL: ${hasAdminCall ? 'configured' : 'not configured'}, ServerStatusURL: ${hasServerStatus ? 'configured' : 'not configured'}`);
         }, config);
     }
 
@@ -720,6 +754,13 @@ export class HeadlessBrowser {
                 actualWebhookUrl = webhookConfig.adminCallUrl || '';
                 if (!actualWebhookUrl) {
                     winstonLogger.warn(`[webhook] Admin call webhook not configured. Set 'adminCallUrl' in webhook settings to enable admin calls.`);
+                    return;
+                }
+            } else if (type === 'server_status') {
+                // For server status, only use serverStatusUrl
+                actualWebhookUrl = webhookConfig.serverStatusUrl || '';
+                if (!actualWebhookUrl) {
+                    winstonLogger.warn(`[webhook] Server status webhook not configured. Set 'serverStatusUrl' in webhook settings to enable server status notifications.`);
                     return;
                 }
             } else {
@@ -775,6 +816,37 @@ export class HeadlessBrowser {
                 
                 if (response.status === 200 || response.status === 204) {
                     winstonLogger.info(`[webhook] Successfully sent admin call to Discord webhook`);
+                } else {
+                    winstonLogger.warn(`[webhook] Discord webhook responded with status: ${response.status}`);
+                }
+            } else if (type === 'server_status') {
+                const statusMessage = content.status === 'online' 
+                    ? `🟢 **SERVIDOR ENCENDIDO** 🟢\n\n` +
+                      `🎮 **Sala:** ${content.roomName}\n` +
+                      `🔗 **Link:** ${content.roomLink}\n` +
+                      `⏰ **Hora:** ${new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}\n` +
+                      `🌍 **Ubicación:** Argentina 🇦🇷\n` +
+                      `👥 **Máximo de jugadores:** ${content.maxPlayers}\n` +
+                      `🔒 **Público:** ${content.isPublic ? 'Sí' : 'No'}\n` +
+                      `🆔 **RUID:** ${content.ruid}`
+                    : `🔴 **SERVIDOR APAGADO** 🔴\n\n` +
+                      `🎮 **Sala:** ${content.roomName}\n` +
+                      `⏰ **Hora:** ${new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}\n` +
+                      `🆔 **RUID:** ${content.ruid}`;
+                
+                const payload = {
+                    content: statusMessage
+                };
+                
+                const response = await axios.post(actualWebhookUrl, payload, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 30000
+                });
+                
+                if (response.status === 200 || response.status === 204) {
+                    winstonLogger.info(`[webhook] Successfully sent server status (${content.status}) to Discord webhook`);
                 } else {
                     winstonLogger.warn(`[webhook] Discord webhook responded with status: ${response.status}`);
                 }
