@@ -21,8 +21,6 @@ export interface ReactHostRoomInfo {
 
 export interface BrowserHostRoomWebhooks {
     discord?: {
-        feed: boolean;
-        url?: string; // General webhook URL (backward compatibility)
         replayUrl?: string; // Specific URL for replay webhooks
         adminCallUrl?: string; // Specific URL for admin call webhooks
         replayUpload: boolean;

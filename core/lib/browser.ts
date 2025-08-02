@@ -234,8 +234,6 @@ export class HeadlessBrowser {
                 const discordConfig = webhookConfig?.discord || {};
                 window.gameRoom.social = {
                     discordWebhook: {
-                        feed: discordConfig.feed || false,
-                        url: discordConfig.url || '', // General webhook URL (backward compatibility)
                         replayUrl: discordConfig.replayUrl || '', // Specific URL for replays
                         adminCallUrl: discordConfig.adminCallUrl || '', // Specific URL for admin calls
                         replayUpload: discordConfig.replayUpload || false
@@ -243,7 +241,10 @@ export class HeadlessBrowser {
                 };
                 
                 // Log webhook configuration for debugging
-                window.gameRoom.logger.i('system', `[Webhook] Configuration loaded - Feed: ${window.gameRoom.social.discordWebhook.feed}, ReplayURL: ${window.gameRoom.social.discordWebhook.replayUrl ? 'configured' : 'not configured'}, AdminCallURL: ${window.gameRoom.social.discordWebhook.adminCallUrl ? 'configured' : 'not configured'}`);
+                const hasReplay = !!window.gameRoom.social.discordWebhook.replayUrl;
+                const hasAdminCall = !!window.gameRoom.social.discordWebhook.adminCallUrl;
+                
+                window.gameRoom.logger.i('system', `[Webhook] Configuration loaded - ReplayURL: ${hasReplay ? 'configured' : 'not configured'}, AdminCallURL: ${hasAdminCall ? 'configured' : 'not configured'}`);
             }
         }, initConfig.webhooks || {});
 
@@ -680,22 +681,24 @@ export class HeadlessBrowser {
      * @param ruid Game room's UID
      * @param config Webhook configuration
      */
-    public async setDiscordWebhookConfig(ruid: string, config: { feed: boolean; url?: string; replayUrl?: string; adminCallUrl?: string; replayUpload: boolean }) {
+    public async setDiscordWebhookConfig(ruid: string, config: { replayUrl?: string; adminCallUrl?: string; replayUpload: boolean }) {
         await this._PageContainer.get(ruid)!.evaluate((config: any) => {
             window.gameRoom.social.discordWebhook = {
-                feed: config.feed,
-                url: config.url || '', // Backward compatibility
-                replayUrl: config.replayUrl || config.url || '',
-                adminCallUrl: config.adminCallUrl || config.url || '',
+                replayUrl: config.replayUrl || '',
+                adminCallUrl: config.adminCallUrl || '',
                 replayUpload: config.replayUpload
             };
-            window.gameRoom.logger.i('system', `[Webhook] Discord webhook configuration updated.`);
+            
+            const hasReplay = !!config.replayUrl;
+            const hasAdminCall = !!config.adminCallUrl;
+            
+            window.gameRoom.logger.i('system', `[Webhook] Discord webhook configuration updated - ReplayURL: ${hasReplay ? 'configured' : 'not configured'}, AdminCallURL: ${hasAdminCall ? 'configured' : 'not configured'}`);
         }, config);
     }
 
     /**
      * Send webhook to Discord
-     * @param webhookUrl Complete Discord webhook URL (can be empty if using separate URLs)
+     * @param webhookUrl Complete Discord webhook URL (deprecated - not used)
      * @param type Type of webhook (replay, admin_call)
      * @param content Content to send
      */
@@ -707,25 +710,29 @@ export class HeadlessBrowser {
             const webhookConfig = await this.getDiscordWebhookConfig(content.ruid);
             
             if (type === 'replay') {
-                // For replays, use replayUrl first, then fallback to general url
-                actualWebhookUrl = webhookConfig.replayUrl || webhookConfig.url || webhookUrl;
+                actualWebhookUrl = webhookConfig.replayUrl || '';
+                if (!actualWebhookUrl) {
+                    winstonLogger.warn(`[webhook] Replay webhook not configured. Set 'replayUrl' in webhook settings to enable replay uploads.`);
+                    return;
+                }
             } else if (type === 'admin_call') {
-                // For admin calls, ONLY use adminCallUrl - no fallback to prevent mixing
+                // For admin calls, only use adminCallUrl - no fallbacks
                 actualWebhookUrl = webhookConfig.adminCallUrl || '';
+                if (!actualWebhookUrl) {
+                    winstonLogger.warn(`[webhook] Admin call webhook not configured. Set 'adminCallUrl' in webhook settings to enable admin calls.`);
+                    return;
+                }
             } else {
-                // For other types, use general url
-                actualWebhookUrl = webhookConfig.url || webhookUrl;
+                winstonLogger.warn(`[webhook] Unknown webhook type: ${type}`);
+                return;
             }
         } else {
-            actualWebhookUrl = webhookUrl;
-        }
-        
-        if (!actualWebhookUrl) {
-            winstonLogger.warn(`[webhook] No webhook URL configured for type: ${type}. Please configure the appropriate webhook URL.`);
+            winstonLogger.warn(`[webhook] No room UID provided for webhook type: ${type}`);
             return;
         }
         
         winstonLogger.info(`[webhook] Sending ${type} webhook to: ${actualWebhookUrl.substring(0, 50)}...`);
+        winstonLogger.debug(`[webhook] Full webhook URL: ${actualWebhookUrl}`);
         try {
             if (type === 'replay') {
                 const formData = new FormData();

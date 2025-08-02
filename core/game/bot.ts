@@ -29,8 +29,6 @@ window.gameRoom = {
     ,link: ''
     ,social: {
         discordWebhook: {
-            feed: false,
-            url: '',
             replayUrl: '',
             adminCallUrl: '',
             replayUpload: false

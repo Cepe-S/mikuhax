@@ -23,8 +23,6 @@ declare global {
             link: string;
             social: {
                 discordWebhook: {
-                    feed: boolean;
-                    url: string; // Backward compatibility
                     replayUrl: string;
                     adminCallUrl: string;
                     replayUpload: boolean;

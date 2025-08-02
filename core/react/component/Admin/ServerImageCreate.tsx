@@ -146,7 +146,6 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
             },
             webhooks: {
                 discord: (discordWebhook.replayUrl || discordWebhook.adminCallUrl) ? {
-                    feed: !!discordWebhook.adminCallUrl,
                     replayUrl: discordWebhook.replayUrl || undefined,
                     adminCallUrl: discordWebhook.adminCallUrl || undefined,
                     replayUpload: !!discordWebhook.replayUrl
@@ -885,7 +884,7 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                                     <Grid container spacing={2}>
                                         <Grid item xs={12}>
                                             <Typography variant="body2" color="textSecondary" gutterBottom>
-                                                Configure Discord webhooks for different notifications. You can use the same URL for both or separate URLs.
+                                                Configure Discord webhooks for specific functions. Each webhook goes to a dedicated Discord channel.
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12}>
@@ -897,7 +896,7 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                                                 variant="outlined"
                                                 size="small"
                                                 placeholder="https://discord.com/api/webhooks/123456789/abcdefghijklmnop"
-                                                helperText="Webhook URL for automatic replay uploads after games (optional)"
+                                                helperText="Webhook URL for automatic replay uploads after games - goes to replays channel (optional)"
                                             />
                                         </Grid>
                                         <Grid item xs={12}>
@@ -909,7 +908,7 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                                                 variant="outlined"
                                                 size="small"
                                                 placeholder="https://discord.com/api/webhooks/123456789/abcdefghijklmnop"
-                                                helperText="Webhook URL for !llamaradmin command notifications (optional)"
+                                                helperText="Webhook URL for !llamaradmin command notifications - goes to admin channel (optional)"
                                             />
                                         </Grid>
                                     </Grid>
