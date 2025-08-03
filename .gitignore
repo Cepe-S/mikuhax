@@ -114,3 +114,8 @@ __pycache__/
 logs/
 core/package-lock.json
 jerseyImporter.py
+
+# Server images configuration files (contain sensitive data like webhooks)
+core/server-images/
+**/server-images/
+*.server-image.json
