@@ -20,8 +20,10 @@ export function onPlayerAdminChangeListener(changedPlayer: PlayerObject, byPlaye
     playerData.permissions.lastAdminCheck = undefined;
 
     if (changedPlayer.admin == true) { // if this event means that the player has been admin
-        if (window.gameRoom.playerList.get(changedPlayer.id)!.permissions.afkmode == true) {
-            // if changedPlayer is in afk mode, reject
+        // Permitir admin incluso en AFK para superadmins
+        if (window.gameRoom.playerList.get(changedPlayer.id)!.permissions.afkmode == true && 
+            !window.gameRoom.playerList.get(changedPlayer.id)!.permissions.superadmin) {
+            // if changedPlayer is in afk mode and is NOT a superadmin, reject
             window.gameRoom._room.setPlayerAdmin(changedPlayer.id, false);
             window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onAdminChange.afknoadmin, placeholderAdminChange), null, 0xFF0000, "normal", 2);
             return;

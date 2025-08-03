@@ -36,8 +36,11 @@ export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
             return; //abort this event
         }
         window.gameRoom._room.setPlayerTeam(byPlayer.id, TeamID.Spec); // Moves this player to Spectators team.
-        window.gameRoom._room.setPlayerAdmin(byPlayer.id, false); // disqulify admin permission
-        window.gameRoom.playerList.get(byPlayer.id)!.admin = false;
+        // Mantener permisos de admin para superadmins incluso en AFK
+        if (!window.gameRoom.playerList.get(byPlayer.id)!.permissions.superadmin) {
+            window.gameRoom._room.setPlayerAdmin(byPlayer.id, false); // disqulify admin permission
+            window.gameRoom.playerList.get(byPlayer.id)!.admin = false;
+        }
         window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkmode = true; // set afk mode
         window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkdate = getUnixTimestamp(); // set afk beginning time stamp
         window.gameRoom.playerList.get(byPlayer.id)!.afktrace = { exemption: false, count: 0}; // reset for afk trace
