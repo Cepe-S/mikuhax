@@ -23,6 +23,7 @@ import LinkIcon from '@material-ui/icons/Link';
 import PeopleIcon from '@material-ui/icons/People';
 import SecurityIcon from '@material-ui/icons/Security';
 import RefreshIcon from '@material-ui/icons/Refresh';
+import EditIcon from '@material-ui/icons/Edit';
 
 
 interface ServerImage {
@@ -179,6 +180,10 @@ export default function ServerImages({ styleClass }: styleClass) {
         }
     };
 
+    const handleEdit = (image: ServerImage) => {
+        history.push(`/admin/editimage/${image.id}`);
+    };
+
     return (
         <Container maxWidth="lg" className={classes.container}>
             <Grid container spacing={3}>
@@ -290,6 +295,9 @@ export default function ServerImages({ styleClass }: styleClass) {
                                                 <PlayArrowIcon />
                                             </IconButton>
                                         )}
+                                        <IconButton onClick={() => handleEdit(image)} title="Edit Image">
+                                            <EditIcon />
+                                        </IconButton>
                                         <IconButton onClick={() => handleExport(image)} title="Export Image">
                                             <GetAppIcon />
                                         </IconButton>
@@ -315,6 +323,7 @@ export default function ServerImages({ styleClass }: styleClass) {
                     </Paper>
                 </Grid>
             </Grid>
+
             <Box pt={4}>
                 <Copyright />
             </Box>

@@ -29,6 +29,9 @@ interface ServerImage {
 
 interface styleClass {
     styleClass: any;
+    editMode?: boolean;
+    editData?: any;
+    editImageId?: string;
 }
 
 const getServerImages = (): ServerImage[] => {
@@ -40,7 +43,7 @@ const saveServerImages = (images: ServerImage[]) => {
     localStorage.setItem('_serverImages', JSON.stringify(images));
 };
 
-export default function ServerImageCreate({ styleClass }: styleClass) {
+export default function ServerImageCreate({ styleClass, editMode = false, editData, editImageId }: styleClass) {
     const classes = styleClass;
     const fixedHeightPaper = clsx(classes.paper, classes.fullHeight);
     const history = useHistory();
@@ -96,6 +99,101 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
     const [commandsFormField, setCommandsFormField] = useState({} as BrowserHostRoomCommands);
 
     useEffect(() => {
+        if (editMode && editData) {
+            console.log('Edit data received:', editData); // Debug log
+            console.log('Edit data keys:', Object.keys(editData)); // Show all available keys
+            
+            // Load basic image metadata
+            setImageName(editData.name || '');
+            setImageDescription(editData.description || '');
+            setImageRuid(editData.ruid || '');
+            
+            // Load basic room configuration directly from config
+            if (editData.config) {
+                console.log('Config data:', editData.config); // Debug log
+                console.log('Config keys:', Object.keys(editData.config)); // Show all config keys
+                setConfigFormField({
+                    roomName: editData.config.roomName || '',
+                    playerName: editData.config.playerName || 'Host',
+                    password: editData.config.password || '',
+                    maxPlayers: editData.config.maxPlayers || 30,
+                    noPlayer: editData.config.noPlayer || false,
+                    geo: editData.config.geo || undefined,
+                    public: editData.config.public !== false,
+                    token: editData.config.token || ''
+                });
+                setRoomPublicFormField(editData.config.public !== false);
+            }
+            
+            // Load game rules directly
+            if (editData.rules) {
+                console.log('Rules data:', editData.rules); // Debug log
+                setRulesFormField(editData.rules);
+                if (editData.rules.requisite) {
+                    setRulesTeamLockField(editData.rules.requisite.teamLock !== false);
+                }
+                setRulesSwitchesFormField({
+                    autoAdmin: editData.rules.autoAdmin || false,
+                    autoOperating: editData.rules.autoOperating !== false,
+                    statsRecord: editData.rules.statsRecord !== false
+                });
+            }
+            
+            // Load stadium information from stadiums object
+            if (editData.stadiums) {
+                console.log('Stadiums data:', editData.stadiums); // Debug log
+                // Update rules with stadium names if they exist
+                setRulesFormField(prev => ({
+                    ...prev,
+                    defaultMapName: editData.stadiums.default || prev.defaultMapName || '',
+                    readyMapName: editData.stadiums.ready || prev.readyMapName || ''
+                }));
+            }
+            
+            // Load settings directly
+            if (editData.settings) {
+                console.log('Settings data:', editData.settings); // Debug log
+                setSettingsFormField(editData.settings);
+            }
+            
+            // Load helo configuration directly
+            if (editData.helo) {
+                console.log('Helo data:', editData.helo); // Debug log
+                setHeloFormField(editData.helo);
+            }
+            
+            // Load commands configuration directly
+            if (editData.commands) {
+                console.log('Commands data:', editData.commands); // Debug log
+                setCommandsFormField(editData.commands);
+            }
+            
+            // Load discord webhook configuration
+            if (editData.webhooks && editData.webhooks.discord) {
+                console.log('Discord webhook data:', editData.webhooks.discord); // Debug log
+                setDiscordWebhook({
+                    replayUrl: editData.webhooks.discord.replayUrl || '',
+                    adminCallUrl: editData.webhooks.discord.adminCallUrl || '',
+                    serverStatusUrl: editData.webhooks.discord.serverStatusUrl || '',
+                    dailyStatsUrl: editData.webhooks.discord.dailyStatsUrl || '',
+                    dailyStatsTime: editData.webhooks.discord.dailyStatsTime || '20:00'
+                });
+            }
+            
+            // Load superadmins directly
+            if (editData.superadmins && Array.isArray(editData.superadmins)) {
+                console.log('Superadmins data:', editData.superadmins); // Debug log
+                setSuperadmins(editData.superadmins);
+            }
+            
+            // DON'T call loadDefaults() when we have edit data
+        } else if (!editMode) {
+            // Only load defaults when NOT in edit mode
+            loadDefaults();
+        }
+    }, [editMode, editData]);
+
+    const loadDefaults = () => {
         const loadedDefaultSettings: ReactHostRoomInfo = DefaultConfigSet;
         setRoomUIDFormField(loadedDefaultSettings.ruid);
         setConfigFormField(loadedDefaultSettings._config);
@@ -110,7 +208,7 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
         setSettingsFormField(loadedDefaultSettings.settings);
         setHeloFormField(loadedDefaultSettings.helo);
         setCommandsFormField(loadedDefaultSettings.commands);
-    }, []);
+    };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -198,25 +296,54 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
         };
 
         try {
-            const response = await fetch('/api/v1/images', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(serverImageData)
-            });
+            if (editMode && editImageId) {
+                // Edit mode: delete old image and create new one
+                await fetch(`/api/v1/images/${editImageId}`, {
+                    method: 'DELETE'
+                });
+                
+                const response = await fetch('/api/v1/images', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(serverImageData)
+                });
 
-            if (response.ok) {
-                setFlashMessage('Server image created successfully');
-                setAlertStatus("success");
-                setTimeout(() => {
-                    history.push('/admin/serverimages');
-                }, 1500);
+                if (response.ok) {
+                    setFlashMessage('Server image updated successfully');
+                    setAlertStatus("success");
+                    setTimeout(() => {
+                        history.push('/admin/serverimages');
+                    }, 1500);
+                } else {
+                    const error = await response.json();
+                    setFlashMessage(error.error || 'Failed to update server image');
+                    setAlertStatus("error");
+                    setTimeout(() => setFlashMessage(''), 3000);
+                }
             } else {
-                const error = await response.json();
-                setFlashMessage(error.error || 'Failed to create server image');
-                setAlertStatus("error");
-                setTimeout(() => setFlashMessage(''), 3000);
+                // Create mode
+                const response = await fetch('/api/v1/images', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(serverImageData)
+                });
+
+                if (response.ok) {
+                    setFlashMessage('Server image created successfully');
+                    setAlertStatus("success");
+                    setTimeout(() => {
+                        history.push('/admin/serverimages');
+                    }, 1500);
+                } else {
+                    const error = await response.json();
+                    setFlashMessage(error.error || 'Failed to create server image');
+                    setAlertStatus("error");
+                    setTimeout(() => setFlashMessage(''), 3000);
+                }
             }
         } catch (error) {
             setFlashMessage('Network error occurred');
@@ -257,7 +384,7 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                 <Grid item xs={12}>
                     <Paper className={fixedHeightPaper}>
                         {flashMessage && <Alert severity={alertStatus}>{flashMessage}</Alert>}
-                        <Title>Create Server Image</Title>
+                        <Title>{editMode ? 'Edit Server Image' : 'Create Server Image'}</Title>
 
                         <form className={classes.form} onSubmit={handleSubmit} method="post">
                             <Typography component="h2" variant="subtitle1" color="primary" gutterBottom>
@@ -1075,7 +1202,7 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                                         color="primary"
                                         className={classes.submit}
                                     >
-                                        Save Image
+                                        {editMode ? 'Update Image' : 'Save Image'}
                                     </Button>
                                 </Grid>
                                 <Grid item xs={6} sm={3}>

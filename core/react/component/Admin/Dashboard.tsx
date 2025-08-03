@@ -37,6 +37,7 @@ import RoomTextFilter from './RoomTextFilter';
 import RoomAssets from './RoomAssets';
 import ServerImages from './ServerImages';
 import ServerImageCreate from './ServerImageCreate';
+import ServerImageCreateEdit from './ServerImageCreateEdit';
 
 const drawerWidth = 240;
 
@@ -217,6 +218,7 @@ function Dashboard({ match }: RouteComponentProps) {
                     <Route path={`${match.path}/newroom`}><RoomListSideMenu /></Route>
                     <Route path={`${match.path}/serverimages`}><RoomListSideMenu /></Route>
                     <Route path={`${match.path}/newimage`}><RoomListSideMenu /></Route>
+                    <Route path={`${match.path}/editimage/:imageId`}><RoomListSideMenu /></Route>
                     <Route path={`${match.path}/serverinfo`}><MainboardSideMenu /></Route>
                     <Route path={`${match.path}/superadmin/:ruid`} component={RoomInfoSideMenu} />
                     <Route path={`${match.path}/banlist/:ruid`} component={RoomInfoSideMenu} />
@@ -232,6 +234,7 @@ function Dashboard({ match }: RouteComponentProps) {
                     <Route path={`${match.path}/newroom`} render={()=><RoomCreate styleClass={styleClass} />} />
                     <Route path={`${match.path}/serverimages`} render={()=><ServerImages styleClass={styleClass} />} />
                     <Route path={`${match.path}/newimage`} render={()=><ServerImageCreate styleClass={styleClass} />} />
+                    <Route path={`${match.path}/editimage/:imageId`} render={(props)=><ServerImageCreateEdit styleClass={styleClass} {...props} />} />
                     <Route path={`${match.path}/serverinfo`} render={()=><ServerInfo styleClass={styleClass} />} />
                     <Route path={`${match.path}/superadmin/:ruid`}><RoomSuperAdmin styleClass={styleClass} /></Route>
                     <Route path={`${match.path}/banlist/:ruid`} exact><RoomBanList styleClass={styleClass} /></Route>
