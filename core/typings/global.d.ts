@@ -103,13 +103,13 @@ declare global {
         _createMatchEventDB(ruid: string, matchEvent: MatchEvent): Promise<void>;
         _createMatchSummaryDB(ruid: string, matchSummary: MatchSummary): Promise<void>;
         // Top Scorers DB
-        _getTopScorersGlobalDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
-        _getTopScorersMonthlyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
-        _getTopScorersDailyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
+        _getTopScorersGlobalDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
+        _getTopScorersMonthlyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
+        _getTopScorersDailyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
         // Top Assisters DB
-        _getTopAssistersGlobalDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
-        _getTopAssistersMonthlyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
-        _getTopAssistersDailyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
+        _getTopAssistersGlobalDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
+        _getTopAssistersMonthlyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
+        _getTopAssistersDailyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
         // Get all players from DB
         _getAllPlayersFromDB(ruid: string): Promise<PlayerStorage[]>;
 

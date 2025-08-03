@@ -7,10 +7,10 @@ export interface IRepository<T> {
 }
 
 export interface IMatchEventRepository<T> extends IRepository<T> {
-    getTopScorersGlobal?(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
-    getTopScorersMonthly?(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
-    getTopScorersDaily?(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
-    getTopAssistersGlobal?(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
-    getTopAssistersMonthly?(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
-    getTopAssistersDaily?(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]>;
+    getTopScorersGlobal?(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
+    getTopScorersMonthly?(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
+    getTopScorersDaily?(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
+    getTopAssistersGlobal?(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
+    getTopAssistersMonthly?(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
+    getTopAssistersDaily?(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
 }

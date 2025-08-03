@@ -992,11 +992,11 @@ export class HeadlessBrowser {
             const roomInfo = await this.getRoomInfo(ruid);
             
             // Get daily stats from database
-            const topScorers = await this._PageContainer.get(ruid)!.evaluate(async () => {
+            const topScorers: {playerAuth: string, playerName: string, count: number}[] = await this._PageContainer.get(ruid)!.evaluate(async () => {
                 return await window._getTopScorersDailyDB(window.gameRoom.config._RUID);
             });
             
-            const topAssisters = await this._PageContainer.get(ruid)!.evaluate(async () => {
+            const topAssisters: {playerAuth: string, playerName: string, count: number}[] = await this._PageContainer.get(ruid)!.evaluate(async () => {
                 return await window._getTopAssistersDailyDB(window.gameRoom.config._RUID);
             });
             
@@ -1006,10 +1006,10 @@ export class HeadlessBrowser {
             
             // Add "No hay datos" if empty
             if (scorersData.length === 0) {
-                scorersData.push({ playerId: 0, playerName: 'No hay datos', count: 0 });
+                scorersData.push({ playerAuth: '', playerName: 'No hay datos', count: 0 });
             }
             if (assistersData.length === 0) {
-                assistersData.push({ playerId: 0, playerName: 'No hay datos', count: 0 });
+                assistersData.push({ playerAuth: '', playerName: 'No hay datos', count: 0 });
             }
             
             await this.feedSocialDiscordWebhook('', 'daily_stats', {
@@ -1094,8 +1094,10 @@ export class HeadlessBrowser {
             let currentBlueScore = 0;
             
             window.gameRoom.matchEventsHolder.forEach((event) => {
-                const player = allPlayers.find(p => p.id === event.playerId);
-                const playerName = player ? player.name : 'Desconocido';
+                // Find player by auth instead of ID since auth is what we store
+                const playerWithAuth = Array.from(window.gameRoom.playerList.values())
+                    .find(playerData => playerData.auth === event.playerAuth);
+                const playerName = playerWithAuth ? playerWithAuth.name : 'Desconocido';
                 const eventTime = Math.floor(event.matchTime / 60) + ':' + String(Math.floor(event.matchTime % 60)).padStart(2, '0');
                 
                 // Update scores based on event
@@ -1119,7 +1121,10 @@ export class HeadlessBrowser {
                 eventsSummary += `🟦 ${blueTeamName} ${currentBlueScore}️⃣\n`;
                 
                 if (event.type === 'goal') {
-                    const assist = event.assistPlayerId ? allPlayers.find(p => p.id === event.assistPlayerId)?.name : null;
+                    const assistPlayerWithAuth = event.assistPlayerAuth ? 
+                        Array.from(window.gameRoom.playerList.values())
+                            .find(playerData => playerData.auth === event.assistPlayerAuth) : null;
+                    const assist = assistPlayerWithAuth ? assistPlayerWithAuth.name : null;
                     if (assist) {
                         eventsSummary += `🕒 ${eventTime} ⚊ ⚽💥 ¡GOL de ${playerName}! (👥⚽ ¡PASE de ${assist}!)\n\n`;
                     } else {

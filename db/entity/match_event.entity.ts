@@ -11,7 +11,7 @@ export class MatchEvent {
     matchId!: string;
 
     @PrimaryColumn()
-    playerId!: number;
+    playerAuth!: string;
 
     @PrimaryColumn()
     timestamp!: number;

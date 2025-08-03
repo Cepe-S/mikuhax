@@ -269,7 +269,7 @@ export async function createMatchSummaryDB(ruid: string, matchSummary: MatchSumm
 }
 
 // Top scorers functions
-export async function getTopScorersGlobalDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+export async function getTopScorersGlobalDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
     try {
         const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-scorers/global`);
         if (result.status === 200 && result.data) {
@@ -283,7 +283,7 @@ export async function getTopScorersGlobalDB(ruid: string): Promise<{playerId: nu
     }
 }
 
-export async function getTopScorersMonthlyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+export async function getTopScorersMonthlyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
     try {
         const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-scorers/monthly`);
         if (result.status === 200 && result.data) {
@@ -297,7 +297,7 @@ export async function getTopScorersMonthlyDB(ruid: string): Promise<{playerId: n
     }
 }
 
-export async function getTopScorersDailyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+export async function getTopScorersDailyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
     try {
         const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-scorers/daily`);
         if (result.status === 200 && result.data) {
@@ -312,7 +312,7 @@ export async function getTopScorersDailyDB(ruid: string): Promise<{playerId: num
 }
 
 // Top assisters functions
-export async function getTopAssistersGlobalDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+export async function getTopAssistersGlobalDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
     try {
         const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-assisters/global`);
         if (result.status === 200 && result.data) {
@@ -326,7 +326,7 @@ export async function getTopAssistersGlobalDB(ruid: string): Promise<{playerId: 
     }
 }
 
-export async function getTopAssistersMonthlyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+export async function getTopAssistersMonthlyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
     try {
         const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-assisters/monthly`);
         if (result.status === 200 && result.data) {
@@ -340,7 +340,7 @@ export async function getTopAssistersMonthlyDB(ruid: string): Promise<{playerId:
     }
 }
 
-export async function getTopAssistersDailyDB(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+export async function getTopAssistersDailyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
     try {
         const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-assisters/daily`);
         if (result.status === 200 && result.data) {

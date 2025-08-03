@@ -144,7 +144,7 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
             // sets the matchEvent
             const matchEvent = {
                 eventType: holder.type,
-                playerId: holder.playerId,
+                playerAuth: holder.playerAuth,
                 playerTeamId: holder.playerTeamId,
                 matchId: matchId,
                 matchTime: holder.matchTime,
@@ -158,8 +158,8 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
         const matchSummary = {
             matchId: matchId,
             totalMatchTime: window.gameRoom.config.rules.requisite.timeLimit,
-            team1Players: redTeamPlayers.map(player => player.id),
-            team2Players: blueTeamPlayers.map(player => player.id),
+            team1Players: redTeamPlayers.map(player => window.gameRoom.playerList.get(player.id)!.auth),
+            team2Players: blueTeamPlayers.map(player => window.gameRoom.playerList.get(player.id)!.auth),
             serverRuid: window.gameRoom.config._RUID,
             timestamp: getUnixTimestamp()
         } as MatchSummary;

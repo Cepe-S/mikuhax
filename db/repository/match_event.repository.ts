@@ -34,9 +34,9 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
             if (events.length === 0) throw new Error('Match event not found.');
             return events[0];
         } else {
-            // Buscar evento único por matchId, playerId, timestamp
-            const { matchId, playerId, timestamp } = target;
-            const event = await repository.findOne({ ruid, matchId, playerId, timestamp });
+            // Buscar evento único por matchId, playerAuth, timestamp
+            const { matchId, playerAuth, timestamp } = target;
+            const event = await repository.findOne({ ruid, matchId, playerAuth, timestamp });
             if (!event) throw new Error('Match event not found.');
             return event;
         }
@@ -44,7 +44,7 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
 
     public async addSingle(ruid: string, event: MatchEventModel): Promise<MatchEvent> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
-        let newEvent = await repository.findOne({ ruid, matchId: event.matchId, playerId: event.playerId, timestamp: event.timestamp });
+        let newEvent = await repository.findOne({ ruid, matchId: event.matchId, playerAuth: event.playerAuth, timestamp: event.timestamp });
         if (!newEvent) {
             newEvent = repository.create({ ...event, ruid });
         } else {
@@ -55,13 +55,13 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
 
     public async updateSingle(ruid: string, target: any, event: MatchEventModel): Promise<MatchEvent> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
-        let matchId: string, playerId: number, timestamp: number;
+        let matchId: string, playerAuth: string, timestamp: number;
         if (typeof target === 'object') {
-            ({ matchId, playerId, timestamp } = target);
+            ({ matchId, playerAuth, timestamp } = target);
         } else {
             throw new Error('Invalid target for updateSingle');
         }
-        let existingEvent = await repository.findOne({ ruid: ruid, matchId, playerId, timestamp });
+        let existingEvent = await repository.findOne({ ruid: ruid, matchId, playerAuth, timestamp });
         if (existingEvent) {
             Object.assign(existingEvent, event);
         } else {
@@ -72,13 +72,13 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
 
     public async deleteSingle(ruid: string, target: any): Promise<void> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
-        let matchId: string, playerId: number, timestamp: number;
+        let matchId: string, playerAuth: string, timestamp: number;
         if (typeof target === 'object') {
-            ({ matchId, playerId, timestamp } = target);
+            ({ matchId, playerAuth, timestamp } = target);
         } else {
             throw new Error('Invalid target for deleteSingle');
         }
-        const event = await repository.findOne({ ruid: ruid, matchId, playerId, timestamp });
+        const event = await repository.findOne({ ruid: ruid, matchId, playerAuth, timestamp });
         if (!event) {
             throw new Error('Match event not found.');
         } else {
@@ -86,25 +86,25 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         }
     }
 
-    public async getTopScorersGlobal(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    public async getTopScorersGlobal(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
-            .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
+            .select('event.playerAuth', 'playerAuth')
+            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
-            .groupBy('event.playerId')
+            .groupBy('event.playerAuth')
             .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
+        return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
-    public async getTopScorersMonthly(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    public async getTopScorersMonthly(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
@@ -113,22 +113,22 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
-            .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
+            .select('event.playerAuth', 'playerAuth')
+            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
-            .groupBy('event.playerId')
+            .groupBy('event.playerAuth')
             .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
+        return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
-    public async getTopScorersDaily(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    public async getTopScorersDaily(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
@@ -136,40 +136,40 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
-            .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
+            .select('event.playerAuth', 'playerAuth')
+            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
-            .groupBy('event.playerId')
+            .groupBy('event.playerAuth')
             .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
+        return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
-    public async getTopAssistersGlobal(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    public async getTopAssistersGlobal(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
-            .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
+            .select('event.playerAuth', 'playerAuth')
+            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'assist' })
-            .groupBy('event.playerId')
+            .groupBy('event.playerAuth')
             .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
+        return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
-    public async getTopAssistersMonthly(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    public async getTopAssistersMonthly(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
@@ -178,22 +178,22 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
-            .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
+            .select('event.playerAuth', 'playerAuth')
+            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'assist' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
-            .groupBy('event.playerId')
+            .groupBy('event.playerAuth')
             .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
+        return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
-    public async getTopAssistersDaily(ruid: string): Promise<{playerId: number, playerName: string, count: number}[]> {
+    public async getTopAssistersDaily(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
@@ -201,18 +201,18 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.uid = event.playerId')
-            .select('event.playerId', 'playerId')
-            .addSelect('COALESCE(player.name, "Player #" || CAST(event.playerId AS TEXT))', 'playerName')
+            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
+            .select('event.playerAuth', 'playerAuth')
+            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'assist' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
-            .groupBy('event.playerId')
+            .groupBy('event.playerAuth')
             .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
-        return result.map(r => ({ playerId: r.playerId, playerName: r.playerName, count: parseInt(r.count) }));
+        return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 }

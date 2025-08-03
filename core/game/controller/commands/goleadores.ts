@@ -11,7 +11,7 @@ export async function cmdGoleadores(byPlayer: PlayerObject, message?: string): P
     }
 
     try {
-        let topScorers: {playerId: number, playerName: string, count: number}[] = [];
+        let topScorers: {playerAuth: string, playerName: string, count: number}[] = [];
         
         if (period === 'day') {
             topScorers = await getTopScorersDailyFromDB();

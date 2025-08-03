@@ -62,13 +62,13 @@ export async function onTeamGoalListener(team: TeamID): Promise<void> {
             window.gameRoom.playerList.get(touchPlayer)!.matchRecord.goals++; // record goal in match record
             const goalEvent: MatchEventHolder = {
                 type: 'goal',
-                playerId: window.gameRoom.playerList.get(touchPlayer)!.id,
+                playerAuth: window.gameRoom.playerList.get(touchPlayer)!.auth,
                 playerTeamId: team,
                 matchTime: matchTime
             };
             
             if (assistPlayer !== undefined && touchPlayer != assistPlayer && window.gameRoom.playerList.get(assistPlayer)!.team === team) {
-                goalEvent.assistPlayerId = window.gameRoom.playerList.get(assistPlayer)!.id;
+                goalEvent.assistPlayerAuth = window.gameRoom.playerList.get(assistPlayer)!.auth;
             }
             
             window.gameRoom.matchEventsHolder.push(goalEvent);
@@ -80,7 +80,7 @@ export async function onTeamGoalListener(team: TeamID): Promise<void> {
                 window.gameRoom.playerList.get(assistPlayer)!.matchRecord.assists++; // record assist in match record
                 window.gameRoom.matchEventsHolder.push({
                     type: 'assist',
-                    playerId: window.gameRoom.playerList.get(assistPlayer)!.id,
+                    playerAuth: window.gameRoom.playerList.get(assistPlayer)!.auth,
                     playerTeamId: team,
                     matchTime: matchTime
                 });
@@ -96,7 +96,7 @@ export async function onTeamGoalListener(team: TeamID): Promise<void> {
             window.gameRoom.logger.i('onTeamGoal', `${window.gameRoom.playerList.get(touchPlayer)!.name}#${touchPlayer} made an OG.`);
             window.gameRoom.matchEventsHolder.push({
                 type: 'ownGoal',
-                playerId: touchPlayer,
+                playerAuth: window.gameRoom.playerList.get(touchPlayer)!.auth,
                 playerTeamId: window.gameRoom.playerList.get(touchPlayer)!.team,
                 matchTime: matchTime
             });

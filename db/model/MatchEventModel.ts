@@ -1,6 +1,6 @@
 export interface MatchEventModel {
     matchId: string;
-    playerId: number;
+    playerAuth: string;
     playerTeamId: number;
     matchTime: number;
     timestamp: number;

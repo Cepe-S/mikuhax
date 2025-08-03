@@ -11,7 +11,7 @@ export async function cmdAsistidores(byPlayer: PlayerObject, message?: string): 
     }
 
     try {
-        let topAssisters: {playerId: number, playerName: string, count: number}[] = [];
+        let topAssisters: {playerAuth: string, playerName: string, count: number}[] = [];
         
         if (period === 'day') {
             topAssisters = await getTopAssistersDailyFromDB();

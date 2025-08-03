@@ -15,10 +15,10 @@ export class MatchSummary {
     totalMatchTime!: number;
 
     @Column("simple-array")
-    team1Players!: number[];
+    team1Players!: string[];
 
     @Column("simple-array")
-    team2Players!: number[];
+    team2Players!: string[];
 
     @Column()
     serverRuid!: string;

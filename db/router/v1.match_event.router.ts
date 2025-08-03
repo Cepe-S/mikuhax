@@ -12,7 +12,7 @@ matchEventRouter.get("/", async (ctx) => {
 });
 
 // GET single event
-matchEventRouter.get("/:matchId/:playerId/:timestamp", async (ctx) => {
+matchEventRouter.get("/:matchId/:playerAuth/:timestamp", async (ctx) => {
     await controller.getMatchEvent(ctx);
 });
 
@@ -22,13 +22,13 @@ matchEventRouter.post("/", async (ctx) => {
 });
 
 // PUT update event
-matchEventRouter.put("/:matchId/:playerId/:timestamp", async (ctx) => {
+matchEventRouter.put("/:matchId/:playerAuth/:timestamp", async (ctx) => {
     // Implementar si tienes update en el controller
     ctx.status = 501; // Not Implemented
 });
 
 // DELETE event
-matchEventRouter.delete("/:matchId/:playerId/:timestamp", async (ctx) => {
+matchEventRouter.delete("/:matchId/:playerAuth/:timestamp", async (ctx) => {
     // Implementar si tienes delete en el controller
     ctx.status = 501; // Not Implemented
 });
