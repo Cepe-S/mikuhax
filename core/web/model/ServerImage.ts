@@ -187,6 +187,10 @@ export interface ServerImage {
         balance: string;
         camisetas: string;
     };
+    superadmins: {
+        key: string;
+        description: string;
+    }[];
     stadiums: {
         default: string;
         ready: string;

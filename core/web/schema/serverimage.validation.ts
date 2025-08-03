@@ -48,7 +48,13 @@ export const createImageSchema = Joi.object().keys({
             dailyStatsTime: Joi.string().optional().default('20:00').pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/),
             replayUpload: Joi.boolean().required()
         }).optional()
-    }).optional()
+    }).optional(),
+    superadmins: Joi.array().items(
+        Joi.object().keys({
+            key: Joi.string().required().min(1).max(100),
+            description: Joi.string().required().min(1).max(200)
+        })
+    ).optional().default([])
 });
 
 export const deployRequestSchema = Joi.object().keys({

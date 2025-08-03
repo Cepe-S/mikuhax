@@ -61,6 +61,24 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
         dailyStatsTime: '20:00'
     });
 
+    // Superadmin states
+    const [superadmins, setSuperadmins] = useState<{key: string, description: string}[]>([]);
+
+    // Add superadmin functions
+    const addSuperadmin = () => {
+        setSuperadmins([...superadmins, { key: '', description: '' }]);
+    };
+
+    const removeSuperadmin = (index: number) => {
+        setSuperadmins(superadmins.filter((_, i) => i !== index));
+    };
+
+    const updateSuperadmin = (index: number, field: 'key' | 'description', value: string) => {
+        const updated = [...superadmins];
+        updated[index][field] = value;
+        setSuperadmins(updated);
+    };
+
 
     // Room config states (simplified from original RoomCreate)
     const [configFormField, setConfigFormField] = useState({} as BrowserHostRoomConfig);
@@ -175,7 +193,8 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                     dailyStatsTime: discordWebhook.dailyStatsTime || '20:00',
                     replayUpload: !!discordWebhook.replayUrl
                 } : undefined
-            }
+            },
+            superadmins: superadmins.filter(admin => admin.key.trim() !== '' && admin.description.trim() !== '')
         };
 
         try {
@@ -974,6 +993,74 @@ export default function ServerImageCreate({ styleClass }: styleClass) {
                                                     pattern: "^([01]?[0-9]|2[0-3]):[0-5][0-9]$"
                                                 }}
                                             />
+                                        </Grid>
+                                    </Grid>
+                                </AccordionDetails>
+                            </Accordion>
+
+                            {/* Superadmin Configuration */}
+                            <Accordion>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                    <Typography variant="subtitle1" color="primary">Superadmin Configuration</Typography>
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <Grid container spacing={2} direction="column">
+                                        <Grid item>
+                                            <Typography variant="body2" style={{ marginBottom: 16 }}>
+                                                Configure superadmin passwords that will be available when the server is deployed.
+                                            </Typography>
+                                        </Grid>
+                                        
+                                        {superadmins.map((admin, index) => (
+                                            <Grid item key={index}>
+                                                <Grid container spacing={2} alignItems="center">
+                                                    <Grid item xs={12} sm={4}>
+                                                        <TextField
+                                                            fullWidth
+                                                            value={admin.key}
+                                                            onChange={(e) => updateSuperadmin(index, 'key', e.target.value)}
+                                                            label="Password"
+                                                            variant="outlined"
+                                                            size="small"
+                                                            placeholder="admin123"
+                                                            helperText="Superadmin password"
+                                                        />
+                                                    </Grid>
+                                                    <Grid item xs={12} sm={6}>
+                                                        <TextField
+                                                            fullWidth
+                                                            value={admin.description}
+                                                            onChange={(e) => updateSuperadmin(index, 'description', e.target.value)}
+                                                            label="Description"
+                                                            variant="outlined"
+                                                            size="small"
+                                                            placeholder="Main admin password"
+                                                            helperText="Description for this password"
+                                                        />
+                                                    </Grid>
+                                                    <Grid item xs={12} sm={2}>
+                                                        <Button
+                                                            variant="outlined"
+                                                            color="secondary"
+                                                            onClick={() => removeSuperadmin(index)}
+                                                            size="small"
+                                                        >
+                                                            Remove
+                                                        </Button>
+                                                    </Grid>
+                                                </Grid>
+                                            </Grid>
+                                        ))}
+                                        
+                                        <Grid item>
+                                            <Button
+                                                variant="outlined"
+                                                color="primary"
+                                                onClick={addSuperadmin}
+                                                size="small"
+                                            >
+                                                Add Superadmin Password
+                                            </Button>
                                         </Grid>
                                     </Grid>
                                 </AccordionDetails>

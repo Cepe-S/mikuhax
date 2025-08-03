@@ -98,6 +98,7 @@ declare global {
         _deleteBanlistDB(ruid: string, playerConn: string): Promise<void>;
         _createSuperadminDB(ruid: string, key: string, description: string): Promise<void>;
         _readSuperadminDB(ruid: string, key: string): Promise<string | undefined>;
+        _getAllSuperadminsDB(ruid: string): Promise<{key: string, description: string}[]>;
         _deleteSuperadminDB(ruid: string, key: string): Promise<void>;
         // Match Event/Match Summary DB
         _createMatchEventDB(ruid: string, matchEvent: MatchEvent): Promise<void>;

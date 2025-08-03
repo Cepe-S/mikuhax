@@ -56,6 +56,28 @@ export async function readSuperadminDB(ruid: string, key: string): Promise<strin
     }
 }
 
+export async function getAllSuperadminsDB(ruid: string): Promise<{key: string, description: string}[]> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/superadmin`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`200 Succeed on getAllSuperadminsDB: Read ${result.data.length} superadmins`);
+            return result.data.map((admin: any) => ({
+                key: admin.key,
+                description: admin.description
+            }));
+        }
+        return [];
+    } catch (error) {
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            winstonLogger.info(`${err.response.status} No superadmins found for ruid: ${ruid}`);
+        } else {
+            winstonLogger.error(`Error caught on getAllSuperadminsDB: ${error}`);
+        }
+        return [];
+    }
+}
+
 //async function updateSuperadminDB is not implemented.
 
 export async function deleteSuperadminDB(ruid: string, key: string): Promise<void> {

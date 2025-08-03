@@ -71,12 +71,16 @@ export async function createServerImageFromRoom(ctx: Context) {
     try {
         const roomDetailInfo = await browser.getRoomDetailInfo(ruid);
         
+        // Get superadmins from database
+        const superadmins = await browser.getAllSuperadmins(ruid) || [];
+        
         const serverImage: ServerImage = {
             name,
             description,
             ruid,
             version: "1.0.0",
             createdAt: new Date(),
+            superadmins,
             config: {
                 roomName: roomDetailInfo._roomConfig.roomName,
                 playerName: roomDetailInfo._roomConfig.playerName,
@@ -253,6 +257,17 @@ export async function deployFromImage(ctx: Context) {
         }
 
         await browser.openNewRoom(imageData.ruid, newRoomConfig);
+        
+        // Restore superadmins if present in image
+        if (imageData.superadmins && imageData.superadmins.length > 0) {
+            for (const superadmin of imageData.superadmins) {
+                try {
+                    await browser.createSuperadmin(imageData.ruid, superadmin.key, superadmin.description);
+                } catch (error) {
+                    console.log(`Superadmin ${superadmin.key} already exists or failed to create:`, error);
+                }
+            }
+        }
         
         // Configure webhooks if present in image
         if (imageData.webhooks?.discord) {

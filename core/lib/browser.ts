@@ -203,6 +203,7 @@ export class HeadlessBrowser {
         // inject functions for CRUD with DB Server ====================================
         await page.exposeFunction('_createSuperadminDB', dbUtilityInject.createSuperadminDB);
         await page.exposeFunction('_readSuperadminDB', dbUtilityInject.readSuperadminDB);
+        await page.exposeFunction('_getAllSuperadminsDB', dbUtilityInject.getAllSuperadminsDB);
         //await page.exposeFunction('updateSuperadminDB', dbUtilityInject.updateSuperadminDB); //this function is not implemented.
         await page.exposeFunction('_deleteSuperadminDB', dbUtilityInject.deleteSuperadminDB);
 
@@ -461,6 +462,24 @@ export class HeadlessBrowser {
                 return undefined;
             }
         }, id);
+    }
+
+    /**
+     * Get all superadmins from database
+     */
+    public async getAllSuperadmins(ruid: string): Promise<{key: string, description: string}[]> {
+        return await this._PageContainer.get(ruid)?.evaluate(async () => {
+            return await window._getAllSuperadminsDB(window.gameRoom.config._RUID);
+        }) || [];
+    }
+
+    /**
+     * Create superadmin in database
+     */
+    public async createSuperadmin(ruid: string, key: string, description: string): Promise<void> {
+        await this._PageContainer.get(ruid)?.evaluate(async (key: string, description: string) => {
+            await window._createSuperadminDB(window.gameRoom.config._RUID, key, description);
+        }, key, description);
     }
 
     /**
