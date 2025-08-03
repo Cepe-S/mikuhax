@@ -151,6 +151,7 @@ export interface ServerImage {
         _helpManavatar: string;
         _helpManmap: string;
         _helpManbalance: string;
+        _helpManllamaradmin: string;
         _listSubafk: string;
         _listSubmute: string;
         _listSubred: string;
@@ -186,6 +187,7 @@ export interface ServerImage {
         map: string;
         balance: string;
         camisetas: string;
+        llamaradmin: string;
     };
     superadmins: {
         key: string;

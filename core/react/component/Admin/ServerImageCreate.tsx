@@ -12,11 +12,13 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import * as DefaultConfigSet from "../../lib/defaultroomconfig.json";
 import { useHistory } from 'react-router-dom';
-import { Divider, Switch, Accordion, AccordionSummary, AccordionDetails } from '@material-ui/core';
+import { Divider, Switch, Accordion, AccordionSummary, AccordionDetails, IconButton } from '@material-ui/core';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Alert, { AlertColor } from '../common/Alert';
 import { isNumber } from '../../lib/numcheck';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import AddIcon from '@material-ui/icons/Add';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 interface ServerImage {
     id: string;
@@ -858,6 +860,9 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                 </AccordionSummary>
                                 <AccordionDetails>
                                     <Grid container spacing={2}>
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle2" gutterBottom>Ball Properties</Typography>
+                                        </Grid>
                                         <Grid item xs={6} sm={3}>
                                             <TextField
                                                 fullWidth
@@ -868,6 +873,7 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                 variant="outlined"
                                                 size="small"
                                                 inputProps={{ step: 0.1 }}
+                                                helperText="Default: 6.4"
                                             />
                                         </Grid>
                                         <Grid item xs={6} sm={3}>
@@ -880,6 +886,7 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                 variant="outlined"
                                                 size="small"
                                                 inputProps={{ step: 0.1 }}
+                                                helperText="Default: 0.4"
                                             />
                                         </Grid>
                                         <Grid item xs={6} sm={3}>
@@ -892,6 +899,7 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                 variant="outlined"
                                                 size="small"
                                                 inputProps={{ step: 0.1 }}
+                                                helperText="Default: 1.5"
                                             />
                                         </Grid>
                                         <Grid item xs={6} sm={3}>
@@ -904,6 +912,7 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                 variant="outlined"
                                                 size="small"
                                                 inputProps={{ step: 0.01 }}
+                                                helperText="Default: 0.99"
                                             />
                                         </Grid>
                                         <Grid item xs={6} sm={3}>
@@ -914,7 +923,12 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                 label="Ball Color (hex)"
                                                 variant="outlined"
                                                 size="small"
+                                                helperText="Default: 0"
                                             />
+                                        </Grid>
+                                        
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle2" gutterBottom style={{ marginTop: '16px' }}>Powershot Configuration</Typography>
                                         </Grid>
                                         <Grid item xs={6} sm={3}>
                                             <FormControlLabel
@@ -929,6 +943,97 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                 label="Powershot Enabled"
                                                 labelPlacement="top"
                                             />
+                                        </Grid>
+                                        <Grid item xs={6} sm={3}>
+                                            <TextField
+                                                fullWidth
+                                                value={settingsFormField?.powershotActivationTime || ''}
+                                                onChange={(e) => setSettingsFormField({ ...settingsFormField, powershotActivationTime: parseInt(e.target.value) || 0 })}
+                                                label="Activation Time (deciseconds)"
+                                                type="number"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: 10 (1 second) - 1 decisecond = 0.1s"
+                                                disabled={!settingsFormField?.powershotEnabled}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={6} sm={3}>
+                                            <TextField
+                                                fullWidth
+                                                value={settingsFormField?.powershotCooldown || ''}
+                                                onChange={(e) => setSettingsFormField({ ...settingsFormField, powershotCooldown: parseInt(e.target.value) || 0 })}
+                                                label="Cooldown (ms)"
+                                                type="number"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: 30000ms"
+                                                disabled={!settingsFormField?.powershotEnabled}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={6} sm={3}>
+                                            <TextField
+                                                fullWidth
+                                                value={settingsFormField?.powershotStickDistance || ''}
+                                                onChange={(e) => setSettingsFormField({ ...settingsFormField, powershotStickDistance: parseFloat(e.target.value) || 0 })}
+                                                label="Stick Distance"
+                                                type="number"
+                                                variant="outlined"
+                                                size="small"
+                                                inputProps={{ step: 0.1 }}
+                                                helperText="Default: 26"
+                                                disabled={!settingsFormField?.powershotEnabled}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={6} sm={3}>
+                                            <TextField
+                                                fullWidth
+                                                value={settingsFormField?.powershotInvMassFactor || ''}
+                                                onChange={(e) => setSettingsFormField({ ...settingsFormField, powershotInvMassFactor: parseFloat(e.target.value) || 0 })}
+                                                label="Inverse Mass Factor"
+                                                type="number"
+                                                variant="outlined"
+                                                size="small"
+                                                inputProps={{ step: 0.1 }}
+                                                helperText="Default: 2.0"
+                                                disabled={!settingsFormField?.powershotEnabled}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={6} sm={3}>
+                                            <TextField
+                                                fullWidth
+                                                value={settingsFormField?.powershotNormalColor || ''}
+                                                onChange={(e) => setSettingsFormField({ ...settingsFormField, powershotNormalColor: parseInt(e.target.value) || 0 })}
+                                                label="Normal Color (decimal)"
+                                                type="number"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: 16777215 (white)"
+                                                disabled={!settingsFormField?.powershotEnabled}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={6} sm={3}>
+                                            <TextField
+                                                fullWidth
+                                                value={settingsFormField?.powershotActiveColor || ''}
+                                                onChange={(e) => setSettingsFormField({ ...settingsFormField, powershotActiveColor: parseInt(e.target.value) || 0 })}
+                                                label="Active Color (decimal)"
+                                                type="number"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: 16729344 (orange)"
+                                                disabled={!settingsFormField?.powershotEnabled}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Typography variant="body2" color="textSecondary" style={{ marginTop: '8px' }}>
+                                                <strong>Powershot Settings Help:</strong><br/>
+                                                • <strong>Activation Time:</strong> How long a player must hold kick button to trigger powershot (deciseconds: 1 = 0.1 seconds, 10 = 1 second)<br/>
+                                                • <strong>Cooldown:</strong> Time before a player can use powershot again (milliseconds)<br/>
+                                                • <strong>Stick Distance:</strong> Maximum distance from ball to activate powershot<br/>
+                                                • <strong>Inverse Mass Factor:</strong> Multiplier for ball speed when powershot is used (higher = faster)<br/>
+                                                • <strong>Colors:</strong> Visual indicators for powershot state (use decimal color values)<br/>
+                                                <em>Note: If powershot indicator timing seems off, try adjusting the activation time. Lower values = faster activation.</em>
+                                            </Typography>
                                         </Grid>
                                     </Grid>
                                 </AccordionDetails>
@@ -1028,7 +1133,10 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                 </AccordionSummary>
                                 <AccordionDetails>
                                     <Grid container spacing={2}>
-                                        <Grid item xs={12} sm={6}>
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle2" gutterBottom>Basic Commands</Typography>
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
                                             <TextField
                                                 fullWidth
                                                 value={commandsFormField?._commandPrefix || ''}
@@ -1036,11 +1144,109 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                 label="Command Prefix"
                                                 variant="outlined"
                                                 size="small"
+                                                helperText="Default: !"
                                             />
                                         </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                value={commandsFormField?.help || ''}
+                                                onChange={(e) => setCommandsFormField({ ...commandsFormField, help: e.target.value })}
+                                                label="Help Command"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: help"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                value={commandsFormField?.about || ''}
+                                                onChange={(e) => setCommandsFormField({ ...commandsFormField, about: e.target.value })}
+                                                label="About Command"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: about"
+                                            />
+                                        </Grid>
+                                        
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle2" gutterBottom style={{ marginTop: '16px' }}>Game Commands</Typography>
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                value={commandsFormField?.stats || ''}
+                                                onChange={(e) => setCommandsFormField({ ...commandsFormField, stats: e.target.value })}
+                                                label="Stats Command"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: stats"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                value={commandsFormField?.ranking || ''}
+                                                onChange={(e) => setCommandsFormField({ ...commandsFormField, ranking: e.target.value })}
+                                                label="Ranking Command"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: ranking"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                value={commandsFormField?.tier || ''}
+                                                onChange={(e) => setCommandsFormField({ ...commandsFormField, tier: e.target.value })}
+                                                label="Tier Command"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: tier"
+                                            />
+                                        </Grid>
+                                        
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle2" gutterBottom style={{ marginTop: '16px' }}>Special Features</Typography>
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                value={commandsFormField?.powershotadmin || ''}
+                                                onChange={(e) => setCommandsFormField({ ...commandsFormField, powershotadmin: e.target.value })}
+                                                label="Powershot Admin Command"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: powershotadmin"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                value={commandsFormField?.avatar || ''}
+                                                onChange={(e) => setCommandsFormField({ ...commandsFormField, avatar: e.target.value })}
+                                                label="Avatar Command"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: avatar"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <TextField
+                                                fullWidth
+                                                value={commandsFormField?.camisetas || ''}
+                                                onChange={(e) => setCommandsFormField({ ...commandsFormField, camisetas: e.target.value })}
+                                                label="Jersey Command"
+                                                variant="outlined"
+                                                size="small"
+                                                helperText="Default: camisetas"
+                                            />
+                                        </Grid>
+                                        
                                         <Grid item xs={12}>
                                             <Typography variant="body2" color="textSecondary">
-                                                Note: Individual command mappings can be configured after creation
+                                                Note: Additional command mappings can be configured after creation. The powershot admin command allows administrators to toggle powershot settings during gameplay.
                                             </Typography>
                                         </Grid>
                                     </Grid>

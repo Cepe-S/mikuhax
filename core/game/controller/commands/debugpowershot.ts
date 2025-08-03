@@ -11,7 +11,7 @@ export function cmdDebugPowershot(byPlayer: PlayerObject, message?: string): voi
 • Counter: ${ballStack.getPowershotCounter()}
 • Active: ${ballStack.isPowershotActive()}
 • Last Touch: ${ballStack.getLastTouchPlayerID()}
-• Threshold: ${window.gameRoom.config.settings.powershotActivationTime}
+• Threshold: ${window.gameRoom.config.settings.powershotActivationTime} deciseconds (${window.gameRoom.config.settings.powershotActivationTime * 0.1}s)
 • Distance: ${window.gameRoom.config.settings.powershotStickDistance}
     `.trim();
     

@@ -193,6 +193,14 @@ export interface BrowserHostRoomCommands {
     _helpMantier: string
     _helpMansuper: string
     _helpMannotice: string
+    _helpManpowershotadmin: string
+    _helpMangoleadores: string
+    _helpManasistidores: string
+    _helpManranking: string
+    _helpManavatar: string
+    _helpManmap: string
+    _helpManbalance: string
+    _helpManllamaradmin: string
 
     _listSubafk: string
     _listSubmute: string
@@ -224,4 +232,13 @@ export interface BrowserHostRoomCommands {
     vote: string
     tier: string
     notice: string
+    powershotadmin: string
+    goleadores: string
+    asistidores: string
+    ranking: string
+    avatar: string
+    map: string
+    balance: string
+    camisetas: string
+    llamaradmin: string
 }

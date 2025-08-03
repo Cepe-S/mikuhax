@@ -169,7 +169,10 @@ export class KickStack {
         // Get settings from game config (with safe fallbacks)
         if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.config && window.gameRoom.config.settings) {
             const settings = window.gameRoom.config.settings;
-            this.powershot.activationThreshold = settings.powershotActivationTime || 100;
+            // Convert deciseconds to number of 25ms ticks
+            // 1 decisecond = 100ms, so 100ms / 25ms = 4 ticks per decisecond
+            const activationTimeDeciseconds = settings.powershotActivationTime || 10;
+            this.powershot.activationThreshold = activationTimeDeciseconds * 4; // 4 ticks per decisecond
             this.powershot.normalColor = settings.powershotNormalColor || 0xFFFFFF;
             this.powershot.powershotColor = settings.powershotActiveColor || 0xFF4500;
             this.powershot.normalInvMass = settings.ballInvMass || 1.5;
@@ -198,23 +201,34 @@ export class KickStack {
             
             // Solo manejar colores si no se ha activado aún el powershot
             if (!this.powershot.isActive && window.gameRoom._room) {
-                // Titileo empieza al 60% del tiempo (antes era 3/5 = 60%)
-                // Titileo termina al 80% del tiempo (antes era 4/5 = 80%)
+                // Titileo empieza al 60% del tiempo y termina al 100%
                 if (progressPercent >= 60 && progressPercent < 100) {
                     // Calcular cuántos ticks han pasado en este 40% de tiempo (60% a 100%)
                     const flashingPeriod = this.powershot.activationThreshold * 0.4; // 40% del tiempo total
                     const ticksInFlashingPeriod = this.powershot.counter - (this.powershot.activationThreshold * 0.6);
                     
-                    // Crear ciclos de titileo cada 20 ticks (0.5 segundos a 25ms/tick)
-                    const ticksInCycle = ticksInFlashingPeriod % 20;
-                    const isFirstHalf = ticksInCycle < 10; // Primeros 0.25s del ciclo
+                    // Dividir el período de titileo en exactamente 2 ciclos completos
+                    const cycleDuration = flashingPeriod / 2; // Cada ciclo es 20% del tiempo total
+                    const currentCycle = Math.floor(ticksInFlashingPeriod / cycleDuration);
+                    const ticksInCurrentCycle = ticksInFlashingPeriod % cycleDuration;
+                    const isFirstHalfOfCycle = ticksInCurrentCycle < (cycleDuration / 2);
                     
-                    const flashColor = isFirstHalf ? 0xCCCCCC : this.powershot.normalColor; // Gris claro/Blanco
-                    
-                    try {
-                        window.gameRoom._room.setDiscProperties(0, { color: flashColor });
-                    } catch (e) {
-                        // Ignore errors during color setting
+                    // Solo titilar si estamos en uno de los 2 ciclos permitidos
+                    if (currentCycle < 2) {
+                        const flashColor = isFirstHalfOfCycle ? 0xCCCCCC : this.powershot.normalColor; // Gris claro/Blanco
+                        
+                        try {
+                            window.gameRoom._room.setDiscProperties(0, { color: flashColor });
+                        } catch (e) {
+                            // Ignore errors during color setting
+                        }
+                    } else {
+                        // Después de los 2 ciclos, mantener color normal
+                        try {
+                            window.gameRoom._room.setDiscProperties(0, { color: this.powershot.normalColor });
+                        } catch (e) {
+                            // Ignore errors during color setting
+                        }
                     }
                 } else if (progressPercent < 60) {
                     // Mantener pelota blanca antes del 60%

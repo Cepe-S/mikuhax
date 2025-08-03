@@ -62,7 +62,7 @@
 		"ballInvMass": 1.5,
 		"ballDamping": 0.99,
 		"powershotEnabled": true,
-		"powershotActivationTime": 100,
+		"powershotActivationTime": 10,
 		"powershotNormalColor": 16777215,
 		"powershotActiveColor": 16729344,
 		"powershotInvMassFactor": 2.0,
