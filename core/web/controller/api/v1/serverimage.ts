@@ -121,48 +121,73 @@ export async function createServerImageFromRoom(ctx: Context) {
  */
 export async function listServerImages(ctx: Context) {
     try {
+        console.log('Starting listServerImages...');
         const files = fs.readdirSync(IMAGES_DIR).filter(file => file.endsWith('.json'));
-        const images = await Promise.all(files.map(async file => {
-            const imagePath = path.join(IMAGES_DIR, file);
-            const imageData: ServerImage = JSON.parse(fs.readFileSync(imagePath, 'utf8'));
-            const isRunning = browser.checkExistRoom(imageData.ruid);
-            
-            let roomInfo = null;
-            if (isRunning) {
-                try {
-                    const roomDetail = await browser.getRoomDetailInfo(imageData.ruid);
-                    const playersList = await browser.getOnlinePlayersIDList(imageData.ruid);
-                    const playersInfo = await Promise.all(
-                        playersList.map(id => browser.getPlayerInfo(imageData.ruid, id))
-                    );
-                    const admins = playersInfo.filter(p => p && p.admin).length;
-                    
-                    roomInfo = {
-                        link: roomDetail._link,
-                        onlinePlayers: roomDetail.onlinePlayers,
-                        admins: admins
-                    };
-                } catch (error) {
-                    // If we can't get room info, just mark as running without details
-                    roomInfo = {
-                        link: 'Error loading link',
-                        onlinePlayers: 0,
-                        admins: 0
-                    };
+        console.log(`Found ${files.length} image files`);
+        
+        const images = await Promise.all(files.map(async (file, index) => {
+            try {
+                console.log(`Processing file ${index + 1}/${files.length}: ${file}`);
+                const imagePath = path.join(IMAGES_DIR, file);
+                const imageData: ServerImage = JSON.parse(fs.readFileSync(imagePath, 'utf8'));
+                console.log(`Parsed image data for ${file}, name: ${imageData.name}`);
+                
+                const isRunning = browser.checkExistRoom(imageData.ruid);
+                console.log(`Room ${imageData.ruid} running status: ${isRunning}`);
+                
+                let roomInfo = null;
+                if (isRunning) {
+                    try {
+                        const roomDetail = await browser.getRoomDetailInfo(imageData.ruid);
+                        const playersList = await browser.getOnlinePlayersIDList(imageData.ruid);
+                        const playersInfo = await Promise.all(
+                            playersList.map(id => browser.getPlayerInfo(imageData.ruid, id))
+                        );
+                        const admins = playersInfo.filter(p => p && p.admin).length;
+                        
+                        roomInfo = {
+                            link: roomDetail._link,
+                            onlinePlayers: roomDetail.onlinePlayers,
+                            admins: admins
+                        };
+                    } catch (error) {
+                        console.log(`Error getting room info for ${imageData.ruid}:`, error);
+                        // If we can't get room info, just mark as running without details
+                        roomInfo = {
+                            link: 'Error loading link',
+                            onlinePlayers: 0,
+                            admins: 0
+                        };
+                    }
                 }
+                
+                return {
+                    id: file.replace('.json', ''),
+                    name: imageData.name || 'Unnamed',
+                    description: imageData.description || '',
+                    ruid: imageData.ruid,
+                    version: imageData.version || '1.0.0',
+                    createdAt: imageData.createdAt || new Date(),
+                    isRunning,
+                    roomInfo
+                };
+            } catch (fileError) {
+                console.error(`Error processing file ${file}:`, fileError);
+                // Return a fallback object for corrupted files
+                return {
+                    id: file.replace('.json', ''),
+                    name: `Error loading ${file}`,
+                    description: 'Failed to load image data',
+                    ruid: 'ERROR',
+                    version: '1.0.0',
+                    createdAt: new Date(),
+                    isRunning: false,
+                    roomInfo: null
+                };
             }
-            
-            return {
-                id: file.replace('.json', ''),
-                name: imageData.name,
-                description: imageData.description,
-                ruid: imageData.ruid,
-                version: imageData.version,
-                createdAt: imageData.createdAt,
-                isRunning,
-                roomInfo
-            };
         }));
+
+        console.log(`Successfully processed ${images.length} images`);
 
         // Sort images: running first, then by creation date
         images.sort((a, b) => {
@@ -174,8 +199,9 @@ export async function listServerImages(ctx: Context) {
         ctx.status = 200;
         ctx.body = images;
     } catch (error) {
+        console.error('Error in listServerImages:', error);
         ctx.status = 500;
-        ctx.body = { error: 'Failed to list server images' };
+        ctx.body = { error: 'Failed to list server images', details: error.message };
     }
 }
 

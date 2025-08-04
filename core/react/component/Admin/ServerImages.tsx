@@ -24,6 +24,7 @@ import PeopleIcon from '@material-ui/icons/People';
 import SecurityIcon from '@material-ui/icons/Security';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import EditIcon from '@material-ui/icons/Edit';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
 
 
 interface ServerImage {
@@ -59,17 +60,24 @@ export default function ServerImages({ styleClass }: styleClass) {
 
     const loadImages = async () => {
         try {
+            console.log('Loading server images...');
             const result = await client.get('/api/v1/images');
+            console.log('Images API response:', result.status, result.data);
+            
             if (result.status === 200) {
                 setImages(result.data.map((img: any) => ({
                     ...img,
                     createdAt: new Date(img.createdAt)
                 })));
+                console.log(`Successfully loaded ${result.data.length} images`);
+            } else {
+                throw new Error(`API returned status ${result.status}`);
             }
         } catch (error) {
-            setFlashMessage('Failed to load server images');
+            console.error('Error loading images:', error);
+            setFlashMessage(`Failed to load server images: ${error.message || error}`);
             setAlertStatus("error");
-            setTimeout(() => setFlashMessage(''), 3000);
+            setTimeout(() => setFlashMessage(''), 5000);
         }
     };
 
@@ -182,6 +190,96 @@ export default function ServerImages({ styleClass }: styleClass) {
 
     const handleEdit = (image: ServerImage) => {
         history.push(`/admin/editimage/${image.id}`);
+    };
+
+    const handleDuplicate = async (image: ServerImage) => {
+        try {
+            setFlashMessage('Duplicating image...');
+            setAlertStatus("info");
+            
+            // Fetch the complete image data
+            const result = await client.get(`/api/v1/images/${image.id}`);
+            if (result.status === 200) {
+                const imageData = result.data;
+                
+                // Generate unique RUID for the duplicate
+                const generateUniqueRuid = () => {
+                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                    let result = '';
+                    for (let i = 0; i < 8; i++) {
+                        result += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+                    return result;
+                };
+                
+                // Ensure we have a valid base structure with all required fields
+                const now = new Date();
+                
+                // Create duplicate with modified data
+                const duplicateData = {
+                    name: `${imageData.name || 'Unnamed'} (Copy)`,
+                    description: `Copy of ${imageData.description || imageData.name || 'server image'}`,
+                    ruid: generateUniqueRuid(),
+                    version: imageData.version || '1.0.0',
+                    createdAt: now,
+                    config: {
+                        roomName: `${imageData.config?.roomName || imageData.name || 'Room'} (Copy)`,
+                        playerName: imageData.config?.playerName || 'Host',
+                        password: imageData.config?.password || '',
+                        maxPlayers: imageData.config?.maxPlayers || 12,
+                        public: imageData.config?.public !== false, // default to true
+                        noPlayer: imageData.config?.noPlayer || false,
+                        geo: imageData.config?.geo || undefined
+                    },
+                    settings: imageData.settings || {},
+                    rules: {
+                        ruleName: imageData.rules?.ruleName || 'Default Rule',
+                        ruleDescription: imageData.rules?.ruleDescription || 'Default rule description',
+                        requisite: {
+                            minimumPlayers: imageData.rules?.requisite?.minimumPlayers || 4,
+                            eachTeamPlayers: imageData.rules?.requisite?.eachTeamPlayers || 4,
+                            timeLimit: imageData.rules?.requisite?.timeLimit || 3,
+                            scoreLimit: imageData.rules?.requisite?.scoreLimit || 3,
+                            teamLock: imageData.rules?.requisite?.teamLock || false
+                        },
+                        autoAdmin: imageData.rules?.autoAdmin || false,
+                        autoOperating: imageData.rules?.autoOperating || false,
+                        statsRecord: imageData.rules?.statsRecord || true,
+                        defaultMapName: imageData.rules?.defaultMapName || 'Classic',
+                        readyMapName: imageData.rules?.readyMapName || 'Classic',
+                        customJSONOptions: imageData.rules?.customJSONOptions || '{}'
+                    },
+                    helo: imageData.helo || {},
+                    commands: imageData.commands || {},
+                    stadiums: {
+                        default: imageData.stadiums?.default || 'Classic',
+                        ready: imageData.stadiums?.ready || 'Classic'
+                    },
+                    webhooks: imageData.webhooks || {},
+                    superadmins: imageData.superadmins || imageData.superadmin || []
+                };
+                
+                console.log('Attempting to create duplicate with data:', duplicateData);
+                
+                // Create the duplicate
+                const createResult = await client.post('/api/v1/images', duplicateData);
+                if (createResult.status === 201) {
+                    setFlashMessage('Image duplicated successfully');
+                    setAlertStatus("success");
+                    setTimeout(() => setFlashMessage(''), 2000);
+                    loadImages(); // Reload the list
+                } else {
+                    throw new Error(`Server returned status ${createResult.status}`);
+                }
+            } else {
+                throw new Error(`Failed to fetch image data: ${result.status}`);
+            }
+        } catch (error) {
+            console.error('Duplication error:', error);
+            setFlashMessage(`Failed to duplicate image: ${error.message || error}`);
+            setAlertStatus("error");
+            setTimeout(() => setFlashMessage(''), 5000);
+        }
     };
 
     return (
@@ -297,6 +395,9 @@ export default function ServerImages({ styleClass }: styleClass) {
                                         )}
                                         <IconButton onClick={() => handleEdit(image)} title="Edit Image">
                                             <EditIcon />
+                                        </IconButton>
+                                        <IconButton onClick={() => handleDuplicate(image)} title="Duplicate Image">
+                                            <FileCopyIcon />
                                         </IconButton>
                                         <IconButton onClick={() => handleExport(image)} title="Export Image">
                                             <GetAppIcon />
