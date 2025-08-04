@@ -9,6 +9,8 @@ import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, assignPlayerToBalancedTeam, getTeamsEloInfo } from "../../model/OperateHelper/Quorum";
 import { decideTier, getAvatarByTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
 import { isExistNickname, isIncludeBannedWords } from "../TextFilter";
+import { trackPlayerConnection } from "../ConnectionTracker";
+import { trackPlayerConnectionLocal } from "../LocalConnectionTracker";
 
 export async function onPlayerJoinListener(player: PlayerObject): Promise<void> {
     const joinTimeStamp: number = getUnixTimestamp();
@@ -197,6 +199,14 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
     }
 
     await setPlayerDataToDB(convertToPlayerStorage(window.gameRoom.playerList.get(player.id)!)); // register(or update) this player into DB
+
+    // Track player connection for anti-spam analysis (HTTP version - currently disabled due to CORS)
+    trackPlayerConnection(player).catch(err => {
+        window.gameRoom.logger.w('onPlayerJoin', `Failed to track connection for ${player.name}: ${err.message}`);
+    });
+
+    // Track player connection locally (no HTTP issues)
+    trackPlayerConnectionLocal(player);
 
     if (window.gameRoom.config.rules.autoAdmin === true) { // if auto admin option is enabled
         updateAdmins(); // check there are any admin players, if not make an admin player.
