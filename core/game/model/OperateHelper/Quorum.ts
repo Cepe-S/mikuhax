@@ -48,9 +48,10 @@ export function assignPlayerToBalancedTeam(playerId: number) {
     const redCount = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
     const blueCount = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Blue).length;
     
+    // Lógica determinística: siempre al equipo con menos jugadores, si empate entonces al rojo
     const targetTeam = redCount < blueCount ? TeamID.Red : 
                      blueCount < redCount ? TeamID.Blue : 
-                     Math.random() < 0.5 ? TeamID.Red : TeamID.Blue;
+                     TeamID.Red; // Por defecto al rojo si están equilibrados
     
     window.gameRoom._room.setPlayerTeam(playerId, targetTeam);
 }

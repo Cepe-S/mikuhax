@@ -15,6 +15,7 @@ import { TeamID } from "./model/GameObject/TeamID";
 import { EmergencyTools } from "./model/ExposeLibs/EmergencyTools";
 import { refreshBanVoteCache } from "./model/OperateHelper/Vote";
 import { GameRoomConfig } from "./model/Configuration/GameRoomConfig";
+import { setDefaultStadiums } from "./controller/RoomTools";
 // ====================================================================================================
 // load initial configurations
 const loadedConfig: GameRoomConfig = JSON.parse(localStorage.getItem('_initConfig')!);
@@ -156,15 +157,7 @@ function makeRoom(): void {
 
     window.gameRoom.logger.i('initialisation', `The game mode is '${window.gameRoom.isGamingNow}' now(by default).`);
 
-    // Ensure stadium data is properly loaded with current config
-    try {
-        window.gameRoom._room.setCustomStadium(window.gameRoom.stadiumData.training);
-        window.gameRoom.logger.i('initialisation', 'Training stadium loaded successfully');
-    } catch (error) {
-        window.gameRoom.logger.e('initialisation', `Failed to load training stadium: ${error}`);
-        // Fallback to a basic stadium if loading fails
-        window.gameRoom._room.setCustomStadium('{"name":"Basic Stadium","width":420,"height":200,"spawnDistance":180,"bg":{"type":"","width":0,"height":0,"kickOffRadius":80,"cornerRadius":0},"vertexes":[{"x":-420,"y":-200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"x":-420,"y":200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"x":420,"y":200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"x":420,"y":-200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]}],"segments":[{"v0":0,"v1":1,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"v0":1,"v1":2,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"v0":2,"v1":3,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"v0":3,"v1":0,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]}],"goals":[{"p0":[-420,-60],"p1":[-420,60],"team":"red"},{"p0":[420,60],"p1":[420,-60],"team":"blue"}],"discs":[{"radius":6.4,"color":"0","bCoef":0.4,"invMass":1.5,"damping":0.99,"cGroup":["ball","kick","score"]}],"planes":[{"normal":[0,1],"dist":-200,"bCoef":1},{"normal":[0,-1],"dist":-200,"bCoef":1},{"normal":[1,0],"dist":-420,"bCoef":1},{"normal":[-1,0],"dist":-420,"bCoef":1}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"],"cGroup":["ball"]}},"playerPhysics":{"bCoef":0,"acceleration":0.11,"kickingAcceleration":0.083,"kickStrength":5},"ballPhysics":"disc0"}');
-    }
+    // Stadium will be loaded automatically based on player count via setDefaultStadiums()
     
     window.gameRoom._room.setScoreLimit(window.gameRoom.config.rules.requisite.scoreLimit);
     window.gameRoom._room.setTimeLimit(window.gameRoom.config.rules.requisite.timeLimit);
@@ -190,5 +183,8 @@ function makeRoom(): void {
     window.gameRoom._room.onStadiumChange = (newStadiumName: string, byPlayer: PlayerObject): void => eventListener.onStadiumChangeListner(newStadiumName, byPlayer);
     window.gameRoom._room.onRoomLink = (url: string): void => eventListener.onRoomLinkListener(url);
     window.gameRoom._room.onKickRateLimitSet = (min: number, rate: number, burst: number, byPlayer: PlayerObject): void => eventListener.onKickRateLimitSetListener(min, rate, burst, byPlayer);
+    
+    // Asegurar que el mapa correcto se carga al inicio (ready mode por defecto)
+    setDefaultStadiums();
     // =========================
 }

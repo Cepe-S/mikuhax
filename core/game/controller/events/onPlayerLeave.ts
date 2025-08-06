@@ -1,7 +1,7 @@
 import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { updateAdmins } from "../RoomTools";
+import { updateAdmins, setDefaultStadiums } from "../RoomTools";
 import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, balanceTeamsAfterLeave, forceTeamBalance } from "../../model/OperateHelper/Quorum";
@@ -50,6 +50,7 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
         if (window.gameRoom.isStatRecord === false) {
             window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onLeft.startRecord, placeholderLeft), null, 0x00FF00, "normal", 0);
             window.gameRoom.isStatRecord = true;
+            setDefaultStadiums(); // Cambiar al mapa de estadísticas cuando hay suficientes jugadores
         }
         // when auto emcee mode is enabled
         if(window.gameRoom.config.rules.autoOperating === true && window.gameRoom.isGamingNow === true) {
@@ -65,6 +66,7 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
         if (window.gameRoom.isStatRecord === true) {
             window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onLeft.stopRecord, placeholderLeft), null, 0x00FF00, "normal", 0);
             window.gameRoom.isStatRecord = false;
+            setDefaultStadiums(); // Cambiar al mapa ready/training cuando no hay suficientes jugadores
             // when auto emcee mode is enabled and lack of players
             if(window.gameRoom.config.rules.autoOperating === true && window.gameRoom.isGamingNow === true) {
                 window.gameRoom._room.stopGame(); // stop for start readymode game

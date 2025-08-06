@@ -4,7 +4,7 @@ import * as mapFutx3 from "./stadium/futx3.hbs"
 import * as mapFutx4 from "./stadium/futx4.hbs"
 import * as mapFutx5 from "./stadium/futx5.hbs"
 import * as mapFutx7 from "./stadium/futx7.hbs"
-
+import * as mapTraining from "./stadium/training.hbs"
 /**
 * load stadium map (JSON stringified).
 */
@@ -27,6 +27,10 @@ export function loadStadiumData(mapName: string): string {
             break;
         case 'futx7':
             stadiumText = mapFutx7.stadiumText;
+            break;
+        case 'training':
+        case 'ready':
+            stadiumText = mapTraining.stadiumText;
             break;
         default:
             stadiumText = mapFutx4.stadiumText;

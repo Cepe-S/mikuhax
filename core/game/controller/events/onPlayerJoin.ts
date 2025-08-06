@@ -319,6 +319,23 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         if (window.gameRoom.isStatRecord === false) {
             window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onJoin.startRecord, placeholderJoin), null, 0x00FF00, "normal", 0);
             window.gameRoom.isStatRecord = true;
+            setDefaultStadiums(); // Cambiar al mapa de estadísticas cuando hay suficientes jugadores
+            
+            // Rebalancear todos los jugadores cuando se cambia a modo estadísticas
+            if (window.gameRoom.config.rules.autoOperating === true) {
+                const allPlayers = window.gameRoom._room.getPlayerList().filter((p: PlayerObject) => p.id !== 0 && window.gameRoom.playerList.has(p.id) && !window.gameRoom.playerList.get(p.id)!.permissions.afkmode);
+                allPlayers.forEach((p: PlayerObject) => {
+                    window.gameRoom._room.setPlayerTeam(p.id, TeamID.Spec); // Mover todos a espectadores primero
+                });
+                
+                setTimeout(() => {
+                    // Luego asignar a equipos balanceados
+                    allPlayers.forEach((p: PlayerObject) => {
+                        assignPlayerToBalancedTeam(p.id);
+                    });
+                }, 100);
+            }
+            
             if (window.gameRoom.config.rules.autoOperating === true && window.gameRoom.isGamingNow === true) {
                 // if auto emcee mode is enabled and the match has been playing as ready mode
                 window.gameRoom._room.stopGame(); // stop game
@@ -328,14 +345,22 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         if (window.gameRoom.isStatRecord === true) {
             window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onJoin.stopRecord, placeholderJoin), null, 0x00FF00, "normal", 0);
             window.gameRoom.isStatRecord = false;
+            setDefaultStadiums(); // Cambiar al mapa ready/training cuando no hay suficientes jugadores
         }
     }
 
     // when auto emcee mode is enabled
     if (window.gameRoom.config.rules.autoOperating === true) {
         setTimeout(() => {
-            // Siempre asignar a equipos balanceados, independientemente del estado del juego
-            assignPlayerToBalancedTeam(player.id);
+            // Lógica diferente para asignación de equipos según el modo
+            if (window.gameRoom.isStatRecord === false) {
+                // Modo ready/training: asignar al equipo rojo por defecto para que pueda jugar
+                window.gameRoom._room.setPlayerTeam(player.id, TeamID.Red);
+                window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} assigned to Red team in ready mode`);
+            } else {
+                // Modo estadísticas: usar balanceo normal
+                assignPlayerToBalancedTeam(player.id);
+            }
             
             // Solo iniciar juego automáticamente si no hay partida en curso
             if (window.gameRoom._room.getScores() === null) {
@@ -344,17 +369,27 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
                     
                     window.gameRoom.logger.i('onPlayerJoin', `Current teams after assignment - Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount}`);
                     
-                    // Iniciar juego si hay al menos 1 jugador por equipo
-                    if (teamsInfo.redCount > 0 && teamsInfo.blueCount > 0) {
-                        setDefaultStadiums();
+                    // Lógica diferente según el modo del juego
+                    if (window.gameRoom.isStatRecord === false) {
+                        // Modo ready/training: iniciar juego automáticamente incluso con un solo jugador
                         setTimeout(() => {
                             window.gameRoom._room.startGame();
-                            window.gameRoom.logger.i('onPlayerJoin', `Game started automatically (Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount})`);
+                            window.gameRoom.logger.i('onPlayerJoin', `Game started automatically in ready mode (Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount})`);
                         }, 500);
+                    } else {
+                        // Modo estadísticas: solo iniciar si hay al menos 1 jugador por equipo
+                        if (teamsInfo.redCount > 0 && teamsInfo.blueCount > 0) {
+                            setTimeout(() => {
+                                window.gameRoom._room.startGame();
+                                window.gameRoom.logger.i('onPlayerJoin', `Game started automatically in stats mode (Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount})`);
+                            }, 500);
+                        } else {
+                            window.gameRoom.logger.i('onPlayerJoin', `Game not started - insufficient balanced teams for stats mode (Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount})`);
+                        }
                     }
                 }, 500);
             } else {
-                window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} assigned to balanced team - game in progress`);
+                window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} assigned to team - game in progress`);
             }
         }, 500);
     }
