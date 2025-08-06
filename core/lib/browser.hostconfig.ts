@@ -201,6 +201,7 @@ export interface BrowserHostRoomCommands {
     _helpManmap: string
     _helpManbalance: string
     _helpManllamaradmin: string
+    _helpManmemide: string
 
     _listSubafk: string
     _listSubmute: string
@@ -241,4 +242,5 @@ export interface BrowserHostRoomCommands {
     balance: string
     camisetas: string
     llamaradmin: string
+    memide: string
 }

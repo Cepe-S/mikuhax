@@ -144,6 +144,7 @@
 		"_helpManmap": "map",
 		"_helpManbalance": "balance",
 		"_helpManllamaradmin": "llamaradmin",
+		"_helpManmemide": "memide",
 		"_listSubafk": "afk",
 		"_listSubmute": "mute",
 		"_listSubred": "red",
@@ -182,6 +183,7 @@
 		"map": "map",
 		"balance": "balance",
 		"camisetas": "camisetas",
-		"llamaradmin": "llamaradmin"
+		"llamaradmin": "llamaradmin",
+		"memide": "memide"
 	}
 }

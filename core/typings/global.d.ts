@@ -78,7 +78,9 @@ declare global {
                 ban(playerID: number, msg?: string): void;
                 password(password?: string): void;
             };
-            matchEventsHolder: MatchEventHolder[]
+            matchEventsHolder: MatchEventHolder[];
+            memideCooldowns?: Map<number, number>;
+            memideUsedValues?: Map<number, number>;
         };
 
         // ==============================
