@@ -57,6 +57,9 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
 
     window.gameRoom.isGamingNow = false; // turn off
 
+    // Variable para almacenar cambios de ELO
+    let eloChanges: Array<{playerId: number, playerName: string, oldRating: number, newRating: number, change: number, isWinner: boolean}> = [];
+
     if (window.gameRoom.config.rules.statsRecord == true && window.gameRoom.isStatRecord == true) { // records when game mode is for stats recording.
         // HElo rating part ================
         // make diffs array (key: index by teamPlayers order, value: number[])
@@ -78,8 +81,19 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
                 diffArray.push(ratingHelper.calcBothDiff(eachItem, blueStatsRecords[i], winTeamRatingsMean, loseTeamRatingsMean, eachItem.matchKFactor));
             }
             let newRating: number = ratingHelper.calcNewRating(eachItem.rating, diffArray);
+            let eloChange: number = newRating - oldRating;
+            
             window.gameRoom.playerList.get(redTeamPlayers[idx].id)!.stats.rating = newRating;
             window.gameRoom.logger.i('onTeamVictory', `Red Player ${redTeamPlayers[idx].name}#${redTeamPlayers[idx].id}'s rating has become ${newRating} from ${oldRating}.`);
+            
+            eloChanges.push({
+                playerId: redTeamPlayers[idx].id,
+                playerName: redTeamPlayers[idx].name,
+                oldRating: oldRating,
+                newRating: newRating,
+                change: eloChange,
+                isWinner: winnerTeamID === TeamID.Red
+            });
         });
         blueStatsRecords.forEach((eachItem: StatsRecord, idx: number) => {
             let diffArray: number[] = [];
@@ -88,8 +102,19 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
                 diffArray.push(ratingHelper.calcBothDiff(eachItem, redStatsRecords[i], winTeamRatingsMean, loseTeamRatingsMean, eachItem.matchKFactor));
             }
             let newRating: number = ratingHelper.calcNewRating(eachItem.rating, diffArray);
+            let eloChange: number = newRating - oldRating;
+            
             window.gameRoom.playerList.get(blueTeamPlayers[idx].id)!.stats.rating = newRating;
             window.gameRoom.logger.i('onTeamVictory', `Blue Player ${blueTeamPlayers[idx].name}#${blueTeamPlayers[idx].id}'s rating has become ${newRating} from ${oldRating}.`);
+            
+            eloChanges.push({
+                playerId: blueTeamPlayers[idx].id,
+                playerName: blueTeamPlayers[idx].name,
+                oldRating: oldRating,
+                newRating: newRating,
+                change: eloChange,
+                isWinner: winnerTeamID === TeamID.Blue
+            });
         });
 
         // record stats part ================
@@ -230,4 +255,35 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
     // notify victory
     window.gameRoom.logger.i('onTeamVictory', `The game has ended. Scores ${scores.red}:${scores.blue}.`);
     window.gameRoom._room.sendAnnouncement(winningMessage, null, 0x00FF00, "bold", 1);
+    
+    // Show ELO changes if stats were recorded
+    if (window.gameRoom.config.rules.statsRecord == true && window.gameRoom.isStatRecord == true && typeof eloChanges !== 'undefined') {
+        setTimeout(() => {
+            // Separar ganadores y perdedores
+            const winners = eloChanges.filter(p => p.isWinner).sort((a, b) => b.change - a.change);
+            const losers = eloChanges.filter(p => !p.isWinner).sort((a, b) => a.change - b.change);
+            
+            // Mensaje para ganadores
+            if (winners.length > 0) {
+                let winnersMsg = "🏆 Cambios de ELO - GANADORES:";
+                winners.forEach(player => {
+                    const changeStr = player.change >= 0 ? `+${Math.round(player.change)}` : `${Math.round(player.change)}`;
+                    winnersMsg += `\n⬆️ ${player.playerName}: ${Math.round(player.oldRating)} → ${Math.round(player.newRating)} (${changeStr})`;
+                });
+                window.gameRoom._room.sendAnnouncement(winnersMsg, null, 0x00FF88, "normal", 1);
+            }
+            
+            // Mensaje para perdedores
+            if (losers.length > 0) {
+                setTimeout(() => {
+                    let losersMsg = "💔 Cambios de ELO - PERDEDORES:";
+                    losers.forEach(player => {
+                        const changeStr = player.change >= 0 ? `+${Math.round(player.change)}` : `${Math.round(player.change)}`;
+                        losersMsg += `\n⬇️ ${player.playerName}: ${Math.round(player.oldRating)} → ${Math.round(player.newRating)} (${changeStr})`;
+                    });
+                    window.gameRoom._room.sendAnnouncement(losersMsg, null, 0xFF6666, "normal", 1);
+                }, 1500);
+            }
+        }, 2000);
+    }
 }
