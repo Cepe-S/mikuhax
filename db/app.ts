@@ -43,8 +43,12 @@ createConnection({
     database: path.join(__dirname, '..', process.env.DB_HOST || 'haxbotron.sqlite.db'),
     entities: [Player, BanList, SuperAdmin, MatchEvent, MatchSummary, Connection],
     logging: true,
-    synchronize: true
-}).then(conn => {
+    synchronize: true, // Re-enable auto-sync
+    dropSchema: false // Don't drop existing tables
+}).then(async conn => {
+    winstonLogger.info('[db] Database connection established');
+    winstonLogger.info('[db] TypeORM synchronization enabled');
+    
     const app = new Koa(); // koa server
     const router = new Router();
 

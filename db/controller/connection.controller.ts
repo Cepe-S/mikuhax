@@ -1,4 +1,5 @@
 import { Context } from 'koa';
+import { getRepository } from 'typeorm';
 import { ConnectionRepository } from '../repository/connection.repository';
 import { Connection } from '../entity/connection.entity';
 import { ConnectionModel } from '../model/ConnectionModel';
@@ -141,6 +142,7 @@ export async function markConnectionSuspicious(ctx: Context) {
  */
 export async function trackConnection(ctx: Context) {
     try {
+        console.log('📥 [Controller] Received POST /api/v1/connections');
         const connectionData = ctx.request.body as {
             auth: string;
             nickname: string;
@@ -153,6 +155,8 @@ export async function trackConnection(ctx: Context) {
             isp: string;
         };
 
+        console.log('📥 [Controller] Received connection data:', JSON.stringify(connectionData, null, 2));
+
         // Convert to your ConnectionModel format with all required fields
         const nickname = connectionData.nickname || 'Unknown Player';
         
@@ -163,18 +167,69 @@ export async function trackConnection(ctx: Context) {
             playerName: nickname,
             ipAddress: connectionData.ipAddress,
             country: connectionData.country || '',
+            region: '',
             city: connectionData.city || '',
+            latitude: 0,
+            longitude: 0,
             isp: connectionData.isp || '',
+            timezone: '',
             isVpn: false,
-            isSuspicious: false
+            isSuspicious: false,
+            spamScore: 0,
+            joinCount: 1,
+            kickCount: 0,
+            banCount: 0,
+            aliases: JSON.stringify([nickname]),
+            spamPatterns: '{}',
+            firstSeen: new Date(),
+            lastSeen: new Date(),
+            lastActivity: new Date()
         };
 
-        const connection: Connection = await connectionRepository.addSingle(connectionData.ruid, adaptedData);
+        console.log('🔄 [Controller] Adapted data:', JSON.stringify(adaptedData, null, 2));
+
+        // First, check if connection already exists
+        console.log('🔍 [Controller] Checking for existing connection');
+        const existingConnection = await connectionRepository.findSingle(connectionData.ruid, adaptedData.conn);
+        
+        let connection: Connection;
+        if (existingConnection) {
+            console.log('🔄 [Controller] Updating existing connection');
+            // Update existing connection
+            existingConnection.lastSeen = new Date();
+            existingConnection.lastActivity = new Date();
+            existingConnection.joinCount = (existingConnection.joinCount || 0) + 1;
+            existingConnection.playerName = nickname;
+            
+            // Update aliases if needed
+            try {
+                const aliases = JSON.parse(existingConnection.aliases || '[]');
+                if (!aliases.includes(nickname)) {
+                    aliases.push(nickname);
+                    existingConnection.aliases = JSON.stringify(aliases);
+                }
+            } catch (e) {
+                existingConnection.aliases = JSON.stringify([nickname]);
+            }
+
+            const repository = getRepository(Connection);
+            connection = await repository.save(existingConnection);
+            console.log('✅ [Controller] Updated existing connection successfully');
+        } else {
+            console.log('➕ [Controller] Creating new connection');
+            // Create new connection
+            connection = await connectionRepository.addSingle(connectionData.ruid, adaptedData);
+            console.log('✅ [Controller] Created new connection successfully');
+        }
+
         ctx.status = 201;
         ctx.body = { success: true, data: connection };
+        console.log('✅ [Controller] Response sent successfully');
     } catch (error) {
+        console.error('❌ [Controller] Error in trackConnection:', error);
+        console.error('❌ [Controller] Error stack:', error.stack);
         ctx.status = 500;
-        ctx.body = { success: false, error: error.message };
+        ctx.body = { success: false, error: error.message, details: error.stack };
     }
 }
 
