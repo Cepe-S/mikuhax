@@ -34,8 +34,15 @@ const MAX_HISTORY = 100; // Keep last 100 connections per player
  */
 function loadConnectionData(): Map<string, LocalPlayerStats> {
     try {
+        window.gameRoom.logger.i('LocalConnectionTracker', `Loading data from localStorage with key: ${STORAGE_KEY}`);
+        
         const stored = localStorage.getItem(STORAGE_KEY);
-        if (!stored) return new Map();
+        if (!stored) {
+            window.gameRoom.logger.i('LocalConnectionTracker', 'No stored data found, returning empty map');
+            return new Map();
+        }
+
+        window.gameRoom.logger.i('LocalConnectionTracker', `Found stored data, size: ${stored.length} characters`);
 
         const data = JSON.parse(stored);
         const result = new Map<string, LocalPlayerStats>();
@@ -53,9 +60,11 @@ function loadConnectionData(): Map<string, LocalPlayerStats> {
             });
         }
 
+        window.gameRoom.logger.i('LocalConnectionTracker', `Loaded ${result.size} players from localStorage`);
         return result;
     } catch (error) {
         window.gameRoom.logger.w('LocalConnectionTracker', `Failed to load data: ${error}`);
+        window.gameRoom.logger.w('LocalConnectionTracker', `Error details: ${error.message}`);
         return new Map();
     }
 }
@@ -65,6 +74,8 @@ function loadConnectionData(): Map<string, LocalPlayerStats> {
  */
 function saveConnectionData(data: Map<string, LocalPlayerStats>): void {
     try {
+        window.gameRoom.logger.i('LocalConnectionTracker', `Saving ${data.size} players to localStorage`);
+        
         const toSave: any = {};
         
         for (const [auth, stats] of data) {
@@ -79,9 +90,23 @@ function saveConnectionData(data: Map<string, LocalPlayerStats>): void {
             };
         }
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+        const dataToStore = JSON.stringify(toSave);
+        window.gameRoom.logger.i('LocalConnectionTracker', `Data size: ${dataToStore.length} characters`);
+        
+        localStorage.setItem(STORAGE_KEY, dataToStore);
+        window.gameRoom.logger.i('LocalConnectionTracker', `Successfully saved data to localStorage with key: ${STORAGE_KEY}`);
+        
+        // Verify data was saved
+        const verification = localStorage.getItem(STORAGE_KEY);
+        if (verification) {
+            window.gameRoom.logger.i('LocalConnectionTracker', `Verification: Data exists in localStorage, size: ${verification.length}`);
+        } else {
+            window.gameRoom.logger.w('LocalConnectionTracker', `Verification failed: No data found in localStorage`);
+        }
+        
     } catch (error) {
         window.gameRoom.logger.w('LocalConnectionTracker', `Failed to save data: ${error}`);
+        window.gameRoom.logger.w('LocalConnectionTracker', `Error details: ${error.message}`);
     }
 }
 
@@ -138,11 +163,24 @@ function decodeIP(conn: string): string {
  */
 export function trackPlayerConnectionLocal(player: PlayerObject): void {
     try {
+        // Add debug logging
+        window.gameRoom.logger.i('LocalConnectionTracker', `Starting to track ${player.name} with auth: ${player.auth}, conn: ${player.conn}`);
+        
         const timestamp = getUnixTimestamp();
+        window.gameRoom.logger.i('LocalConnectionTracker', `Timestamp: ${timestamp}`);
+        
         const decodedIP = decodeIP(player.conn);
+        window.gameRoom.logger.i('LocalConnectionTracker', `Decoded IP: ${decodedIP} from conn: ${player.conn}`);
+        
+        // Check if localStorage is available
+        if (typeof localStorage === 'undefined') {
+            window.gameRoom.logger.e('LocalConnectionTracker', 'localStorage is not available in this environment');
+            return;
+        }
         
         // Load existing data
         const connectionData = loadConnectionData();
+        window.gameRoom.logger.i('LocalConnectionTracker', `Loaded ${connectionData.size} existing players from storage`);
         
         // Get or create player stats
         let playerStats = connectionData.get(player.auth);
@@ -156,6 +194,9 @@ export function trackPlayerConnectionLocal(player: PlayerObject): void {
                 recentConnections: [],
                 nicknames: new Set()
             };
+            window.gameRoom.logger.i('LocalConnectionTracker', `Created new stats for ${player.name}`);
+        } else {
+            window.gameRoom.logger.i('LocalConnectionTracker', `Found existing stats for ${player.name} with ${playerStats.totalConnections} connections`);
         }
 
         // Update stats
@@ -184,15 +225,18 @@ export function trackPlayerConnectionLocal(player: PlayerObject): void {
 
         // Update the map
         connectionData.set(player.auth, playerStats);
+        window.gameRoom.logger.i('LocalConnectionTracker', `Updated map, now has ${connectionData.size} players`);
 
         // Save to localStorage
         saveConnectionData(connectionData);
+        window.gameRoom.logger.i('LocalConnectionTracker', `Data saved to localStorage`);
 
         window.gameRoom.logger.i('LocalConnectionTracker', 
             `Tracked ${player.name}#${player.id} locally (IP: ${decodedIP}, Total: ${playerStats.totalConnections})`);
 
     } catch (error) {
         window.gameRoom.logger.e('LocalConnectionTracker', `Error tracking connection: ${error}`);
+        window.gameRoom.logger.e('LocalConnectionTracker', `Error stack: ${error.stack}`);
     }
 }
 
@@ -249,5 +293,57 @@ export function cleanupOldConnections(daysOld: number = 30): number {
     } catch (error) {
         window.gameRoom.logger.e('LocalConnectionTracker', `Error cleaning data: ${error}`);
         return 0;
+    }
+}
+
+/**
+ * Debug function to test localStorage functionality
+ */
+export function testLocalStorage(): void {
+    try {
+        window.gameRoom.logger.i('LocalConnectionTracker', 'Testing localStorage functionality...');
+        
+        // Test basic localStorage access
+        if (typeof localStorage === 'undefined') {
+            window.gameRoom.logger.e('LocalConnectionTracker', 'localStorage is not available');
+            return;
+        }
+        
+        // Test write
+        const testKey = 'haxbotron_test';
+        const testData = { test: 'data', timestamp: Date.now() };
+        localStorage.setItem(testKey, JSON.stringify(testData));
+        window.gameRoom.logger.i('LocalConnectionTracker', 'Test data written to localStorage');
+        
+        // Test read
+        const readData = localStorage.getItem(testKey);
+        if (readData) {
+            const parsed = JSON.parse(readData);
+            window.gameRoom.logger.i('LocalConnectionTracker', `Test data read successfully: ${JSON.stringify(parsed)}`);
+        } else {
+            window.gameRoom.logger.w('LocalConnectionTracker', 'Failed to read test data');
+        }
+        
+        // Clean up
+        localStorage.removeItem(testKey);
+        window.gameRoom.logger.i('LocalConnectionTracker', 'Test completed and cleaned up');
+        
+        // Show current stored data
+        const currentData = localStorage.getItem(STORAGE_KEY);
+        if (currentData) {
+            window.gameRoom.logger.i('LocalConnectionTracker', `Current connection data size: ${currentData.length} characters`);
+            try {
+                const parsed = JSON.parse(currentData);
+                const playerCount = Object.keys(parsed).length;
+                window.gameRoom.logger.i('LocalConnectionTracker', `Current players stored: ${playerCount}`);
+            } catch (e) {
+                window.gameRoom.logger.w('LocalConnectionTracker', 'Failed to parse current data');
+            }
+        } else {
+            window.gameRoom.logger.i('LocalConnectionTracker', 'No connection data currently stored');
+        }
+        
+    } catch (error) {
+        window.gameRoom.logger.e('LocalConnectionTracker', `localStorage test failed: ${error}`);
     }
 }

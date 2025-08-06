@@ -228,6 +228,10 @@ export class HeadlessBrowser {
         await page.exposeFunction('_getTopAssistersDailyDB', dbUtilityInject.getTopAssistersDailyDB);
         await page.exposeFunction('_getAllPlayersFromDB', dbUtilityInject.getAllPlayersFromDB);
         
+        // Connection tracking functions
+        await page.exposeFunction('_trackConnectionDB', dbUtilityInject.trackConnectionDB);
+        await page.exposeFunction('_getConnectionAnalyticsDB', dbUtilityInject.getConnectionAnalyticsDB);
+        
         // inject webhook function
         await page.exposeFunction('_feedSocialDiscordWebhook', this.feedSocialDiscordWebhook.bind(this));
         // ================================================================================

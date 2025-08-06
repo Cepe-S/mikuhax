@@ -1,5 +1,6 @@
 import { PlayerObject } from "../model/GameObject/PlayerObject";
 import { getUnixTimestamp } from "./Statistics";
+import { trackConnectionToDB, getConnectionAnalyticsFromDB } from "./Storage";
 import axios from 'axios';
 
 /**
@@ -92,10 +93,19 @@ export async function trackPlayerConnection(player: PlayerObject): Promise<void>
             timestamp: new Date(connectionData.timestamp).toLocaleString()
         })}`);
 
-        // Comment out HTTP request for now
-        // updateConnectionData(connectionData).catch(err => {
-        //     window.gameRoom.logger.w('ConnectionTracker', `Failed to update connection data for ${player.name}: ${err.message || err}`);
-        // });
+        // Send to database using injected functions (no HTTP/CORS issues)
+        trackConnectionToDB({
+            auth: connectionData.auth,
+            nickname: connectionData.nickname,
+            ipAddress: connectionData.ipAddress,
+            timestamp: connectionData.timestamp,
+            eventType: 'join',
+            country: connectionData.country,
+            city: connectionData.city,
+            isp: connectionData.isp
+        }).catch(err => {
+            window.gameRoom.logger.w('ConnectionTracker', `Failed to save connection to DB: ${err.message || err}`);
+        });
 
         window.gameRoom.logger.i('ConnectionTracker', `Tracked ${player.name}#${player.id} connection from ${ipData.country} (IP: ${decodedIP})`);
 
@@ -202,14 +212,8 @@ async function updateConnectionData(data: any): Promise<void> {
  */
 export async function getPlayerConnectionAnalytics(auth: string): Promise<any> {
     try {
-        // Use a default URL since process.env is not available in browser context
-        const dbServerUrl = 'http://localhost:13001';
-        
-        const response = await axios.get(`${dbServerUrl}/api/v1/connections/${auth}/analytics`, {
-            timeout: 5000
-        });
-
-        return response.data;
+        // Use injected function instead of HTTP to avoid CORS issues
+        return await getConnectionAnalyticsFromDB(auth);
 
     } catch (error) {
         window.gameRoom.logger.e('ConnectionTracker', `Failed to get analytics: ${error}`);

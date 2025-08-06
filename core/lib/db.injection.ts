@@ -410,3 +410,39 @@ export async function getAllPlayersFromDB(ruid: string): Promise<PlayerStorage[]
         return [];
     }
 }
+
+// Connection tracking functions
+export async function trackConnectionDB(connectionData: {
+    auth: string;
+    nickname: string;
+    ipAddress: string;
+    timestamp: number;
+    ruid: string;
+    eventType: 'join' | 'rejoin' | 'kick' | 'ban';
+    country: string;
+    city: string;
+    isp: string;
+}): Promise<void> {
+    try {
+        // Send data to the new trackConnection endpoint
+        const result = await axios.post(`${dbConnAddr}connections`, connectionData);
+        if (result.status === 201) {
+            winstonLogger.info(`201 Succeed on trackConnectionDB: Created. auth(${connectionData.auth})`);
+        }
+    } catch (error) {
+        winstonLogger.error(`Error caught on trackConnectionDB: ${error}`);
+    }
+}
+
+export async function getConnectionAnalyticsDB(auth: string): Promise<any> {
+    try {
+        // For now, just return null since the analytics endpoint is not implemented in your controller
+        // You can implement this later when you add the analytics functionality
+        winstonLogger.info(`Analytics not implemented for auth(${auth})`);
+        return null;
+    } catch (error) {
+        const err = error as any;
+        winstonLogger.error(`Error caught on getConnectionAnalyticsDB: ${error}`);
+        return null;
+    }
+}

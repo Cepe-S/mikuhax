@@ -6,6 +6,7 @@ import { superadminRouter } from "./v1.superadmin.router";
 import { ruidlistRouter } from "./v1.ruidlist.router";
 import { matchEventRouter } from "./v1.match_event.router";
 import { matchSummaryRouter } from "./v1.match_summary.router";
+import { connectionsRouter } from "./v1.connections.router";
 
 export const apiRouterV1 = new Router();
 
@@ -19,4 +20,5 @@ apiRouterV1
     .use('/room/:ruid/banlist', banlistRouter.routes())
     .use('/room/:ruid/superadmin', superadminRouter.routes())
     .use('/room/:ruid/match_event', matchEventRouter.routes())
-    .use('/room/:ruid/match_summary', matchSummaryRouter.routes());
+    .use('/room/:ruid/match_summary', matchSummaryRouter.routes())
+    .use('/connections', connectionsRouter.routes());

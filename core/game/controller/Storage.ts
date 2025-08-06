@@ -111,3 +111,25 @@ export async function getTopAssistersDailyFromDB(): Promise<{playerAuth: string,
 export async function getAllPlayersFromDB(): Promise<PlayerStorage[]> {
     return await window._getAllPlayersFromDB(window.gameRoom.config._RUID);
 }
+
+// Connection tracking functions
+export async function trackConnectionToDB(connectionData: {
+    auth: string;
+    nickname: string;
+    ipAddress: string;
+    timestamp: number;
+    eventType: 'join' | 'rejoin' | 'kick' | 'ban';
+    country: string;
+    city: string;
+    isp: string;
+}): Promise<void> {
+    const dataWithRUID = {
+        ...connectionData,
+        ruid: window.gameRoom.config._RUID
+    };
+    return await window._trackConnectionDB(dataWithRUID);
+}
+
+export async function getConnectionAnalyticsFromDB(auth: string): Promise<any> {
+    return await window._getConnectionAnalyticsDB(auth);
+}

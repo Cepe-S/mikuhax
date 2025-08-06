@@ -113,6 +113,19 @@ declare global {
         _getTopAssistersDailyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
         // Get all players from DB
         _getAllPlayersFromDB(ruid: string): Promise<PlayerStorage[]>;
+        // Connection tracking DB
+        _trackConnectionDB(connectionData: {
+            auth: string;
+            nickname: string;
+            ipAddress: string;
+            timestamp: number;
+            ruid: string;
+            eventType: 'join' | 'rejoin' | 'kick' | 'ban';
+            country: string;
+            city: string;
+            isp: string;
+        }): Promise<void>;
+        _getConnectionAnalyticsDB(auth: string): Promise<any>;
 
         // ==============================
         // Haxball Headless Initial Methods
