@@ -27,6 +27,7 @@ import { cmdCamisetas } from "./commands/camisetas";
 import { cmdLlamarAdmin } from "./commands/llamaradmin";
 import { cmdConnectionStats } from "./commands/connectionstats";
 import { cmdMemide } from "./commands/memide";
+import { cmdDiscord } from "./commands/discord";
 
 // Check if given string is a command chat. Returns true if it is, false otherwise.
 export function isCommandString(message: string): boolean {
@@ -206,6 +207,10 @@ export function parseCommand(byPlayer: PlayerObject, message: string): void {
         }
         case window.gameRoom.config.commands.memide: {
             cmdMemide(byPlayer);
+            break;
+        }
+        case window.gameRoom.config.commands.discord: {
+            cmdDiscord(byPlayer);
             break;
         }
         default: {

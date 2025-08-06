@@ -153,6 +153,7 @@ export interface ServerImage {
         _helpManbalance: string;
         _helpManllamaradmin: string;
         _helpManmemide: string;
+        _helpMandiscord: string;
         _listSubafk: string;
         _listSubmute: string;
         _listSubred: string;
@@ -190,6 +191,7 @@ export interface ServerImage {
         camisetas: string;
         llamaradmin: string;
         memide: string;
+        discord: string;
     };
     superadmins: {
         key: string;

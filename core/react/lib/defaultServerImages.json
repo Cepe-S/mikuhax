@@ -187,7 +187,8 @@
         "balance": "balance",
         "camisetas": "camisetas",
         "llamaradmin": "llamaradmin",
-        "memide": "memide"
+        "memide": "memide",
+        "discord": "discord"
       },
     "stadiums": {
       "default": "futx4",
@@ -346,6 +347,7 @@
         "_helpManbalance": "balance",
         "_helpManllamaradmin": "llamaradmin",
         "_helpManmemide": "memide",
+        "_helpMandiscord": "discord",
         "_listSubafk": "afk",
         "_listSubmute": "mute",
         "_listSubred": "red",
@@ -382,7 +384,8 @@
         "balance": "balance",
         "camisetas": "camisetas",
         "llamaradmin": "llamaradmin",
-        "memide": "memide"
+        "memide": "memide",
+        "discord": "discord"
       },
     "stadiums": {
       "default": "futx4",
