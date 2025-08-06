@@ -8,6 +8,95 @@ import { ScoresObject } from "../../model/GameObject/ScoresObject";
 import { setBanlistDataToDB } from "../Storage";
 import { getUnixTimestamp } from "../Statistics";
 
+// ========================================
+// MENSAJES PERSONALIZADOS PARA GOLES
+// ========================================
+
+/**
+ * Genera un mensaje aleatorio para goles normales
+ */
+function getRandomScorerMessage(playerName: string): string {
+    const scorerMessages = [
+        "⚽ ¡Golazo de " + playerName + "!",
+        "🔥 ¡Impresionante remate de " + playerName + "!",
+        "💥⚽ ¡Espectacular gol de " + playerName + "!",
+        "💥😱 ¡Increíble golazo de " + playerName + "!",
+        "👌 ¡Bien definido por " + playerName + "!",
+        "La definición de " + playerName + " definitivamente es cine! 🍷🚬 ",
+        "¡Golazo de " + playerName + " que está jugando desnudo! 🔞",
+        "🔥 Eduque " + playerName + ", eduque 👏 ",
+        "🥵 ¡Golazo de " + playerName + ", que definió a lo Czerro! 👑🐐",
+        "Cuando sos crack, sos crack... ¡Y " + playerName + " lo acaba de demostrar! 💪🔥",
+        "⚡ ¡Golazo total de " + playerName + "! 🚀",
+        "🍾 ¡HaxBall Champagne! " + playerName + " acaba de marcar un golazo ⚽🔥",
+        "🤩 ¡Naa, golazo de " + playerName + "! 😱",
+        "🎯 ¡99 de definición, " + playerName + " lo acaba de demostrar! 🔥",
+        "💥⚽ ¡Ufff, qué golazo de " + playerName + "! 😱",
+        "😱 ¡Locura de gol de " + playerName + "! 🥵",
+        "👀 ¡Olfato de gol! " + playerName + " lo ha hecho otra vez! ⚽"
+    ];
+    
+    return scorerMessages[Math.floor(Math.random() * scorerMessages.length)];
+}
+
+/**
+ * Genera un mensaje aleatorio para asistencias
+ */
+function getRandomAssistMessage(assistPlayerName: string): string {
+    const assistMessages = [
+        "👟 ¡Gran pase de " + assistPlayerName + "!",
+        "🎯 ¡Preciso pase de " + assistPlayerName + "!",
+        "🔑 ¡La jugada se gestó con una asistencia de " + assistPlayerName + "!",
+        "🤝 ¡" + assistPlayerName + " brinda la asistencia para el gol!",
+        "⚽ ¡Asistencia perfecta de " + assistPlayerName + "!",
+        "👌 ¡Excelente pase de " + assistPlayerName + "!",
+        "🔥 ¡Jugada brillante de " + assistPlayerName + "!",
+        "🤩 ¡" + assistPlayerName + " crea la oportunidad de gol!",
+        "👏 ¡Fantástica asistencia de " + assistPlayerName + "!",
+        "💫 ¡" + assistPlayerName + " demuestra su visión de juego!",
+    ];
+    
+    return assistMessages[Math.floor(Math.random() * assistMessages.length)];
+}
+
+/**
+ * Genera un mensaje aleatorio para asistencias (versión corta)
+ */
+function getRandomAssistMessage2(assistPlayerName: string): string {
+    const assistMessages2 = [
+        "⚽👟 ¡**ASISTENCIA** de **" + assistPlayerName + "**!",
+        "👥⚽ ¡**PASE** de **" + assistPlayerName + "**!"
+    ];
+    
+    return assistMessages2[Math.floor(Math.random() * assistMessages2.length)];
+}
+
+/**
+ * Genera un mensaje aleatorio para autogoles
+ */
+function getRandomOwnGoalScorerMessage(playerName: string): string {
+    const ownGoalScorerMessages = [
+        "⚠️ ¡Qué desastre! " + playerName + " anotó un gol en contra.",
+        "🔥 ¡Increíble! " + playerName + " marcó en su propia meta.",
+        "🙈 ¡Vaya error! " + playerName + " hizo gol en propia meta.",
+        "💣 ¡Gol en propia puerta! " + playerName + " cometió un autogol.",
+        "😱 ¡Autogol involuntario! " + playerName + " no pudo evitarlo.",
+        "😫 ¡Qué mala suerte! " + playerName + " anotó en su propia portería.",
+        "💥 ¡Increíble autogol! " + playerName + " se equivocó en la definición.",
+        "😖 ¡Inesperado gol en propia meta! " + playerName + " desvió el balón al arco equivocado.",
+        "🚫 ¡Desviación desafortunada! " + playerName + " desvía el balón a su propia red.",
+        "💔 ¡Golpe desafortunado! " + playerName + " termina marcando en su propia meta.",
+        "😩 ¡Autogol desafortunado! " + playerName + " no puede evitar el error.",
+        "💢 ¡Terrible autogol! " + playerName + " comete un grave error.",
+        "😵 ¡Autogol sorprendente! " + playerName + " no puede creer lo que acaba de hacer.",
+        "😓 ¡Autogol desastroso! " + playerName + " se lamenta por su propia anotación.",
+        "⛔️ ¡Autogol trágico! " + playerName + " sufre un duro golpe en su equipo.",
+        "🤯 ¡Autogol catastrófico! " + playerName + " vive una pesadilla en el campo.",
+    ];
+    
+    return ownGoalScorerMessages[Math.floor(Math.random() * ownGoalScorerMessages.length)];
+}
+
 export async function onTeamGoalListener(team: TeamID): Promise<void> {
     // Event called when a team scores a goal.
     let scores: ScoresObject | null = window.gameRoom._room.getScores(); //get scores object (it includes time data about seconds elapsed)
@@ -72,7 +161,10 @@ export async function onTeamGoalListener(team: TeamID): Promise<void> {
             }
             
             window.gameRoom.matchEventsHolder.push(goalEvent);
-            var goalMsg: string = Tst.maketext(LangRes.onGoal.goal, placeholderGoal);
+            
+            // Generar mensaje personalizado de gol
+            var goalMsg: string = getRandomScorerMessage(window.gameRoom.playerList.get(touchPlayer)!.name);
+            
             if (assistPlayer !== undefined && touchPlayer != assistPlayer && window.gameRoom.playerList.get(assistPlayer)!.team === team) {
                 // records assist when the player who assists is not same as the player goaled, and is not other team.
                 placeholderGoal.assistID = window.gameRoom.playerList.get(assistPlayer)!.id;
@@ -84,16 +176,24 @@ export async function onTeamGoalListener(team: TeamID): Promise<void> {
                     playerTeamId: team,
                     matchTime: matchTime
                 });
-                goalMsg = Tst.maketext(LangRes.onGoal.goalWithAssist, placeholderGoal);
+                
+                // Combinar mensaje de gol + asistencia
+                const assistMsg = getRandomAssistMessage(window.gameRoom.playerList.get(assistPlayer)!.name);
+                goalMsg = goalMsg + "\n" + assistMsg;
             }
+            
             window.gameRoom._room.sendAnnouncement(goalMsg, null, 0x00FF00, "normal", 0);
             window.gameRoom.logger.i('onTeamGoal', goalMsg);
         } else { // if the goal is OG
             placeholderGoal.ogID = touchPlayer;
             placeholderGoal.ogName = window.gameRoom.playerList.get(touchPlayer)!.name;
             window.gameRoom.playerList.get(touchPlayer)!.matchRecord.ogs++; // record OG in match record
-            window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onGoal.og, placeholderGoal), null, 0x00FF00, "normal", 0);
-            window.gameRoom.logger.i('onTeamGoal', `${window.gameRoom.playerList.get(touchPlayer)!.name}#${touchPlayer} made an OG.`);
+            
+            // Usar mensaje personalizado de autogol
+            const ownGoalMsg = getRandomOwnGoalScorerMessage(window.gameRoom.playerList.get(touchPlayer)!.name);
+            window.gameRoom._room.sendAnnouncement(ownGoalMsg, null, 0xFF6666, "normal", 0);
+            window.gameRoom.logger.i('onTeamGoal', `${window.gameRoom.playerList.get(touchPlayer)!.name}#${touchPlayer} made an OG: ${ownGoalMsg}`);
+            
             window.gameRoom.matchEventsHolder.push({
                 type: 'ownGoal',
                 playerAuth: window.gameRoom.playerList.get(touchPlayer)!.auth,
