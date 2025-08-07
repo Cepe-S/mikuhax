@@ -3,6 +3,7 @@ import { getRepository, Repository } from 'typeorm';
 import { IRepository, IMatchEventRepository } from './repository.interface';
 import { MatchEvent } from '../entity/match_event.entity';
 import { MatchEventModel } from '../model/MatchEventModel';
+import { Player } from '../entity/player.entity';
 
 
 export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
@@ -90,17 +91,30 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
             .select('event.playerAuth', 'playerAuth')
-            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
             .groupBy('event.playerAuth')
-            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
+        
+        // Obtener los nombres más recientes para cada playerAuth
+        const playerRepository = getRepository(Player);
+        for (let i = 0; i < result.length; i++) {
+            const latestPlayer = await playerRepository
+                .createQueryBuilder('player')
+                .select('player.name', 'name')
+                .where('player.ruid = :ruid', { ruid })
+                .andWhere('player.auth = :auth', { auth: result[i].playerAuth })
+                .orderBy('player.uid', 'DESC')
+                .limit(1)
+                .getRawOne();
+            
+            result[i].playerName = latestPlayer ? latestPlayer.name : `Player #${result[i].playerAuth}`;
+        }
+        
         return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
@@ -113,18 +127,31 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
             .select('event.playerAuth', 'playerAuth')
-            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
             .groupBy('event.playerAuth')
-            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
+        
+        // Obtener los nombres más recientes para cada playerAuth
+        const playerRepository = getRepository(Player);
+        for (let i = 0; i < result.length; i++) {
+            const latestPlayer = await playerRepository
+                .createQueryBuilder('player')
+                .select('player.name', 'name')
+                .where('player.ruid = :ruid', { ruid })
+                .andWhere('player.auth = :auth', { auth: result[i].playerAuth })
+                .orderBy('player.uid', 'DESC')
+                .limit(1)
+                .getRawOne();
+            
+            result[i].playerName = latestPlayer ? latestPlayer.name : `Player #${result[i].playerAuth}`;
+        }
+        
         return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
@@ -136,18 +163,31 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
             .select('event.playerAuth', 'playerAuth')
-            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'goal' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
             .groupBy('event.playerAuth')
-            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
+        
+        // Obtener los nombres más recientes para cada playerAuth
+        const playerRepository = getRepository(Player);
+        for (let i = 0; i < result.length; i++) {
+            const latestPlayer = await playerRepository
+                .createQueryBuilder('player')
+                .select('player.name', 'name')
+                .where('player.ruid = :ruid', { ruid })
+                .andWhere('player.auth = :auth', { auth: result[i].playerAuth })
+                .orderBy('player.uid', 'DESC')
+                .limit(1)
+                .getRawOne();
+            
+            result[i].playerName = latestPlayer ? latestPlayer.name : `Player #${result[i].playerAuth}`;
+        }
+        
         return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
@@ -155,17 +195,30 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         const repository: Repository<MatchEvent> = getRepository(MatchEvent);
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
             .select('event.playerAuth', 'playerAuth')
-            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'assist' })
             .groupBy('event.playerAuth')
-            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
+        
+        // Obtener los nombres más recientes para cada playerAuth
+        const playerRepository = getRepository(Player);
+        for (let i = 0; i < result.length; i++) {
+            const latestPlayer = await playerRepository
+                .createQueryBuilder('player')
+                .select('player.name', 'name')
+                .where('player.ruid = :ruid', { ruid })
+                .andWhere('player.auth = :auth', { auth: result[i].playerAuth })
+                .orderBy('player.uid', 'DESC')
+                .limit(1)
+                .getRawOne();
+            
+            result[i].playerName = latestPlayer ? latestPlayer.name : `Player #${result[i].playerAuth}`;
+        }
+        
         return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
@@ -178,18 +231,31 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
             .select('event.playerAuth', 'playerAuth')
-            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'assist' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
             .groupBy('event.playerAuth')
-            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
+        
+        // Obtener los nombres más recientes para cada playerAuth
+        const playerRepository = getRepository(Player);
+        for (let i = 0; i < result.length; i++) {
+            const latestPlayer = await playerRepository
+                .createQueryBuilder('player')
+                .select('player.name', 'name')
+                .where('player.ruid = :ruid', { ruid })
+                .andWhere('player.auth = :auth', { auth: result[i].playerAuth })
+                .orderBy('player.uid', 'DESC')
+                .limit(1)
+                .getRawOne();
+            
+            result[i].playerName = latestPlayer ? latestPlayer.name : `Player #${result[i].playerAuth}`;
+        }
+        
         return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 
@@ -201,18 +267,33 @@ export class MatchEventRepository implements IMatchEventRepository<MatchEvent> {
         
         const result = await repository
             .createQueryBuilder('event')
-            .leftJoin('player', 'player', 'player.ruid = event.ruid AND player.auth = event.playerAuth')
             .select('event.playerAuth', 'playerAuth')
-            .addSelect('COALESCE(player.name, "Player #" || event.playerAuth)', 'playerName')
             .addSelect('COUNT(*)', 'count')
             .where('event.ruid = :ruid', { ruid })
             .andWhere('event.eventType = :eventType', { eventType: 'assist' })
             .andWhere('event.timestamp >= :startTimestamp', { startTimestamp })
             .groupBy('event.playerAuth')
-            .addGroupBy('player.name')
             .orderBy('count', 'DESC')
             .limit(5)
             .getRawMany();
+        
+        // Obtener los nombres más recientes para cada playerAuth
+        const playerRepository = getRepository(Player);
+        for (let i = 0; i < result.length; i++) {
+            const latestPlayer = await playerRepository
+                .createQueryBuilder('player')
+                .select('player.name', 'name')
+                .where('player.ruid = :ruid', { ruid })
+                .andWhere('player.auth = :auth', { auth: result[i].playerAuth })
+                .orderBy('player.uid', 'DESC')
+                .limit(1)
+                .getRawOne();
+            
+            result[i].playerName = latestPlayer ? latestPlayer.name : `Player #${result[i].playerAuth}`;
+        }
+        
         return result.map(r => ({ playerAuth: r.playerAuth, playerName: r.playerName, count: parseInt(r.count) }));
     }
 }
+
+export default MatchEventRepository;
