@@ -113,10 +113,19 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                 
                 const customMessage = `${tierEmoji} « 🆔:${player.id} » ${teamEmoji} ~ ${adminIndicator}${player.name}: ${message}`;
                 let msgColor = 0xFFFFFF; // default white
-                if (player.team === TeamID.Red) msgColor = 0xFF3333; // rojo
-                else if (player.team === TeamID.Blue) msgColor = 0x3399FF; // azul
-                else if (player.team === TeamID.Spec) msgColor = 0xC7C7C7; // gris
-        window.gameRoom._room.sendAnnouncement(customMessage, null, msgColor, "normal", 0);
+                
+                // Los admins tienen color dorado, independientemente del equipo
+                if (player.admin || playerData.permissions.superadmin) {
+                    msgColor = 0xFFD700; // dorado
+                } else {
+                    // Colores por equipo para jugadores normales
+                    if (player.team === TeamID.Red) msgColor = 0xFF3333; // rojo
+                    else if (player.team === TeamID.Blue) msgColor = 0x3399FF; // azul
+                    else if (player.team === TeamID.Spec) msgColor = 0xC7C7C7; // gris
+                }
+        
+        // Reproducir sonido de mensaje para todos los jugadores
+        window.gameRoom._room.sendAnnouncement(customMessage, null, msgColor, "normal", 1);
         return false; // Bloquear el mensaje original
     }
 }
