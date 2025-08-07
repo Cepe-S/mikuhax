@@ -1,5 +1,6 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import * as LangRes from "../../resource/strings";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdFreeze(byPlayer: PlayerObject): void {
     if(window.gameRoom.playerList.get(byPlayer.id)!.admin == true) {
@@ -16,3 +17,10 @@ export function cmdFreeze(byPlayer: PlayerObject): void {
         window.gameRoom._room.sendAnnouncement(LangRes.command.freeze._ErrorNoPermission, byPlayer.id, 0xFF7777, "normal", 2);
     }
 }
+
+// Register the command
+registerCommand("freeze", cmdFreeze, {
+    helpText: "🧊 Activa/desactiva el modo silencio global (solo administradores)",
+    category: "Admin Commands",
+    adminOnly: true
+});

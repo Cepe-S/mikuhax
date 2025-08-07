@@ -4,6 +4,7 @@ import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { TeamID } from "../../model/GameObject/TeamID";
 import { getUnixTimestamp } from "../Statistics";
 import { roomActivePlayersNumberCheck, assignPlayerToBalancedTeam, balanceTeamsAfterLeave } from "../../model/OperateHelper/Quorum";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
     var placeholder = {
@@ -84,3 +85,10 @@ export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
 
     window._emitSIOPlayerStatusChangeEvent(byPlayer.id);
 }
+
+// Register the command
+registerCommand("afk", cmdAfk, {
+    helpText: "💤 Te marca como AFK/jugando. Uso: !afk [razón]",
+    category: "Basic Commands",
+    requiresArgs: false
+});

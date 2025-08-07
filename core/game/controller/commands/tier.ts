@@ -1,6 +1,7 @@
 import * as LangRes from "../../resource/strings";
 import * as Tst from "../Translator";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdTier(byPlayer: PlayerObject): void {
     var placeholder = {
@@ -22,3 +23,9 @@ export function cmdTier(byPlayer: PlayerObject): void {
     }
     window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.command.tier, placeholder), byPlayer.id, 0x479947, "normal", 1);
 }
+
+// Register the command
+registerCommand("tier", cmdTier, {
+    helpText: "🏆 Muestra información sobre los niveles de habilidad y sus rangos",
+    category: "Game Commands"
+});

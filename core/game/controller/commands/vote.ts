@@ -5,6 +5,7 @@ import { roomPlayersNumberCheck } from "../../model/OperateHelper/Quorum";
 import * as LangRes from "../../resource/strings";
 import * as Tst from "../Translator";
 import { setBanlistDataToDB } from "../Storage";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdVote(byPlayer: PlayerObject, message?: string): void {
     if (!window.gameRoom.config.settings.banVoteEnable) {
@@ -78,3 +79,10 @@ export function cmdVote(byPlayer: PlayerObject, message?: string): void {
         window.gameRoom._room.sendAnnouncement(Tst.maketext(statusMessage, placeholder), byPlayer.id, 0x479947, "normal", 1);
     }
 }
+
+// Register the command
+registerCommand("vote", cmdVote, {
+    helpText: "Votar para expulsar jugador. Uso: !vote <#ID> o !vote para ver estado",
+    category: "Game Commands",
+    requiresArgs: false
+});

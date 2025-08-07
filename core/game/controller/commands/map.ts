@@ -1,8 +1,9 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { loadStadiumData } from "../../../lib/stadiumLoader";
 import * as LangRes from "../../resource/strings";
+import { registerCommand } from "../CommandRegistry";
 
-export function cmdMap(byPlayer: PlayerObject, mapName?: string): void {
+export function cmdMap(byPlayer: PlayerObject, message?: string): void {
     // Verificar permisos de superadmin
     if (!window.gameRoom.playerList.get(byPlayer.id)?.permissions.superadmin) {
         window.gameRoom._room.sendAnnouncement(
@@ -13,6 +14,15 @@ export function cmdMap(byPlayer: PlayerObject, mapName?: string): void {
             2
         );
         return;
+    }
+
+    // Parsear el mensaje para extraer el nombre del mapa
+    let mapName: string | undefined;
+    if (message) {
+        const args = message.trim().split(" ");
+        if (args.length > 1) {
+            mapName = args[1]; // El segundo elemento es el nombre del mapa
+        }
     }
 
     // Si no se proporciona nombre de mapa, mostrar mapas disponibles
@@ -65,3 +75,11 @@ export function cmdMap(byPlayer: PlayerObject, mapName?: string): void {
         window.gameRoom.logger.e('cmdMap', `Error loading map ${mapName}: ${error}`);
     }
 }
+
+// Register the command
+registerCommand("map", cmdMap, {
+    helpText: "🗺️ Cambia el mapa del servidor. Uso: !map <nombre_mapa>",
+    category: "Admin Commands",
+    superAdminOnly: true,
+    requiresArgs: false
+});

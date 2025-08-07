@@ -1,6 +1,7 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { getPlayerConnectionAnalytics, checkSuspiciousActivity } from "../ConnectionTracker";
 import { getLocalPlayerAnalytics } from "../LocalConnectionTracker";
+import { registerCommand } from "../CommandRegistry";
 
 export async function cmdConnectionStats(byPlayer: PlayerObject, message?: string): Promise<void> {
     // Solo superadmins pueden usar este comando
@@ -106,3 +107,10 @@ ${recentConnections.map((conn, index) =>
         window.gameRoom._room.sendAnnouncement(`❌ Error al obtener estadísticas.`, byPlayer.id, 0xFF0000, "normal", 0);
     }
 }
+
+// Register the command
+registerCommand("connstats", cmdConnectionStats, {
+    helpText: "Ver estadísticas de conexión. Uso: !connstats [#ID o nombre]",
+    category: "Admin Commands",
+    superAdminOnly: true
+});

@@ -1,5 +1,6 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { getTopScorersGlobalFromDB, getTopScorersMonthlyFromDB, getTopScorersDailyFromDB } from "../Storage";
+import { registerCommand } from "../CommandRegistry";
 
 export async function cmdGoleadores(byPlayer: PlayerObject, message?: string): Promise<void> {
     let period: 'day' | 'month' | 'global' = 'global';
@@ -48,3 +49,10 @@ export async function cmdGoleadores(byPlayer: PlayerObject, message?: string): P
         );
     }
 }
+
+// Register the command
+registerCommand("goleadores", cmdGoleadores, {
+    helpText: "Ver top goleadores. Uso: !goleadores [dia|mes] (por defecto: global)",
+    category: "Game Commands",
+    requiresArgs: false
+});

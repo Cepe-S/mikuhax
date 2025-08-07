@@ -1,6 +1,7 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { balanceTeams, getTeamsEloInfo, smartTeamBalance } from "../../model/OperateHelper/Quorum";
 import * as LangRes from "../../resource/strings";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdBalance(byPlayer: PlayerObject): void {
     // Verificar permisos de administrador
@@ -33,3 +34,10 @@ export function cmdBalance(byPlayer: PlayerObject): void {
 
     window.gameRoom.logger.i('cmdBalance', `${byPlayer.name}#${byPlayer.id} forced team balance`);
 }
+
+// Register the command
+registerCommand("balance", cmdBalance, {
+    helpText: "⚖️ Balancea los equipos según ELO (solo administradores)",
+    category: "Admin Commands",
+    adminOnly: true
+});

@@ -3,6 +3,7 @@ import * as LangRes from "../../resource/strings";
 import * as StatCalc from "../Statistics";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { decideTier, getAvatarByTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
+import { registerCommand } from "../CommandRegistry";
 
 /**
  * Check if this player plays this match
@@ -13,7 +14,11 @@ function isOnMatchNow(id: number): boolean {
     else return false;
 }
 
-export function cmdStats(byPlayer: PlayerObject, message?: string): void {
+export function cmdStats(byPlayer: PlayerObject, fullMessage?: string): void {
+    // Parse the full message to extract the target parameter
+    const msgChunk = fullMessage ? fullMessage.split(" ") : [];
+    const message = msgChunk[1]; // first argument after command
+    
     if (message !== undefined) {
         //stats for other player who are on this room
         if (message.charAt(0) == "#") {
@@ -99,3 +104,10 @@ export function cmdStats(byPlayer: PlayerObject, message?: string): void {
         window.gameRoom._room.sendAnnouncement(resultMsg, byPlayer.id, 0x00AA00, "normal", 1);
     }
 }
+
+// Register the command
+registerCommand("stats", cmdStats, {
+    helpText: "📊 Muestra las estadísticas de un jugador. Uso: !stats o !stats <nombre>",
+    category: "Game Commands",
+    requiresArgs: false
+});

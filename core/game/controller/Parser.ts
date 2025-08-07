@@ -1,33 +1,35 @@
 import * as LangRes from "../resource/strings";
 import { PlayerObject } from "../model/GameObject/PlayerObject";
-import { cmdAbout } from "./commands/about";
-import { cmdHelp } from "./commands/help";
-import { cmdStats } from "./commands/stats";
-import { cmdStreak } from "./commands/streak";
-import { cmdStatsReset } from "./commands/statsreset";
-import { cmdScout } from "./commands/scout";
-import { cmdPoss } from "./commands/poss";
-import { cmdAfk } from "./commands/afk";
-import { cmdList } from "./commands/list";
-import { cmdFreeze } from "./commands/freeze";
-import { cmdMute } from "./commands/mute";
-import { cmdVote } from "./commands/vote";
-import { cmdSuper } from "./commands/super";
-import { cmdTier } from "./commands/tier";
-import { cmdNotice } from "./commands/notice";
-import { cmdPowershotAdmin } from "./commands/powershotadmin";
-import { cmdDebugPowershot } from "./commands/debugpowershot";
-import { cmdGoleadores } from "./commands/goleadores";
-import { cmdAsistidores } from "./commands/asistidores";
-import { cmdRanking } from "./commands/ranking";
-import { cmdAvatar } from "./commands/avatar";
-import { cmdMap } from "./commands/map";
-import { cmdBalance } from "./commands/balance";
-import { cmdCamisetas } from "./commands/camisetas";
-import { cmdLlamarAdmin } from "./commands/llamaradmin";
-import { cmdConnectionStats } from "./commands/connectionstats";
-import { cmdMemide } from "./commands/memide";
-import { cmdDiscord } from "./commands/discord";
+import { CommandRegistry } from "./CommandRegistry";
+// Import all migrated commands to auto-register them
+import "./commands/discord";
+import "./commands/about";
+import "./commands/help";
+import "./commands/stats";
+import "./commands/streak";
+import "./commands/statsreset";
+import "./commands/scout";
+import "./commands/tier";
+import "./commands/ranking";
+import "./commands/memide";
+import "./commands/balance";
+import "./commands/avatar";
+import "./commands/map";
+import "./commands/llamaradmin";
+import "./commands/poss";
+import "./commands/afk";
+import "./commands/list";
+import "./commands/freeze";
+import "./commands/mute";
+import "./commands/debugpowershot";
+import "./commands/connectionstats";
+import "./commands/vote";
+import "./commands/notice";
+import "./commands/powershotadmin";
+import "./commands/super";
+import "./commands/goleadores";
+import "./commands/asistidores";
+import "./commands/camisetas";
 
 // Check if given string is a command chat. Returns true if it is, false otherwise.
 export function isCommandString(message: string): boolean {
@@ -48,171 +50,33 @@ export function parseCommand(byPlayer: PlayerObject, message: string): void {
         window.gameRoom._room.sendAnnouncement(LangRes.command._ErrorDisabled, byPlayer.id, 0xFF7777, "normal", 2); // Notify
         return; // Exit this function
     }
+
+    // 🆕 Try new command registry first
+    const registeredCommand = CommandRegistry.get(commandSign);
+    if (registeredCommand) {
+        try {
+            // Check permissions if needed
+            if (registeredCommand.meta.superAdminOnly && !window.gameRoom.playerList.get(byPlayer.id)?.permissions.superadmin) {
+                window.gameRoom._room.sendAnnouncement("❌ Solo los superadministradores pueden usar este comando.", byPlayer.id, 0xFF7777, "normal", 2);
+                return;
+            }
+            if (registeredCommand.meta.adminOnly && !byPlayer.admin && !window.gameRoom.playerList.get(byPlayer.id)?.permissions.superadmin) {
+                window.gameRoom._room.sendAnnouncement("❌ Solo los administradores pueden usar este comando.", byPlayer.id, 0xFF7777, "normal", 2);
+                return;
+            }
+            
+            // Execute the registered command
+            registeredCommand.handler(byPlayer, message);
+            return;
+        } catch (error) {
+            console.error(`Error executing command ${commandSign}:`, error);
+            window.gameRoom._room.sendAnnouncement("❌ Error al ejecutar el comando.", byPlayer.id, 0xFF7777, "normal", 2);
+            return;
+        }
+    }
+
+    // Fallback to legacy switch system for non-migrated commands
     switch(commandSign) {
-        case window.gameRoom.config.commands.help: {
-            if(msgChunk[1] !== undefined) {
-                cmdHelp(byPlayer, msgChunk[1]);
-            } else {
-                cmdHelp(byPlayer);
-            }
-            break;
-        }
-        case window.gameRoom.config.commands.about: {
-            cmdAbout(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.stats: {
-            if(msgChunk[1] !== undefined) {
-                cmdStats(byPlayer, msgChunk[1]);
-            } else {
-                cmdStats(byPlayer);
-            }
-            break;
-        }
-        case window.gameRoom.config.commands.statsreset: {
-            cmdStatsReset(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.streak: {
-            cmdStreak(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.scout: {
-            cmdScout(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.poss: {
-            cmdPoss(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.afk: {
-            if(msgChunk[1] !== undefined) {
-                cmdAfk(byPlayer, msgChunk[1]);
-            } else {
-                cmdAfk(byPlayer);
-            }
-            break;
-        }
-        case window.gameRoom.config.commands.list: {
-            if(msgChunk[1] !== undefined) {
-                cmdList(byPlayer, msgChunk[1]);
-            } else {
-                cmdList(byPlayer);
-            }
-            break;
-        }
-        case window.gameRoom.config.commands.freeze: {
-            cmdFreeze(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.mute: {
-            if(msgChunk[1] !== undefined) {
-                cmdMute(byPlayer, msgChunk[1]);
-            } else {
-                cmdMute(byPlayer);
-            }
-            break;
-        }
-        case window.gameRoom.config.commands.vote: {
-            if(msgChunk[1] !== undefined) {
-                cmdVote(byPlayer, msgChunk[1]);
-            } else {
-                cmdVote(byPlayer);
-            }
-            break;
-        }
-        case window.gameRoom.config.commands.tier: {
-            cmdTier(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.notice: {
-            cmdNotice(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.powershotadmin: {
-            cmdPowershotAdmin(byPlayer, message);
-            break;
-        }
-        case "debugpowershot": {
-            cmdDebugPowershot(byPlayer, message);
-            break;
-        }
-        case window.gameRoom.config.commands.super: {
-            if(msgChunk[1] !== undefined) {
-                if(msgChunk[2] !== undefined) {
-                    cmdSuper(byPlayer, msgChunk[1], msgChunk[2]);
-                } else {
-                    cmdSuper(byPlayer, msgChunk[1]);
-                }
-            } else {
-                cmdSuper(byPlayer);
-            }
-            break;
-        }
-        case window.gameRoom.config.commands.goleadores: {
-            if(msgChunk[1] !== undefined) {
-                cmdGoleadores(byPlayer, msgChunk[1]);
-            } else {
-                cmdGoleadores(byPlayer);
-            }
-            break;
-        }
-        case window.gameRoom.config.commands.asistidores: {
-            if(msgChunk[1] !== undefined) {
-                cmdAsistidores(byPlayer, msgChunk[1]);
-            } else {
-                cmdAsistidores(byPlayer);
-            }
-            break;
-        }
-        case window.gameRoom.config.commands.ranking: {
-            cmdRanking(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.avatar: {
-            cmdAvatar(byPlayer, message);
-            break;
-        }
-        case window.gameRoom.config.commands.map: {
-            if(msgChunk[1] !== undefined) {
-                cmdMap(byPlayer, msgChunk[1]);
-            } else {
-                cmdMap(byPlayer);
-            }
-            break;
-        }
-        case window.gameRoom.config.commands.balance: {
-            cmdBalance(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.camisetas: {
-            cmdCamisetas(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.llamaradmin: {
-            if(msgChunk[1] !== undefined) {
-                cmdLlamarAdmin(byPlayer, msgChunk.slice(1).join(" "));
-            } else {
-                cmdLlamarAdmin(byPlayer);
-            }
-            break;
-        }
-        case "connstats": {
-            if(msgChunk[1] !== undefined) {
-                cmdConnectionStats(byPlayer, msgChunk[1]);
-            } else {
-                cmdConnectionStats(byPlayer);
-            }
-            break;
-        }
-        case window.gameRoom.config.commands.memide: {
-            cmdMemide(byPlayer);
-            break;
-        }
-        case window.gameRoom.config.commands.discord: {
-            cmdDiscord(byPlayer);
-            break;
-        }
         default: {
             window.gameRoom._room.sendAnnouncement(LangRes.command._ErrorWrongCommand, byPlayer.id, 0xFF7777, "normal", 2);
             break;

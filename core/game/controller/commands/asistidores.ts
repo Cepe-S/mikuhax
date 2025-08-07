@@ -1,5 +1,6 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { getTopAssistersGlobalFromDB, getTopAssistersMonthlyFromDB, getTopAssistersDailyFromDB } from "../Storage";
+import { registerCommand } from "../CommandRegistry";
 
 export async function cmdAsistidores(byPlayer: PlayerObject, message?: string): Promise<void> {
     let period: 'day' | 'month' | 'global' = 'global';
@@ -48,3 +49,10 @@ export async function cmdAsistidores(byPlayer: PlayerObject, message?: string): 
         );
     }
 }
+
+// Register the command
+registerCommand("asistidores", cmdAsistidores, {
+    helpText: "Ver top asistidores. Uso: !asistidores [dia|mes] (por defecto: global)",
+    category: "Game Commands",
+    requiresArgs: false
+});

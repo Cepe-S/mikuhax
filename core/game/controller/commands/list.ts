@@ -2,6 +2,7 @@ import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { TeamID } from "../../model/GameObject/TeamID";
 import * as LangRes from "../../resource/strings";
 import * as Tst from "../Translator";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdList(byPlayer: PlayerObject, message?: string): void {
     if (message !== undefined) {
@@ -112,3 +113,10 @@ export function cmdList(byPlayer: PlayerObject, message?: string): void {
         window.gameRoom._room.sendAnnouncement(LangRes.command.list._ErrorNoTeam, byPlayer.id, 0xFF7777, "normal", 2);
     }
 }
+
+// Register the command
+registerCommand("list", cmdList, {
+    helpText: "📄 Lista jugadores por equipo. Uso: !list <red|blue|spec|afk|mute>",
+    category: "Basic Commands",
+    requiresArgs: true
+});

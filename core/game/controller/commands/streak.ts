@@ -2,6 +2,7 @@ import * as LangRes from "../../resource/strings";
 import * as Tst from "../Translator";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertTeamID2Name } from "../../model/GameObject/TeamID";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdStreak(byPlayer: PlayerObject): void {
     var placeholder ={
@@ -10,3 +11,9 @@ export function cmdStreak(byPlayer: PlayerObject): void {
     }
     window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.command.streak, placeholder), byPlayer.id, 0x479947, "normal", 1);
 }
+
+// Register the command
+registerCommand("streak", cmdStreak, {
+    helpText: "🔥 Muestra la racha ganadora actual",
+    category: "Game Commands"
+});

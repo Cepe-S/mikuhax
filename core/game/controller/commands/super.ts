@@ -1,8 +1,14 @@
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { superAdminLogin } from "../SuperAdmin";
+import { registerCommand } from "../CommandRegistry";
 
-export async function cmdSuper(byPlayer: PlayerObject, message?: string, submessage?: string): Promise<void> {
+export async function cmdSuper(byPlayer: PlayerObject, fullMessage?: string): Promise<void> {
+    // Parse the full message to extract arguments
+    const msgChunk = fullMessage ? fullMessage.split(" ") : [];
+    const message = msgChunk[1]; // first argument
+    const submessage = msgChunk[2]; // second argument
+    
     if (message !== undefined) {
         switch (message) {
             case window.gameRoom.config.commands._superSublogin: {
@@ -162,3 +168,11 @@ export async function cmdSuper(byPlayer: PlayerObject, message?: string, submess
         window.gameRoom._room.sendAnnouncement(LangRes.command.super.defaultMessage, byPlayer.id, 0xFF7777, "normal", 2);
     }
 }
+
+// Register the command
+registerCommand("super", cmdSuper, {
+    helpText: "Comando de super administrador. Subcomandos: login, logout, thor",
+    category: "Admin Commands",
+    requiresArgs: false,
+    superAdminOnly: false  // El comando verifica permisos internamente
+});

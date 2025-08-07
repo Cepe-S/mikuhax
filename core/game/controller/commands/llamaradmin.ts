@@ -1,6 +1,7 @@
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import * as Tst from "../Translator";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdLlamarAdmin(byPlayer: PlayerObject, message?: string): void {
     const reason = message || "Sin razón especificada";
@@ -59,3 +60,10 @@ export function cmdLlamarAdmin(byPlayer: PlayerObject, message?: string): void {
         );
     }
 }
+
+// Register the command
+registerCommand("llamaradmin", cmdLlamarAdmin, {
+    helpText: "📞 Llama a un administrador. Uso: !llamaradmin [razón]",
+    category: "Basic Commands",
+    requiresArgs: false
+});

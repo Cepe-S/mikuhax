@@ -1,6 +1,7 @@
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertToPlayerStorage, setPlayerDataToDB } from "../Storage";
+import { registerCommand } from "../CommandRegistry";
 
 export async function cmdStatsReset(byPlayer: PlayerObject): Promise<void> {
     window.gameRoom.playerList.get(byPlayer.id)!.stats.rating = 1000;
@@ -17,3 +18,9 @@ export async function cmdStatsReset(byPlayer: PlayerObject): Promise<void> {
 
     window.gameRoom._room.sendAnnouncement(LangRes.command.statsreset, byPlayer.id, 0x479947, "normal", 1);
 }
+
+// Register the command
+registerCommand("statsreset", cmdStatsReset, {
+    helpText: "🔄 Resetea tus estadísticas personales",
+    category: "Game Commands"
+});

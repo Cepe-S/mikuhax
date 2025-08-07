@@ -3,6 +3,7 @@ import * as Tst from "../Translator";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { decideTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
 import { getAllPlayersFromDB } from "../Storage";
+import { registerCommand } from "../CommandRegistry";
 
 export async function cmdRanking(byPlayer: PlayerObject): Promise<void> {
     try {
@@ -48,3 +49,9 @@ export async function cmdRanking(byPlayer: PlayerObject): Promise<void> {
         window.gameRoom._room.sendAnnouncement("❌ Error al obtener el ranking.", byPlayer.id, 0xFF0000, "normal", 1);
     }
 }
+
+// Register the command
+registerCommand("ranking", cmdRanking, {
+    helpText: "🏆 Muestra el ranking top 20 de jugadores por ELO",
+    category: "Game Commands"
+});

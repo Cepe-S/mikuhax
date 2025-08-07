@@ -1,6 +1,7 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { getRandomMatch } from "../../resource/realTeams";
 import { TeamID } from "../../model/GameObject/TeamID";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdCamisetas(byPlayer: PlayerObject): void {
     const match = getRandomMatch();
@@ -12,3 +13,10 @@ export function cmdCamisetas(byPlayer: PlayerObject): void {
         window.gameRoom._room.sendAnnouncement("❌ Error al cambiar camisetas", byPlayer.id, 0xFF0000, "normal", 1);
     }
 }
+
+// Register the command
+registerCommand("camisetas", cmdCamisetas, {
+    helpText: "Cambiar camisetas a equipos reales aleatorios",
+    category: "Admin Commands",
+    adminOnly: true
+});

@@ -1,6 +1,7 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import * as LangRes from "../../resource/strings";
 import * as Tst from "../Translator";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdAbout(byPlayer: PlayerObject): void {
     var placeholder ={
@@ -9,3 +10,9 @@ export function cmdAbout(byPlayer: PlayerObject): void {
     }
     window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.command.about, placeholder), byPlayer.id, 0x479947, "normal", 1);
 }
+
+// Register the command
+registerCommand("about", cmdAbout, {
+    helpText: "📋 Muestra información sobre el bot y el servidor",
+    category: "Basic Commands"
+});

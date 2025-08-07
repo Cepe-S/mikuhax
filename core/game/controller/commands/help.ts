@@ -1,8 +1,28 @@
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
+import { CommandRegistry } from "../CommandRegistry";
+import { registerCommand } from "../CommandRegistry";
 
-export function cmdHelp(byPlayer: PlayerObject, message?: string): void {
+export function cmdHelp(byPlayer: PlayerObject, fullMessage?: string): void {
+    // Parse the full message to extract the target command
+    const msgChunk = fullMessage ? fullMessage.split(" ") : [];
+    const message = msgChunk[1]; // first argument after command
+    
     if(message !== undefined) {
+        // 🆕 Check if it's a registered command first
+        const registeredCommand = CommandRegistry.get(message);
+        if (registeredCommand) {
+            window.gameRoom._room.sendAnnouncement(
+                `📋 ${registeredCommand.meta.helpText}`,
+                byPlayer.id,
+                0x479947,
+                "normal",
+                1
+            );
+            return;
+        }
+
+        // Fallback to legacy help system
         switch(message) {
             case window.gameRoom.config.commands._helpManabout: {
                 window.gameRoom._room.sendAnnouncement(LangRes.command.helpman.about, byPlayer.id, 0x479947, "normal", 1);
@@ -72,16 +92,33 @@ export function cmdHelp(byPlayer: PlayerObject, message?: string): void {
                 window.gameRoom._room.sendAnnouncement(LangRes.command.helpman.memide, byPlayer.id, 0x479947, "normal", 1);
                 break;
             }
-            case window.gameRoom.config.commands._helpMandiscord: {
-                window.gameRoom._room.sendAnnouncement(LangRes.command.helpman.discord, byPlayer.id, 0x479947, "normal", 1);
-                break;
-            }
             default: {
                 window.gameRoom._room.sendAnnouncement(LangRes.command.helpman._ErrorWrongMan, byPlayer.id, 0xFF7777, "normal", 2);
                 break;
             }
         }
     } else {
-        window.gameRoom._room.sendAnnouncement(LangRes.command.help, byPlayer.id, 0x479947, "normal", 1);
+        // Generate dynamic help including registered commands
+        let helpMessage = "📋 COMANDOS DISPONIBLES:\n";
+        
+        // Add registered commands to help
+        const registeredCommands = CommandRegistry.getAllByCategory();
+        Object.keys(registeredCommands).forEach(category => {
+            if (registeredCommands[category].length > 0) {
+                helpMessage += `\n📂 ${category}:\n`;
+                registeredCommands[category].forEach(cmd => {
+                    helpMessage += `!${cmd.meta.name} - ${cmd.meta.helpText}\n`;
+                });
+            }
+        });
+        
+        window.gameRoom._room.sendAnnouncement(helpMessage, byPlayer.id, 0x479947, "normal", 1);
     }
 }
+
+// Register the command
+registerCommand("help", cmdHelp, {
+    helpText: "❓ Muestra la lista de comandos disponibles o información específica de un comando",
+    category: "Basic Commands",
+    requiresArgs: false
+});

@@ -1,4 +1,5 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdAvatar(player: PlayerObject, message: string): void {
     if (!player) return;
@@ -38,3 +39,10 @@ export function cmdAvatar(player: PlayerObject, message: string): void {
         0
     );
 }
+
+// Register the command
+registerCommand("avatar", cmdAvatar, {
+    helpText: "🎭 Cambia tu avatar (1-2 caracteres). Uso: !avatar <caracteres>",
+    category: "Special Features",
+    requiresArgs: true
+});

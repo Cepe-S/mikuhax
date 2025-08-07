@@ -1,4 +1,5 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdDebugPowershot(byPlayer: PlayerObject, message?: string): void {
     // Show current powershot system status
@@ -37,3 +38,10 @@ export function cmdDebugPowershot(byPlayer: PlayerObject, message?: string): voi
         window.gameRoom._room.sendAnnouncement(`❌ Error checking players: ${error}`, byPlayer.id, 0xFF0000, "normal", 1);
     }
 }
+
+// Register the command
+registerCommand("debugpowershot", cmdDebugPowershot, {
+    helpText: "Mostrar estado del sistema powershot para debug",
+    category: "Admin Commands",
+    adminOnly: true
+});

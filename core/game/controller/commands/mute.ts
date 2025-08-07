@@ -2,6 +2,7 @@ import { getUnixTimestamp } from "../Statistics";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import * as LangRes from "../../resource/strings";
 import * as Tst from "../Translator";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdMute(byPlayer: PlayerObject, message?: string): void {
     if(window.gameRoom.playerList.get(byPlayer.id)!.admin == true) {
@@ -44,3 +45,11 @@ export function cmdMute(byPlayer: PlayerObject, message?: string): void {
         window.gameRoom._room.sendAnnouncement(LangRes.command.mute._ErrorNoPermission, byPlayer.id, 0xFF7777, "normal", 2);
     }
 }
+
+// Register the command
+registerCommand("mute", cmdMute, {
+    helpText: "Silenciar/desilenciar jugador. Uso: !mute <ID>",
+    category: "Admin Commands",
+    requiresArgs: true,
+    adminOnly: true
+});

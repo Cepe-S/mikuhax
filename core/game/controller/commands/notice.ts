@@ -1,5 +1,6 @@
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdNotice(byPlayer: PlayerObject): void {
     if(window.gameRoom.notice) {
@@ -8,3 +9,9 @@ export function cmdNotice(byPlayer: PlayerObject): void {
         window.gameRoom._room.sendAnnouncement(LangRes.command.notice._ErrorNoMessage, byPlayer.id, 0xFF7777, "normal", 1);
     }
 }
+
+// Register the command
+registerCommand("notice", cmdNotice, {
+    helpText: "Ver aviso del servidor",
+    category: "Basic Commands"
+});

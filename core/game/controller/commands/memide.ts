@@ -1,4 +1,5 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdMemide(byPlayer: PlayerObject): void {
     // Cooldown management (15 seconds as in the original example)
@@ -126,3 +127,9 @@ export function cmdMemide(byPlayer: PlayerObject): void {
         );
     }
 }
+
+// Register the command
+registerCommand("memide", cmdMemide, {
+    helpText: "📏 Comando divertido que mide algo... (con cooldown de 15 segundos)",
+    category: "Special Features"
+});

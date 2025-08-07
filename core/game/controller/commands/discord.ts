@@ -1,4 +1,5 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdDiscord(byPlayer: PlayerObject): void {
     // Send Discord server invitation message
@@ -13,3 +14,9 @@ export function cmdDiscord(byPlayer: PlayerObject): void {
         1
     );
 }
+
+// Auto-register the command
+registerCommand("discord", cmdDiscord, {
+    helpText: "🔗 Muestra la invitación al servidor de Discord",
+    category: "Basic Commands"
+});

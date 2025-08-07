@@ -1,6 +1,7 @@
 import * as LangRes from "../../resource/strings";
 import * as Tst from "../Translator";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdPowershotAdmin(byPlayer: PlayerObject, message: string): void {
     // Check if player has admin permissions
@@ -94,3 +95,11 @@ export function cmdPowershotAdmin(byPlayer: PlayerObject, message: string): void
         );
     }
 }
+
+// Register the command
+registerCommand("powershotadmin", cmdPowershotAdmin, {
+    helpText: "Administrar sistema powershot. Uso: !powershotadmin <on|off>",
+    category: "Admin Commands",
+    requiresArgs: true,
+    superAdminOnly: true
+});

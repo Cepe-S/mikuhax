@@ -2,6 +2,7 @@ import * as LangRes from "../../resource/strings";
 import * as Tst from "../Translator";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { getTeamsEloInfo } from "../../model/OperateHelper/Quorum";
+import { registerCommand } from "../CommandRegistry";
 
 export function cmdScout(byPlayer: PlayerObject): void {
     if (window.gameRoom.config.rules.statsRecord == true && window.gameRoom.isStatRecord == true) {
@@ -19,3 +20,9 @@ export function cmdScout(byPlayer: PlayerObject): void {
         window.gameRoom._room.sendAnnouncement(LangRes.command.scout._ErrorNoMode, byPlayer.id, 0xFF7777, "normal", 2);
     }
 }
+
+// Register the command
+registerCommand("scout", cmdScout, {
+    helpText: "🔍 Analiza el balance de ELO entre equipos durante el juego",
+    category: "Game Commands"
+});
