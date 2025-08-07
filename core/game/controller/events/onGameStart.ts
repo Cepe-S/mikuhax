@@ -108,8 +108,8 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
                 const balanceMsg = `⚖️ Diferencia de ELO: ${Math.abs(teamsInfo.redElo - teamsInfo.blueElo)} puntos`;
                 
                 window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.startRecord, placeholderStart), null, 0x00FF00, "normal", 0);
-                window.gameRoom._room.sendAnnouncement(redEloMsg, null, 0xFF3333, "normal", 0);
-                window.gameRoom._room.sendAnnouncement(blueEloMsg, null, 0x3399FF, "normal", 0);
+                window.gameRoom._room.sendAnnouncement(redEloMsg, null, 0xFD2C2D, "normal", 0);
+                window.gameRoom._room.sendAnnouncement(blueEloMsg, null, 0x18fde8, "normal", 0);
                 window.gameRoom._room.sendAnnouncement(balanceMsg, null, 0xFFFF00, "normal", 0);
             }, 200);
         } else {
@@ -119,8 +119,8 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
             const blueEloMsg = `🔵 Equipo Azul: ${teamsInfo.blueCount} jugadores | ELO Total: ${teamsInfo.blueElo} | Promedio: ${teamsInfo.blueCount > 0 ? Math.round(teamsInfo.blueElo / teamsInfo.blueCount) : 0}`;
             
             window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.startRecord, placeholderStart), null, 0x00FF00, "normal", 0);
-            window.gameRoom._room.sendAnnouncement(redEloMsg, null, 0xFF3333, "normal", 0);
-            window.gameRoom._room.sendAnnouncement(blueEloMsg, null, 0x3399FF, "normal", 0);
+            window.gameRoom._room.sendAnnouncement(redEloMsg, null, 0xFD2C2D, "normal", 0);
+            window.gameRoom._room.sendAnnouncement(blueEloMsg, null, 0x18fde8, "normal", 0);
         }
 
         // Auto-pause removed - game starts immediately

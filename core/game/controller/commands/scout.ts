@@ -13,8 +13,8 @@ export function cmdScout(byPlayer: PlayerObject): void {
         const balanceMsg = `⚖️ Diferencia de ELO: ${Math.abs(teamsInfo.redElo - teamsInfo.blueElo)} puntos`;
         
         window.gameRoom._room.sendAnnouncement("📊 Análisis de Equipos:", byPlayer.id, 0x479947, "normal", 1);
-        window.gameRoom._room.sendAnnouncement(redEloMsg, byPlayer.id, 0xFF3333, "normal", 0);
-        window.gameRoom._room.sendAnnouncement(blueEloMsg, byPlayer.id, 0x3399FF, "normal", 0);
+        window.gameRoom._room.sendAnnouncement(redEloMsg, byPlayer.id, 0xFD2C2D, "normal", 0);
+        window.gameRoom._room.sendAnnouncement(blueEloMsg, byPlayer.id, 0x18fde8, "normal", 0);
         window.gameRoom._room.sendAnnouncement(balanceMsg, byPlayer.id, 0xFFFF00, "normal", 0);
     } else {
         window.gameRoom._room.sendAnnouncement(LangRes.command.scout._ErrorNoMode, byPlayer.id, 0xFF7777, "normal", 2);
