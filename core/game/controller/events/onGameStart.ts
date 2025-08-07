@@ -11,6 +11,12 @@ import { getRandomMatch } from "../../resource/realTeams";
 export function onGameStartListener(byPlayer: PlayerObject | null): void {
     // Reiniciar almacenamiento temporal de eventos de partido
     window.gameRoom.matchEventsHolder = [];
+    
+    // Reset del uso del comando !size para todos los jugadores al inicio del partido
+    window.gameRoom.playerList.forEach((player) => {
+        (player as any).sizeUsedThisMatch = false;
+    });
+    
     /* Event called when a game starts.
         byPlayer is the player which caused the event (can be null if the event wasn't caused by a player). */
     let placeholderStart = {

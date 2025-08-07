@@ -30,6 +30,7 @@ import "./commands/super";
 import "./commands/goleadores";
 import "./commands/asistidores";
 import "./commands/camisetas";
+import "./commands/size";
 
 // Check if given string is a command chat. Returns true if it is, false otherwise.
 export function isCommandString(message: string): boolean {
