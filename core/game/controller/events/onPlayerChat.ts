@@ -123,8 +123,8 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                     msgColor = 0xFFD700; // dorado
                 } else {
                     // Colores por equipo para jugadores normales
-                    if (player.team === TeamID.Red) msgColor = 0xFF3333; // rojo
-                    else if (player.team === TeamID.Blue) msgColor = 0x3399FF; // azul
+                    if (player.team === TeamID.Red) msgColor = 0xFD2C2D; // rojo
+                    else if (player.team === TeamID.Blue) msgColor = 0x18fde8; // azul
                     else if (player.team === TeamID.Spec) msgColor = 0xC7C7C7; // gris
                 }
         
