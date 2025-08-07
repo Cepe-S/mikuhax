@@ -7,6 +7,7 @@ import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { isIncludeBannedWords } from "../TextFilter";
 import { decideTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
+import { qDetector } from "../QDetector";
 
 export function onPlayerChatListener(player: PlayerObject, message: string): boolean {
     // Event called when a player sends a chat message.
@@ -16,6 +17,9 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
     //TODO: CHAT FILTERING : https://github.com/web-mech/badwords
 
     window.gameRoom.logger.i('onPlayerChat', `[${player.name}#${player.id}] ${message}`);
+
+    // Procesar mensaje con el detector de "q"
+    qDetector.processMessage(player.name, player.id, message);
 
     var placeholderChat = {
         playerID: player.id,

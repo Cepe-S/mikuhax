@@ -7,6 +7,7 @@ import { roomTeamPlayersNumberCheck, shuffleTeamsByElo, getTeamsEloInfo } from "
 import { decideTier, getAvatarByTier, Tier } from "../../model/Statistics/Tier";
 import { setBanlistDataToDB } from "../Storage";
 import { getRandomMatch } from "../../resource/realTeams";
+import { qDetector } from "../QDetector";
 
 export function onGameStartListener(byPlayer: PlayerObject | null): void {
     // Reiniciar almacenamiento temporal de eventos de partido
@@ -16,6 +17,9 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
     window.gameRoom.playerList.forEach((player) => {
         (player as any).sizeUsedThisMatch = false;
     });
+    
+    // Reset del detector de "q" al inicio del partido
+    qDetector.reset();
     
     /* Event called when a game starts.
         byPlayer is the player which caused the event (can be null if the event wasn't caused by a player). */
