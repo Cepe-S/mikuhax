@@ -166,19 +166,16 @@ export class KickStack {
             return;
         }
 
-        // Get settings from game config (with safe fallbacks)
-        if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.config && window.gameRoom.config.settings) {
-            const settings = window.gameRoom.config.settings;
-            // Convert deciseconds to number of 25ms ticks
-            // 1 decisecond = 100ms, so 100ms / 25ms = 4 ticks per decisecond
-            const activationTimeDeciseconds = settings.powershotActivationTime || 10;
-            this.powershot.activationThreshold = activationTimeDeciseconds * 4; // 4 ticks per decisecond
-            this.powershot.normalColor = settings.powershotNormalColor || 0xFFFFFF;
-            this.powershot.powershotColor = settings.powershotActiveColor || 0xFF4500;
-            this.powershot.normalInvMass = settings.ballInvMass || 1.5;
-            this.powershot.powershotInvMass = settings.powershotInvMassFactor || 2.0;
-            this.powershot.stickDistance = settings.powershotStickDistance || 26;
-        }
+        // Always sync configuration when starting timer to ensure current values
+        this.syncPowershotConfig();
+
+        // Convert deciseconds to number of 25ms ticks
+        // 1 decisecond = 100ms, so 100ms / 25ms = 4 ticks per decisecond
+        const activationTimeDeciseconds = 
+            (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.config && window.gameRoom.config.settings) 
+            ? (window.gameRoom.config.settings.powershotActivationTime || 10)
+            : 10;
+        this.powershot.activationThreshold = activationTimeDeciseconds * 4; // 4 ticks per decisecond
 
         // Initialize timer
         this.powershot.counter = 0;
@@ -286,14 +283,8 @@ export class KickStack {
             return false;
         }
 
-        // Get settings from game config (with safe fallbacks)
-        if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.config && window.gameRoom.config.settings) {
-            const settings = window.gameRoom.config.settings;
-            this.powershot.normalColor = settings.powershotNormalColor || 0xFFFFFF;
-            this.powershot.powershotColor = settings.powershotActiveColor || 0xFF4500;
-            this.powershot.normalInvMass = settings.ballInvMass || 1.5;
-            this.powershot.powershotInvMass = settings.powershotInvMassFactor || 2.0;
-        }
+        // Sync configuration to ensure we have current values
+        this.syncPowershotConfig();
 
         this.activatePowershot();
         return true;
@@ -315,10 +306,27 @@ export class KickStack {
     }
 
     /**
+     * Sync powershot configuration with current game settings
+     */
+    private syncPowershotConfig(): void {
+        if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.config && window.gameRoom.config.settings) {
+            const settings = window.gameRoom.config.settings;
+            this.powershot.normalColor = settings.powershotNormalColor || 0xFFFFFF;
+            this.powershot.powershotColor = settings.powershotActiveColor || 0xFF4500;
+            this.powershot.normalInvMass = settings.ballInvMass || 1.5;
+            this.powershot.powershotInvMass = settings.powershotInvMassFactor || 2.0;
+            this.powershot.stickDistance = settings.powershotStickDistance || 26;
+        }
+    }
+
+    /**
      * Reset powershot to normal state
      */
     resetPowershot(): void {
         this.stopPowershotTimer();
+        
+        // Sync configuration before resetting
+        this.syncPowershotConfig();
         
         // Always reset ball color and physics to normal
         if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom._room) {
@@ -378,6 +386,30 @@ export class KickStack {
         }
         // If isBallStuck && wasStuckBefore: still stuck (no action needed)
         // If !isBallStuck && !wasStuckBefore: still not stuck (no action needed)
+    }
+
+    /**
+     * Initialize powershot system with current game settings
+     * This should be called at game start to ensure all config values are properly loaded
+     */
+    initPowershotSystem(): void {
+        // First sync configuration
+        this.syncPowershotConfig();
+        
+        // Then reset to ensure clean state
+        this.resetPowershot();
+        
+        // Also set initial ball properties if room exists
+        if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom._room) {
+            try {
+                window.gameRoom._room.setDiscProperties(0, {
+                    color: this.powershot.normalColor,
+                    invMass: this.powershot.normalInvMass
+                });
+            } catch (e) {
+                // Ignore errors during initial ball setup
+            }
+        }
     }
 
     /**
