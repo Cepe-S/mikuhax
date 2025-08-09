@@ -146,6 +146,8 @@
 		"_helpManllamaradmin": "llamaradmin",
 		"_helpManmemide": "memide",
 		"_helpMandiscord": "discord",
+		"_helpMannv": "nv",
+		"_helpManbb": "bb",
 		"_listSubafk": "afk",
 		"_listSubmute": "mute",
 		"_listSubred": "red",
@@ -186,6 +188,8 @@
 		"camisetas": "camisetas",
 		"llamaradmin": "llamaradmin",
 		"memide": "memide",
-		"discord": "discord"
+		"discord": "discord",
+		"nv": "nv",
+		"bb": "bb"
 	}
 }

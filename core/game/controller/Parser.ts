@@ -18,6 +18,8 @@ import "./commands/map";
 import "./commands/llamaradmin";
 import "./commands/poss";
 import "./commands/afk";
+import "./commands/nv";
+import "./commands/bb";
 import "./commands/list";
 import "./commands/freeze";
 import "./commands/mute";

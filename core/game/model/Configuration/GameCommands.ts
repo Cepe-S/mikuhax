@@ -26,6 +26,8 @@ export interface GameCommands {
     _helpManllamaradmin: string
     _helpManmemide: string
     _helpMandiscord: string
+    _helpMannv: string
+    _helpManbb: string
 
     _listSubafk: string
     _listSubmute: string
@@ -68,4 +70,6 @@ export interface GameCommands {
     llamaradmin: string
     memide: string
     discord: string
+    nv: string
+    bb: string
 }

@@ -203,6 +203,8 @@ export interface BrowserHostRoomCommands {
     _helpManllamaradmin: string
     _helpManmemide: string
     _helpMandiscord: string
+    _helpMannv: string
+    _helpManbb: string
 
     _listSubafk: string
     _listSubmute: string
@@ -245,4 +247,6 @@ export interface BrowserHostRoomCommands {
     llamaradmin: string
     memide: string
     discord: string
+    nv: string
+    bb: string
 }

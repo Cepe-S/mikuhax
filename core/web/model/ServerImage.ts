@@ -154,6 +154,8 @@ export interface ServerImage {
         _helpManllamaradmin: string;
         _helpManmemide: string;
         _helpMandiscord: string;
+        _helpMannv: string;
+        _helpManbb: string;
         _listSubafk: string;
         _listSubmute: string;
         _listSubred: string;
@@ -192,6 +194,8 @@ export interface ServerImage {
         llamaradmin: string;
         memide: string;
         discord: string;
+        nv: string;
+        bb: string;
     };
     superadmins: {
         key: string;
