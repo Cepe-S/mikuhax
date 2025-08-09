@@ -22,20 +22,20 @@ banlistRouter.post('/', async (ctx: Context) => {
     await controller.addBanPlayer(ctx)
 });
 
-// /v1/banlist/:conn GET
-// get the banned player data
-banlistRouter.get('/:conn', async (ctx: Context) => {
+// /v1/banlist/:identifier GET
+// get the banned player data by auth or conn
+banlistRouter.get('/:identifier', async (ctx: Context) => {
     await controller.getBannedPlayer(ctx)
 });
 
-// /v1/banlist/:conn PUT
+// /v1/banlist/:identifier PUT
 // update whole data of the banned player
-banlistRouter.put('/:conn', async (ctx: Context) => {
+banlistRouter.put('/:identifier', async (ctx: Context) => {
     await controller.updateBannedPlayer(ctx)
 });
 
-// /v1/banlist/:conn DELETE
+// /v1/banlist/:identifier DELETE
 // delete the player from ban list
-banlistRouter.delete('/:conn', async (ctx: Context) => {
+banlistRouter.delete('/:identifier', async (ctx: Context) => {
     await controller.deleteBannedPlayer(ctx)
 });

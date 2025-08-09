@@ -227,6 +227,14 @@ export class HeadlessBrowser {
         await page.exposeFunction('_trackConnectionDB', dbUtilityInject.trackConnectionDB);
         await page.exposeFunction('_getConnectionAnalyticsDB', dbUtilityInject.getConnectionAnalyticsDB);
         
+        // Enhanced Ban/Mute system
+        await page.exposeFunction('_createBanDB', dbUtilityInject.createBanDB);
+        await page.exposeFunction('_readBanByAuthDB', dbUtilityInject.readBanByAuthDB);
+        await page.exposeFunction('_deleteBanByAuthDB', dbUtilityInject.deleteBanByAuthDB);
+        await page.exposeFunction('_createMuteDB', dbUtilityInject.createMuteDB);
+        await page.exposeFunction('_readMuteByAuthDB', dbUtilityInject.readMuteByAuthDB);
+        await page.exposeFunction('_deleteMuteByAuthDB', dbUtilityInject.deleteMuteByAuthDB);
+        
         // inject webhook function
         await page.exposeFunction('_feedSocialDiscordWebhook', this.feedSocialDiscordWebhook.bind(this));
         // ================================================================================

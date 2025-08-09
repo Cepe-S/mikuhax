@@ -1,18 +1,17 @@
 import { Context } from "koa";
 import { IRepository } from '../repository/repository.interface';
-import { BanList } from '../entity/banlist.entity';
-import { BanListModel } from '../model/BanListModel';
-import { banListModelSchema } from "../model/Validator";
+import { MuteList } from '../entity/mutelist.entity';
+import { MuteListModel } from '../model/MuteListModel';
 
-export class BanListController {
-    private readonly _repository: IRepository<BanList>;
+export class MuteListController {
+    private readonly _repository: IRepository<MuteList>;
 
-    constructor(repository: IRepository<BanList>) {
+    constructor(repository: IRepository<MuteList>) {
         this._repository = repository;
     }
 
-    public async getAllBannedPlayers(ctx: Context) {
-        const { ruid } = ctx.params;
+    public async getAllMutedPlayers(ctx: Context) {
+        const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
         const { start, count } = ctx.request.query;
 
         if (start && count) {
@@ -40,7 +39,7 @@ export class BanListController {
         }
     }
 
-    public async getBannedPlayer(ctx: Context) {
+    public async getMutedPlayer(ctx: Context) {
         const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
         const { identifier } = ctx.params;
 
@@ -56,12 +55,12 @@ export class BanListController {
             });
     }
 
-    public async addBanPlayer(ctx: Context) {
+    public async addMutePlayer(ctx: Context) {
         const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
-        const banlistModel: BanListModel = ctx.request.body;
+        const mutelistModel: MuteListModel = ctx.request.body;
 
         return this._repository
-            .addSingle(ruid, banlistModel)
+            .addSingle(ruid, mutelistModel)
             .then(() => {
                 ctx.status = 204;
             })
@@ -71,13 +70,13 @@ export class BanListController {
             });
     }
 
-    public async updateBannedPlayer(ctx: Context) {
+    public async updateMutedPlayer(ctx: Context) {
         const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
         const { identifier } = ctx.params;
-        const banlistModel: BanListModel = ctx.request.body;
+        const mutelistModel: MuteListModel = ctx.request.body;
 
         return this._repository
-            .updateSingle(ruid, identifier, banlistModel)
+            .updateSingle(ruid, identifier, mutelistModel)
             .then(() => {
                 ctx.status = 204;
             })
@@ -87,7 +86,7 @@ export class BanListController {
             });
     }
 
-    public async deleteBannedPlayer(ctx: Context) {
+    public async deleteMutedPlayer(ctx: Context) {
         const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
         const { identifier } = ctx.params;
 

@@ -391,3 +391,159 @@ export async function getConnectionAnalyticsDB(auth: string): Promise<any> {
 }
 
 // Removed legacy top-scorers/top-assisters endpoints and fallbacks
+
+// ================== NEW AUTH-BASED BAN/MUTE SYSTEM ==================
+
+// Enhanced Ban/Mute system with auth-based identification and duration support
+
+export interface MuteListItem {
+    auth: string;
+    conn: string;
+    reason: string;
+    register: number;
+    expire: number;
+    adminAuth?: string;
+    adminName?: string;
+}
+
+export interface BanListItem {
+    auth: string;
+    conn: string;
+    reason: string;
+    register: number;
+    expire: number;
+    adminAuth?: string;
+    adminName?: string;
+}
+
+// Enhanced Ban functions
+export async function createBanDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string): Promise<void> {
+    try {
+        const now = Date.now();
+        const expire = durationMinutes > 0 ? now + (durationMinutes * 60 * 1000) : -1; // -1 for permanent
+        
+        const banData: BanListItem = {
+            auth,
+            conn,
+            reason,
+            register: now,
+            expire,
+            adminAuth,
+            adminName
+        };
+        
+        const result = await axios.post(`${dbConnAddr}room/${ruid}/banlist`, banData);
+        if (result.status === 204) {
+            winstonLogger.info(`Ban created: auth(${auth}) duration(${durationMinutes}min) reason(${reason})`);
+        }
+    } catch(error) {
+        const err = error as any;
+        if(err.response && err.response.status === 400) {
+            winstonLogger.info(`Ban updated: auth(${auth}) already exists, updating`);
+        } else {
+            winstonLogger.error(`Error creating ban: ${error}`);
+        }
+    }
+}
+
+export async function readBanByAuthDB(ruid: string, auth: string): Promise<BanListItem | undefined> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/banlist/${auth}`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`Ban found for auth(${auth})`);
+            return result.data;
+        }
+    } catch (error) {
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            // Not banned - this is normal
+        } else {
+            winstonLogger.error(`Error reading ban: ${error}`);
+        }
+    }
+    return undefined;
+}
+
+export async function deleteBanByAuthDB(ruid: string, auth: string): Promise<boolean> {
+    try {
+        const result = await axios.delete(`${dbConnAddr}room/${ruid}/banlist/${auth}`);
+        if (result.status === 204) {
+            winstonLogger.info(`Ban removed for auth(${auth})`);
+            return true;
+        }
+    } catch (error) {
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            winstonLogger.info(`No ban found to remove for auth(${auth})`);
+        } else {
+            winstonLogger.error(`Error removing ban: ${error}`);
+        }
+    }
+    return false;
+}
+
+// Mute functions
+export async function createMuteDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string): Promise<void> {
+    try {
+        const now = Date.now();
+        const expire = durationMinutes > 0 ? now + (durationMinutes * 60 * 1000) : -1; // -1 for permanent
+        
+        const muteData: MuteListItem = {
+            auth,
+            conn,
+            reason,
+            register: now,
+            expire,
+            adminAuth,
+            adminName
+        };
+        
+        const result = await axios.post(`${dbConnAddr}room/${ruid}/mutelist`, muteData);
+        if (result.status === 204) {
+            winstonLogger.info(`Mute created: auth(${auth}) duration(${durationMinutes}min) reason(${reason})`);
+        }
+    } catch(error) {
+        const err = error as any;
+        if(err.response && err.response.status === 400) {
+            winstonLogger.info(`Mute updated: auth(${auth}) already exists, updating`);
+        } else {
+            winstonLogger.error(`Error creating mute: ${error}`);
+        }
+    }
+}
+
+export async function readMuteByAuthDB(ruid: string, auth: string): Promise<MuteListItem | undefined> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/mutelist/${auth}`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`Mute found for auth(${auth})`);
+            return result.data;
+        }
+    } catch (error) {
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            // Not muted - this is normal
+        } else {
+            winstonLogger.error(`Error reading mute: ${error}`);
+        }
+    }
+    return undefined;
+}
+
+export async function deleteMuteByAuthDB(ruid: string, auth: string): Promise<boolean> {
+    try {
+        const result = await axios.delete(`${dbConnAddr}room/${ruid}/mutelist/${auth}`);
+        if (result.status === 204) {
+            winstonLogger.info(`Mute removed for auth(${auth})`);
+            return true;
+        }
+    } catch (error) {
+        const err = error as any;
+        if(err.response && err.response.status === 404) {
+            winstonLogger.info(`No mute found to remove for auth(${auth})`);
+        } else {
+            winstonLogger.error(`Error removing mute: ${error}`);
+        }
+    }
+    return false;
+}

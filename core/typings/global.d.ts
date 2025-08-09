@@ -122,6 +122,13 @@ declare global {
             isp: string;
         }): Promise<void>;
         _getConnectionAnalyticsDB(auth: string): Promise<any>;
+        // Enhanced Ban/Mute system
+        _createBanDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string): Promise<void>;
+        _readBanByAuthDB(ruid: string, auth: string): Promise<any>;
+        _deleteBanByAuthDB(ruid: string, auth: string): Promise<boolean>;
+        _createMuteDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string): Promise<void>;
+        _readMuteByAuthDB(ruid: string, auth: string): Promise<any>;
+        _deleteMuteByAuthDB(ruid: string, auth: string): Promise<boolean>;
 
         // ==============================
         // Haxball Headless Initial Methods

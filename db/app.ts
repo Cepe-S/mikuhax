@@ -19,6 +19,7 @@ import { SuperAdmin } from "./entity/superadmin.entity";
 import { MatchEvent } from "./entity/match_event.entity";
 import { MatchSummary } from "./entity/match_summary.entity";
 import { Connection } from "./entity/connection.entity";
+import { MuteList } from "./entity/mutelist.entity";
 import { apiRouterV1 } from "./router/v1.api.router";
 // ========================================================
 //const _GitHublastestRelease = await axios.get('https://api.github.com/repos/dapucita/haxbotron/releases/latest');
@@ -41,7 +42,7 @@ const whiteListIPs: string[] = process.env.SERVER_WHITELIST_IP?.split(",") || []
 createConnection({
     type: 'sqlite',
     database: path.join(__dirname, '..', process.env.DB_HOST || 'haxbotron.sqlite.db'),
-    entities: [Player, BanList, SuperAdmin, MatchEvent, MatchSummary, Connection],
+    entities: [Player, BanList, SuperAdmin, MatchEvent, MatchSummary, Connection, MuteList],
     logging: true,
     synchronize: true, // Re-enable auto-sync
     dropSchema: false // Don't drop existing tables

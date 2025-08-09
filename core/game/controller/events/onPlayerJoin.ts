@@ -2,7 +2,7 @@ import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { Player } from "../../model/GameObject/Player";
-import { convertToPlayerStorage, getBanlistDataFromDB, getPlayerDataFromDB, removeBanlistDataFromDB, setBanlistDataToDB, setPlayerDataToDB } from "../Storage";
+import { convertToPlayerStorage, getBanlistDataFromDB, getPlayerDataFromDB, removeBanlistDataFromDB, setBanlistDataToDB, setPlayerDataToDB, getBanByAuthFromDB, getMuteByAuthFromDB, removeBanByAuthFromDB, removeMuteByAuthFromDB } from "../Storage";
 import { getUnixTimestamp } from "../Statistics";
 import { setDefaultStadiums, updateAdmins } from "../RoomTools";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
@@ -42,27 +42,62 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         banListReason: ''
     };
 
-    // check ban list
-    let playerBanChecking = await getBanlistDataFromDB(player.conn);
+    // check ban list (new auth-based system)
+    let playerBanChecking = await getBanByAuthFromDB(player.auth);
+    if (!playerBanChecking) {
+        // Fallback to old conn-based system for compatibility
+        playerBanChecking = await getBanlistDataFromDB(player.conn);
+    }
+    
     if (playerBanChecking !== undefined) {// if banned (bListCheck would had returned string or boolean)
         placeholderJoin.banListReason = playerBanChecking.reason;
 
         if (playerBanChecking.expire == -1) { // Permanent ban
-            window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} was joined but kicked for registered in permanent ban list. (conn:${player.conn},reason:${playerBanChecking.reason})`);
+            window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} was joined but kicked for registered in permanent ban list. (auth:${player.auth},reason:${playerBanChecking.reason})`);
             window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.onJoin.banList.permanentBan, placeholderJoin), true); // auto ban
             return;
         }
         if (playerBanChecking.expire > joinTimeStamp) { // Fixed-term ban (time limited ban)
-            window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} was joined but kicked for registered in fixed-term ban list. (conn:${player.conn},reason:${playerBanChecking.reason})`);
+            window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} was joined but kicked for registered in fixed-term ban list. (auth:${player.auth},reason:${playerBanChecking.reason})`);
             window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.onJoin.banList.fixedTermBan, placeholderJoin), false); // auto kick
             return;
         }
         if (playerBanChecking.expire != -1 && playerBanChecking.expire <= joinTimeStamp) { // time-over from expiration date
             // ban clear for this player
-            window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} is deleted from the ban list because the date has expired. (conn:${player.conn},reason:${playerBanChecking.reason})`);
-            await removeBanlistDataFromDB(player.conn);
-            // window.room.clearBan(player.id); //useless cuz banned player in haxball couldn't make join-event.
+            window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} is deleted from the ban list because the date has expired. (auth:${player.auth},reason:${playerBanChecking.reason})`);
+            await removeBanByAuthFromDB(player.auth);
+            // Also try to remove old conn-based ban for cleanup
+            try {
+                await removeBanlistDataFromDB(player.conn);
+            } catch (e) {
+                // Ignore if old ban doesn't exist
+            }
         }
+    }
+
+    // Check mute status (auth-based system)
+    let muteStatus = { mute: false, muteExpire: 0 };
+    try {
+        const playerMuteChecking = await getMuteByAuthFromDB(player.auth);
+        if (playerMuteChecking !== undefined) {
+            if (playerMuteChecking.expire === -1) {
+                // Permanent mute
+                muteStatus.mute = true;
+                muteStatus.muteExpire = -1;
+                window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} has permanent mute. (auth:${player.auth},reason:${playerMuteChecking.reason})`);
+            } else if (playerMuteChecking.expire > joinTimeStamp) {
+                // Active mute
+                muteStatus.mute = true;
+                muteStatus.muteExpire = playerMuteChecking.expire;
+                window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} is muted until ${new Date(playerMuteChecking.expire)}. (auth:${player.auth},reason:${playerMuteChecking.reason})`);
+            } else if (playerMuteChecking.expire !== -1 && playerMuteChecking.expire <= joinTimeStamp) {
+                // Expired mute - remove it
+                window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} mute has expired and was removed. (auth:${player.auth},reason:${playerMuteChecking.reason})`);
+                await removeMuteByAuthFromDB(player.auth);
+            }
+        }
+    } catch (error) {
+        window.gameRoom.logger.w('onPlayerJoin', `Error checking mute status for ${player.name}: ${error}`);
     }
 
     // if this player use seperator (|,|) in nickname, then kick
@@ -115,8 +150,8 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
             balltouch: existPlayerData.balltouch,
             passed: existPlayerData.passed
         }, {
-            mute: existPlayerData.mute,
-            muteExpire: existPlayerData.muteExpire,
+            mute: muteStatus.mute,
+            muteExpire: muteStatus.muteExpire,
             afkmode: false,
             afkreason: '',
             afkdate: 0,
@@ -182,8 +217,8 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
             balltouch: 0,
             passed: 0
         }, {
-            mute: false,
-            muteExpire: 0,
+            mute: muteStatus.mute,
+            muteExpire: muteStatus.muteExpire,
             afkmode: false,
             afkreason: '',
             afkdate: 0,

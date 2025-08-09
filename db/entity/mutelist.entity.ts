@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
 
-@Entity("ban_list")
-export class BanList {
+@Entity("mute_list")
+export class MuteList {
     @PrimaryGeneratedColumn()
     uid!: number;
 
@@ -24,8 +24,8 @@ export class BanList {
     expire!: number; // Expiration timestamp (-1 for permanent)
 
     @Column({ nullable: true })
-    adminAuth?: string; // Auth of admin who applied the ban
+    adminAuth?: string; // Auth of admin who applied the mute
 
     @Column({ nullable: true })
-    adminName?: string; // Name of admin who applied the ban
+    adminName?: string; // Name of admin who applied the mute
 }

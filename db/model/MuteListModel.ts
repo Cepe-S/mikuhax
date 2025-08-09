@@ -1,6 +1,6 @@
-export interface BanListModel {
+export interface MuteListModel {
     auth?: string;
-    conn: string; 
+    conn: string;
     reason: string;
     register: number;
     expire: number;

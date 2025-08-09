@@ -76,9 +76,29 @@ export async function getBanlistDataFromDB(playerConn: string): Promise<BanList 
     return banplayer;
 }
 
+// get ban by auth (new system)
+export async function getBanByAuthFromDB(playerAuth: string): Promise<any> {
+    return await window._readBanByAuthDB(window.gameRoom.config._RUID, playerAuth);
+}
+
+// get mute by auth (new system)
+export async function getMuteByAuthFromDB(playerAuth: string): Promise<any> {
+    return await window._readMuteByAuthDB(window.gameRoom.config._RUID, playerAuth);
+}
+
 // remove exist ban
 export async function removeBanlistDataFromDB(playerConn: string): Promise<void> {
     await window._deleteBanlistDB(window.gameRoom.config._RUID, playerConn);
+}
+
+// remove ban by auth (new system)
+export async function removeBanByAuthFromDB(playerAuth: string): Promise<boolean> {
+    return await window._deleteBanByAuthDB(window.gameRoom.config._RUID, playerAuth);
+}
+
+// remove mute by auth (new system)
+export async function removeMuteByAuthFromDB(playerAuth: string): Promise<boolean> {
+    return await window._deleteMuteByAuthDB(window.gameRoom.config._RUID, playerAuth);
 }
 
 // Unified Top functions
