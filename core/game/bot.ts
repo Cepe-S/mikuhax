@@ -98,6 +98,8 @@ var scheduledTimer60 = setInterval(() => {
 }, 300000); // 300secs (5 minutes)
 
 var scheduledTimer5 = setInterval(() => {
+    // AFK detection and auto-kick system
+    // Superadmins are exempt from all AFK kicks to prevent accidental removal of administrators
     const nowTimeStamp: number = getUnixTimestamp(); //get timestamp
 
     let placeholderScheduler = {
@@ -119,14 +121,20 @@ var scheduledTimer5 = setInterval(() => {
 
         // when afk too long kick option is enabled, then check sleeping with afk command and kick if afk too long
         if (window.gameRoom.config.settings.afkCommandAutoKick === true && player.permissions.afkmode === true && nowTimeStamp > player.permissions.afkdate + window.gameRoom.config.settings.afkCommandAutoKickAllowMillisecs) {
-            window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkCommandTooLongKick, placeholderScheduler), false); // kick
+            // Don't kick superadmins for being AFK too long
+            if (!player.permissions.superadmin) {
+                window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkCommandTooLongKick, placeholderScheduler), false); // kick
+            }
         }
 
         // check afk
         if (window.gameRoom.isGamingNow === true && window.gameRoom.isStatRecord === true) { // if the game is in playing
             if (player.team !== TeamID.Spec && player.permissions.afkmode === false) { // if the player is not spectators and not already AFK
                 if (player.afktrace.count >= window.gameRoom.config.settings.afkCountLimit) { // if the player's count is over than limit
-                    window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false); // kick
+                    // Don't kick superadmins for being AFK during games
+                    if (!player.permissions.superadmin) {
+                        window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false); // kick
+                    }
                 } else {
                     // Comentado temporalmente hasta producción
                     // if (player.afktrace.count >= 1) { // only when the player's count is not 0(in activity)
@@ -138,7 +146,10 @@ var scheduledTimer5 = setInterval(() => {
         } else {
             if (player.admin == true && player.permissions.afkmode === false) { // if the player is admin and not already AFK
                 if (player.afktrace.count >= window.gameRoom.config.settings.afkCountLimit) { // if the player's count is over than limit
-                    window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false); // kick
+                    // Don't kick superadmins for being AFK outside games
+                    if (!player.permissions.superadmin) {
+                        window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false); // kick
+                    }
                 } else {
                     // Comentado temporalmente hasta producción
                     // if (player.afktrace.count >= 1) { // only when the player's count is not 0(in activity)
