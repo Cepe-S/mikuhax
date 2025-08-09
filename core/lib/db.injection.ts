@@ -290,90 +290,33 @@ export async function createMatchSummaryDB(ruid: string, matchSummary: MatchSumm
     }
 }
 
-// Top scorers functions
-export async function getTopScorersGlobalDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
+// Unified Top endpoint
+async function getTopGenericDB(
+    ruid: string,
+    type: 'goal' | 'assist',
+    params?: { from?: number; to?: number; limit?: number }
+): Promise<{playerAuth: string, playerName: string, count: number}[]> {
     try {
-        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-scorers/global`);
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top`, { params: { type, ...params } });
         if (result.status === 200 && result.data) {
-            winstonLogger.info(`200 Succeed on getTopScorersGlobalDB`);
+            winstonLogger.info(`200 Succeed on getTopGenericDB(${type})`);
             return result.data;
         }
         return [];
     } catch (error) {
-        winstonLogger.error(`Error caught on getTopScorersGlobalDB: ${error}`);
+        winstonLogger.error(`Error caught on getTopGenericDB(${type}): ${error}`);
         return [];
     }
 }
 
-export async function getTopScorersMonthlyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
-    try {
-        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-scorers/monthly`);
-        if (result.status === 200 && result.data) {
-            winstonLogger.info(`200 Succeed on getTopScorersMonthlyDB`);
-            return result.data;
-        }
-        return [];
-    } catch (error) {
-        winstonLogger.error(`Error caught on getTopScorersMonthlyDB: ${error}`);
-        return [];
-    }
-}
-
-export async function getTopScorersDailyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
-    try {
-        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-scorers/daily`);
-        if (result.status === 200 && result.data) {
-            winstonLogger.info(`200 Succeed on getTopScorersDailyDB`);
-            return result.data;
-        }
-        return [];
-    } catch (error) {
-        winstonLogger.error(`Error caught on getTopScorersDailyDB: ${error}`);
-        return [];
-    }
-}
-
-// Top assisters functions
-export async function getTopAssistersGlobalDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
-    try {
-        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-assisters/global`);
-        if (result.status === 200 && result.data) {
-            winstonLogger.info(`200 Succeed on getTopAssistersGlobalDB`);
-            return result.data;
-        }
-        return [];
-    } catch (error) {
-        winstonLogger.error(`Error caught on getTopAssistersGlobalDB: ${error}`);
-        return [];
-    }
-}
-
-export async function getTopAssistersMonthlyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
-    try {
-        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-assisters/monthly`);
-        if (result.status === 200 && result.data) {
-            winstonLogger.info(`200 Succeed on getTopAssistersMonthlyDB`);
-            return result.data;
-        }
-        return [];
-    } catch (error) {
-        winstonLogger.error(`Error caught on getTopAssistersMonthlyDB: ${error}`);
-        return [];
-    }
-}
-
-export async function getTopAssistersDailyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]> {
-    try {
-        const result = await axios.get(`${dbConnAddr}room/${ruid}/match_event/top-assisters/daily`);
-        if (result.status === 200 && result.data) {
-            winstonLogger.info(`200 Succeed on getTopAssistersDailyDB`);
-            return result.data;
-        }
-        return [];
-    } catch (error) {
-        winstonLogger.error(`Error caught on getTopAssistersDailyDB: ${error}`);
-        return [];
-    }
+export async function getTopByRangeDB(
+    ruid: string,
+    type: 'goal' | 'assist',
+    from?: number,
+    to?: number,
+    limit?: number
+): Promise<{playerAuth: string, playerName: string, count: number}[]> {
+    return getTopGenericDB(ruid, type, { from, to, limit });
 }
 
 // Get all players from database
@@ -446,3 +389,5 @@ export async function getConnectionAnalyticsDB(auth: string): Promise<any> {
         return null;
     }
 }
+
+// Removed legacy top-scorers/top-assisters endpoints and fallbacks

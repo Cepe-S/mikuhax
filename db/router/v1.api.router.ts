@@ -7,6 +7,8 @@ import { ruidlistRouter } from "./v1.ruidlist.router";
 import { matchEventRouter } from "./v1.match_event.router";
 import { matchSummaryRouter } from "./v1.match_summary.router";
 import { connectionsRouter } from "./v1.connections.router";
+import { MatchEventController } from "../controller/matchevent.controller";
+import { MatchEventRepository } from "../repository/match_event.repository";
 
 export const apiRouterV1 = new Router();
 
@@ -22,3 +24,9 @@ apiRouterV1
     .use('/room/:ruid/match_event', matchEventRouter.routes())
     .use('/room/:ruid/match_summary', matchSummaryRouter.routes())
     .use('/connections', connectionsRouter.routes());
+
+// Explicit route for unified Top endpoint to avoid nested param issues
+const _matchEventController = new MatchEventController(new MatchEventRepository());
+apiRouterV1.get('/room/:ruid/match_event/top', async (ctx) => {
+    await _matchEventController.getTopByRange(ctx);
+});

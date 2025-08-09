@@ -11,7 +11,7 @@ export class MatchEventController {
     }
 
     public async getAllMatchEvents(ctx: Context) {
-        const { ruid } = ctx.params;
+        const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
         return this._repository
             .findAll(ruid)
             .then(events => {
@@ -25,7 +25,8 @@ export class MatchEventController {
     }
 
     public async getMatchEvent(ctx: Context) {
-        const { ruid, matchId } = ctx.params;
+        const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
+        const { matchId } = ctx.params;
         return this._repository
             .findSingle(ruid, matchId)
             .then(event => {
@@ -39,7 +40,7 @@ export class MatchEventController {
     }
 
     public async addMatchEvent(ctx: Context) {
-        const { ruid } = ctx.params;
+        const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
         const matchEventModel: MatchEventModel = ctx.request.body;
         return this._repository
             .addSingle(ruid, matchEventModel)
@@ -52,15 +53,25 @@ export class MatchEventController {
             });
     }
 
-    public async getTopScorersGlobal(ctx: Context) {
-        const { ruid } = ctx.params;
-        if (!this._repository.getTopScorersGlobal) {
+    public async getTopByRange(ctx: Context) {
+        const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
+        const { type, from, to, limit } = ctx.query;
+        if (!this._repository.getTopByRange) {
             ctx.status = 501;
             ctx.body = { error: 'Method not implemented' };
             return;
         }
+        const eventType = (type as string) === 'assist' ? 'assist' : 'goal';
+        const fromNum = from !== undefined ? Number(from) : undefined;
+        const toNum = to !== undefined ? Number(to) : undefined;
+        const limitNum = limit !== undefined ? Number(limit) : undefined;
+        if ((from !== undefined && !Number.isFinite(fromNum!)) || (to !== undefined && !Number.isFinite(toNum!)) || (limit !== undefined && !Number.isFinite(limitNum!))) {
+            ctx.status = 400;
+            ctx.body = { error: 'Invalid query parameters' };
+            return;
+        }
         return this._repository
-            .getTopScorersGlobal(ruid)
+            .getTopByRange(ruid, eventType, fromNum, toNum, limitNum)
             .then(result => {
                 ctx.status = 200;
                 ctx.body = result;
@@ -71,98 +82,8 @@ export class MatchEventController {
             });
     }
 
-    public async getTopScorersMonthly(ctx: Context) {
-        const { ruid } = ctx.params;
-        if (!this._repository.getTopScorersMonthly) {
-            ctx.status = 501;
-            ctx.body = { error: 'Method not implemented' };
-            return;
-        }
-        return this._repository
-            .getTopScorersMonthly(ruid)
-            .then(result => {
-                ctx.status = 200;
-                ctx.body = result;
-            })
-            .catch(error => {
-                ctx.status = 404;
-                ctx.body = { error: error.message };
-            });
-    }
 
-    public async getTopScorersDaily(ctx: Context) {
-        const { ruid } = ctx.params;
-        if (!this._repository.getTopScorersDaily) {
-            ctx.status = 501;
-            ctx.body = { error: 'Method not implemented' };
-            return;
-        }
-        return this._repository
-            .getTopScorersDaily(ruid)
-            .then(result => {
-                ctx.status = 200;
-                ctx.body = result;
-            })
-            .catch(error => {
-                ctx.status = 404;
-                ctx.body = { error: error.message };
-            });
-    }
+    // Legacy compatibility handlers can be removed after clients migrate
 
-    public async getTopAssistersGlobal(ctx: Context) {
-        const { ruid } = ctx.params;
-        if (!this._repository.getTopAssistersGlobal) {
-            ctx.status = 501;
-            ctx.body = { error: 'Method not implemented' };
-            return;
-        }
-        return this._repository
-            .getTopAssistersGlobal(ruid)
-            .then(result => {
-                ctx.status = 200;
-                ctx.body = result;
-            })
-            .catch(error => {
-                ctx.status = 404;
-                ctx.body = { error: error.message };
-            });
-    }
-
-    public async getTopAssistersMonthly(ctx: Context) {
-        const { ruid } = ctx.params;
-        if (!this._repository.getTopAssistersMonthly) {
-            ctx.status = 501;
-            ctx.body = { error: 'Method not implemented' };
-            return;
-        }
-        return this._repository
-            .getTopAssistersMonthly(ruid)
-            .then(result => {
-                ctx.status = 200;
-                ctx.body = result;
-            })
-            .catch(error => {
-                ctx.status = 404;
-                ctx.body = { error: error.message };
-            });
-    }
-
-    public async getTopAssistersDaily(ctx: Context) {
-        const { ruid } = ctx.params;
-        if (!this._repository.getTopAssistersDaily) {
-            ctx.status = 501;
-            ctx.body = { error: 'Method not implemented' };
-            return;
-        }
-        return this._repository
-            .getTopAssistersDaily(ruid)
-            .then(result => {
-                ctx.status = 200;
-                ctx.body = result;
-            })
-            .catch(error => {
-                ctx.status = 404;
-                ctx.body = { error: error.message };
-            });
-    }
+    // Removed legacy getTopScorersByRange/getTopAssistersByRange
 }

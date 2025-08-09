@@ -12,7 +12,7 @@ import * as Tst from "../game/controller/Translator";
 import * as LangRes from "../game/resource/strings";
 
 
-function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
+function typedArrayToBuffer(array: Uint8Array): ArrayBufferLike {
     return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
 }
 
@@ -219,13 +219,8 @@ export class HeadlessBrowser {
         await page.exposeFunction('_createMatchEventDB', dbUtilityInject.createMatchEventDB);
         await page.exposeFunction('_createMatchSummaryDB', dbUtilityInject.createMatchSummaryDB);
         
-        // Top scorers functions
-        await page.exposeFunction('_getTopScorersGlobalDB', dbUtilityInject.getTopScorersGlobalDB);
-        await page.exposeFunction('_getTopScorersMonthlyDB', dbUtilityInject.getTopScorersMonthlyDB);
-        await page.exposeFunction('_getTopScorersDailyDB', dbUtilityInject.getTopScorersDailyDB);
-        await page.exposeFunction('_getTopAssistersGlobalDB', dbUtilityInject.getTopAssistersGlobalDB);
-        await page.exposeFunction('_getTopAssistersMonthlyDB', dbUtilityInject.getTopAssistersMonthlyDB);
-        await page.exposeFunction('_getTopAssistersDailyDB', dbUtilityInject.getTopAssistersDailyDB);
+    // Unified Top endpoint
+    await page.exposeFunction('_getTopByRangeDB', dbUtilityInject.getTopByRangeDB);
         await page.exposeFunction('_getAllPlayersFromDB', dbUtilityInject.getAllPlayersFromDB);
         
         // Connection tracking functions
@@ -1013,15 +1008,38 @@ export class HeadlessBrowser {
             }
             
             const roomInfo = await this.getRoomInfo(ruid);
-            
-            // Get daily stats from database
-            const topScorers: {playerAuth: string, playerName: string, count: number}[] = await this._PageContainer.get(ruid)!.evaluate(async () => {
-                return await window._getTopScorersDailyDB(window.gameRoom.config._RUID);
-            });
-            
-            const topAssisters: {playerAuth: string, playerName: string, count: number}[] = await this._PageContainer.get(ruid)!.evaluate(async () => {
-                return await window._getTopAssistersDailyDB(window.gameRoom.config._RUID);
-            });
+            // Determine cutoff window based on Argentina timezone and configured dailyStatsTime
+            const webhookConfig = await this.getDiscordWebhookConfig(ruid);
+            const scheduleTime = webhookConfig.dailyStatsTime || '20:00';
+            const [hours, minutes] = scheduleTime.split(':').map(Number);
+
+            const now = new Date();
+            const argentinaNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+
+            // Current cutoff in Argentina tz
+            const currentCutoff = new Date(argentinaNow);
+            currentCutoff.setHours(hours, minutes, 0, 0);
+            if (argentinaNow < currentCutoff) {
+                // If we haven't reached today's cutoff yet, use yesterday's as the current window end
+                currentCutoff.setDate(currentCutoff.getDate());
+            }
+
+            // Calculate previous cutoff (24h earlier at same local time)
+            const previousCutoff = new Date(currentCutoff);
+            previousCutoff.setDate(previousCutoff.getDate() - 1);
+
+            // Convert both to UTC epoch ms to query DB stored timestamps
+            const toTs = currentCutoff.getTime();
+            const fromTs = previousCutoff.getTime();
+
+            // Fetch range-based stats from database (unified endpoint)
+            const topScorers: {playerAuth: string, playerName: string, count: number}[] = await this._PageContainer.get(ruid)!.evaluate(async (fromTsArg: number, toTsArg: number) => {
+                return await window._getTopByRangeDB(window.gameRoom.config._RUID, 'goal', fromTsArg, toTsArg, 5);
+            }, fromTs, toTs);
+
+            const topAssisters: {playerAuth: string, playerName: string, count: number}[] = await this._PageContainer.get(ruid)!.evaluate(async (fromTsArg: number, toTsArg: number) => {
+                return await window._getTopByRangeDB(window.gameRoom.config._RUID, 'assist', fromTsArg, toTsArg, 5);
+            }, fromTs, toTs);
             
             // Ensure we have at least empty arrays
             const scorersData = topScorers.slice(0, 5);

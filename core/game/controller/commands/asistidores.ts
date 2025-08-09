@@ -1,26 +1,35 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { getTopAssistersGlobalFromDB, getTopAssistersMonthlyFromDB, getTopAssistersDailyFromDB } from "../Storage";
+import { getTopByRangeFromDB } from "../Storage";
 import { registerCommand } from "../CommandRegistry";
 
 export async function cmdAsistidores(byPlayer: PlayerObject, message?: string): Promise<void> {
     let period: 'day' | 'month' | 'global' = 'global';
-    
-    if (message) {
-        const arg = message.toLowerCase().trim();
-        if (arg === 'dia' || arg === 'day') period = 'day';
-        else if (arg === 'mes' || arg === 'month') period = 'month';
-    }
+
+    // Parser passes the full chat message (e.g., '!asistidores dia').
+    // Extract the first argument after the command name robustly.
+    const tokens = (message || '').trim().split(/\s+/);
+    const rawArg = tokens.length >= 2
+        ? tokens[1]
+        : (tokens[0] && !tokens[0].startsWith('!') ? tokens[0] : '');
+    const arg = (rawArg || '').toLowerCase();
+    if (arg === 'dia' || arg === 'día' || arg === 'day') period = 'day';
+    else if (arg === 'mes' || arg === 'month') period = 'month';
 
     try {
-        let topAssisters: {playerAuth: string, playerName: string, count: number}[] = [];
-        
+        let from: number | undefined;
+        let to: number | undefined;
         if (period === 'day') {
-            topAssisters = await getTopAssistersDailyFromDB();
+            const now = new Date();
+            const arNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+            const start = new Date(arNow); start.setHours(0,0,0,0);
+            from = start.getTime();
         } else if (period === 'month') {
-            topAssisters = await getTopAssistersMonthlyFromDB();
-        } else {
-            topAssisters = await getTopAssistersGlobalFromDB();
+            const now = new Date();
+            const arNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+            const start = new Date(arNow); start.setDate(1); start.setHours(0,0,0,0);
+            from = start.getTime();
         }
+        const topAssisters = await getTopByRangeFromDB('assist', from, to, 5);
 
         let periodText = '';
         if (period === 'day') periodText = ' del día';

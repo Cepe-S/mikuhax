@@ -81,30 +81,9 @@ export async function removeBanlistDataFromDB(playerConn: string): Promise<void>
     await window._deleteBanlistDB(window.gameRoom.config._RUID, playerConn);
 }
 
-// Top scorers functions
-export async function getTopScorersGlobalFromDB(): Promise<{playerAuth: string, playerName: string, count: number}[]> {
-    return await window._getTopScorersGlobalDB(window.gameRoom.config._RUID);
-}
-
-export async function getTopScorersMonthlyFromDB(): Promise<{playerAuth: string, playerName: string, count: number}[]> {
-    return await window._getTopScorersMonthlyDB(window.gameRoom.config._RUID);
-}
-
-export async function getTopScorersDailyFromDB(): Promise<{playerAuth: string, playerName: string, count: number}[]> {
-    return await window._getTopScorersDailyDB(window.gameRoom.config._RUID);
-}
-
-// Top assisters functions
-export async function getTopAssistersGlobalFromDB(): Promise<{playerAuth: string, playerName: string, count: number}[]> {
-    return await window._getTopAssistersGlobalDB(window.gameRoom.config._RUID);
-}
-
-export async function getTopAssistersMonthlyFromDB(): Promise<{playerAuth: string, playerName: string, count: number}[]> {
-    return await window._getTopAssistersMonthlyDB(window.gameRoom.config._RUID);
-}
-
-export async function getTopAssistersDailyFromDB(): Promise<{playerAuth: string, playerName: string, count: number}[]> {
-    return await window._getTopAssistersDailyDB(window.gameRoom.config._RUID);
+// Unified Top functions
+export async function getTopByRangeFromDB(type: 'goal' | 'assist', from?: number, to?: number, limit?: number): Promise<{playerAuth: string, playerName: string, count: number}[]> {
+    return await window._getTopByRangeDB(window.gameRoom.config._RUID, type, from, to, limit);
 }
 
 // Get all players from database

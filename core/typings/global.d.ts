@@ -105,14 +105,8 @@ declare global {
         // Match Event/Match Summary DB
         _createMatchEventDB(ruid: string, matchEvent: MatchEvent): Promise<void>;
         _createMatchSummaryDB(ruid: string, matchSummary: MatchSummary): Promise<void>;
-        // Top Scorers DB
-        _getTopScorersGlobalDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
-        _getTopScorersMonthlyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
-        _getTopScorersDailyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
-        // Top Assisters DB
-        _getTopAssistersGlobalDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
-        _getTopAssistersMonthlyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
-        _getTopAssistersDailyDB(ruid: string): Promise<{playerAuth: string, playerName: string, count: number}[]>;
+    // Unified Top DB
+    _getTopByRangeDB(ruid: string, type: 'goal' | 'assist', from?: number, to?: number, limit?: number): Promise<{playerAuth: string, playerName: string, count: number}[]>;
         // Get all players from DB
         _getAllPlayersFromDB(ruid: string): Promise<PlayerStorage[]>;
         // Connection tracking DB
