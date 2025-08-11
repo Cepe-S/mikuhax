@@ -12,6 +12,7 @@ jobs:
         with:
           host: 34.39.128.106
           username: github-actions
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           key: ${{ secrets.SSH_KEY }}
           script: |
             echo "¡Conexión SSH exitosa!"
