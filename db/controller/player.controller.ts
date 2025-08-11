@@ -13,30 +13,57 @@ export class PlayerController {
 
     public async getAllPlayers(ctx: Context) {
         const { ruid } = ctx.params;
-        const { start, count } = ctx.request.query;
+        const { start, count, orderBy, order } = ctx.request.query;
 
+        const options: any = {};
+        
         if (start && count) {
-            return this._repository
-                .findAll(ruid, { start: parseInt(<string>start), count: parseInt(<string>count) })
-                .then((players) => {
-                    ctx.status = 200;
-                    ctx.body = players;
-                })
-                .catch((error) => {
-                    ctx.status = 404;
-                    ctx.body = { error: error.message };
-                });
-        } else {
-            return this._repository
-                .findAll(ruid)
-                .then((players) => {
-                    ctx.status = 200;
-                    ctx.body = players;
-                })
-                .catch((error) => {
-                    ctx.status = 404;
-                    ctx.body = { error: error.message };
-                });
+            options.start = parseInt(<string>start);
+            options.count = parseInt(<string>count);
+        }
+        
+        if (orderBy) {
+            options.orderBy = <string>orderBy;
+            options.order = order || 'DESC';
+        }
+
+        return this._repository
+            .findAll(ruid, options)
+            .then((players) => {
+                ctx.status = 200;
+                ctx.body = players;
+            })
+            .catch((error) => {
+                ctx.status = 404;
+                ctx.body = { error: error.message };
+            });
+    }
+
+    public async getTop20Players(ctx: Context) {
+        const { ruid } = ctx.params;
+
+        try {
+            // Get all players first, then sort and limit to top 20
+            const allPlayers = await this._repository.findAll(ruid);
+            
+            // Sort by rating descending and take top 20
+            const sortedPlayers = allPlayers
+                .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                .slice(0, 20);
+            
+            // Transform to TOP 20 format
+            const top20 = sortedPlayers.map((player: any, index: number) => ({
+                playerAuth: player.auth,
+                playerName: player.name,
+                rating: player.rating || 0,
+                rank: index + 1
+            }));
+            
+            ctx.status = 200;
+            ctx.body = top20;
+        } catch (error) {
+            ctx.status = 404;
+            ctx.body = { error: error.message };
         }
     }
 

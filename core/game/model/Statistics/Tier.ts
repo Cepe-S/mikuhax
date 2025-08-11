@@ -1,3 +1,5 @@
+import { PlayerStorage } from "../GameObject/PlayerObject";
+
 // TOP 20 Cache System
 interface Top20Player {
     playerAuth: string; // Use auth instead of playerId (more reliable)
@@ -12,45 +14,68 @@ let cacheLastUpdated: number = 0;
 // Update TOP 20 cache (call this at the end of each match)
 export function updateTop20Cache(): void {
     try {
-        // Get all eligible players from database via API
-        fetch('/api/v1/ranking/top20')
-            .then(response => response.json())
-            .then(data => {
-                if (data && Array.isArray(data)) {
-                    top20Cache = data.slice(0, 20).map((player: any, index: number) => ({
-                        playerAuth: player.auth || player.id?.toString() || '', // Use auth, fallback to id as string
+        window.gameRoom.logger.i('updateTop20Cache', 'Attempting to update TOP 20 cache from database using injected function...');
+        
+        // Get the room ID (ruid) from configuration
+        const ruid = window.gameRoom.config._RUID || window.gameRoom.config.rules.ruleName || 'default';
+        
+        window.gameRoom.logger.i('updateTop20Cache', `Config _RUID: ${window.gameRoom.config._RUID}`);
+        window.gameRoom.logger.i('updateTop20Cache', `Config ruleName: ${window.gameRoom.config.rules.ruleName}`);
+        window.gameRoom.logger.i('updateTop20Cache', `Using ruid: ${ruid}`);
+
+        // Use the injected function to avoid CORS issues (like Storage.ts does)
+        window._getAllPlayersFromDB(ruid)
+            .then((allPlayers: PlayerStorage[]) => {
+                window.gameRoom.logger.i('updateTop20Cache', `Retrieved ${allPlayers.length} players from database`);
+                
+                if (allPlayers && allPlayers.length > 0) {
+                    // Sort by rating (descending) and take top 20
+                    const sortedPlayers = allPlayers
+                        .filter(player => player && typeof player.rating === 'number')
+                        .sort((a, b) => b.rating - a.rating)
+                        .slice(0, 20);
+                    
+                    top20Cache = sortedPlayers.map((player, index) => ({
+                        playerAuth: player.auth,
                         playerName: player.name,
-                        rating: player.elo, // Use real ELO from database
+                        rating: player.rating,
                         rank: index + 1
                     }));
+                    
                     cacheLastUpdated = Date.now();
+                    window.gameRoom.logger.i('updateTop20Cache', `TOP 20 cache updated successfully with ${top20Cache.length} players`);
+                    
+                    // Log first few players for debugging
+                    top20Cache.slice(0, 3).forEach(player => {
+                        window.gameRoom.logger.i('updateTop20Cache', `  Rank ${player.rank}: ${player.playerName} (${player.playerAuth}) - ${player.rating} ELO`);
+                    });
+                    
+                } else {
+                    window.gameRoom.logger.w('updateTop20Cache', 'No players found in database');
+                    // Don't clear cache if we receive no data - keep old cache
                 }
             })
             .catch(error => {
                 window.gameRoom.logger.e('updateTop20Cache', `Failed to update TOP 20 cache: ${error}`);
-                // Fallback to session data if API fails
-                updateTop20CacheFromSession();
+                // Don't clear cache on error - keep existing cache
             });
+        
     } catch (error) {
         window.gameRoom.logger.e('updateTop20Cache', `Error updating TOP 20 cache: ${error}`);
-        updateTop20CacheFromSession();
     }
 }
 
-// Fallback: Update cache from session data
+// Fallback: Update cache from session data (ONLY for players already known to be TOP 20)
 function updateTop20CacheFromSession(): void {
     try {
-        const allPlayers = Array.from(window.gameRoom.playerList.values())
-            .filter(p => p.stats.totals >= window.gameRoom.config.HElo.factor.placement_match_chances)
-            .sort((a, b) => b.stats.rating - a.stats.rating)
-            .slice(0, 20);
+        window.gameRoom.logger.w('updateTop20CacheFromSession', 'Using session fallback for TOP 20 cache - this should not determine actual TOP 20 rankings');
         
-        top20Cache = allPlayers.map((player, index) => ({
-            playerAuth: player.auth, // Use auth instead of playerId
-            playerName: player.name,
-            rating: player.stats.rating, // Use real ELO from session
-            rank: index + 1
-        }));
+        // Don't create fake TOP 20 from current session players
+        // Only use existing cache or clear it if we can't get real data
+        if (top20Cache.length === 0) {
+            window.gameRoom.logger.w('updateTop20CacheFromSession', 'No cached TOP 20 data available and API failed - clearing cache');
+            top20Cache = []; // Keep empty until we get real data
+        }
         
         cacheLastUpdated = Date.now();
     } catch (error) {
@@ -60,25 +85,32 @@ function updateTop20CacheFromSession(): void {
 
 // Check if a player is in TOP 20 using cache
 export function isPlayerInTop20(playerId: number): { isTop20: boolean; rank: number; realElo: number } {
-    // Auto-update cache if too old (older than 5 minutes) or empty
-    if (Date.now() - cacheLastUpdated > 300000 || top20Cache.length === 0) {
-        updateTop20CacheFromSession(); // Use session data for immediate update
-    }
-    
-    // Get player auth from current session
+    // Get player from current session
     const currentPlayer = window.gameRoom.playerList.get(playerId);
     if (!currentPlayer) {
+        window.gameRoom.logger.w('isPlayerInTop20', `Player ${playerId} not found in current session`);
         return { isTop20: false, rank: 999, realElo: 0 };
     }
     
     const playerAuth = currentPlayer.auth;
+    const playerRating = currentPlayer.stats.rating;
     
-    const topPlayer = top20Cache.find(player => player.playerAuth === playerAuth);
-    if (topPlayer) {
-        return { isTop20: true, rank: topPlayer.rank, realElo: topPlayer.rating };
+    window.gameRoom.logger.i('isPlayerInTop20', `Checking player ${playerId} (${currentPlayer.name}) with auth: ${playerAuth}, rating: ${playerRating}, cache size: ${top20Cache.length}`);
+    
+    // Only use cache-based TOP 20 determination
+    if (top20Cache.length > 0) {
+        const topPlayer = top20Cache.find(player => player.playerAuth === playerAuth);
+        if (topPlayer) {
+            window.gameRoom.logger.i('isPlayerInTop20', `Found player in TOP 20 cache: rank ${topPlayer.rank}, name: ${topPlayer.playerName}, ELO: ${topPlayer.rating}`);
+            return { isTop20: true, rank: topPlayer.rank, realElo: topPlayer.rating };
+        }
+        
+        window.gameRoom.logger.i('isPlayerInTop20', `Player ${currentPlayer.name} not found in TOP 20 cache`);
+    } else {
+        window.gameRoom.logger.w('isPlayerInTop20', 'TOP 20 cache is empty - no TOP 20 data available');
     }
     
-    return { isTop20: false, rank: 999, realElo: 0 };
+    return { isTop20: false, rank: 999, realElo: playerRating };
 }
 
 // Get TOP 20 cache for external use
@@ -100,8 +132,22 @@ export function debugTop20Cache(): string {
         players: top20Cache.map(p => `${p.rank}. ${p.playerName} (Auth:${p.playerAuth}, ELO:${p.rating})`)
     };
     
-    window.gameRoom.logger.i('debugTop20Cache', JSON.stringify(cacheInfo, null, 2));
-    return JSON.stringify(cacheInfo, null, 2);
+    const debugMessage = `TOP 20 Cache Debug:
+Size: ${cacheInfo.cacheSize}
+Last Updated: ${cacheInfo.lastUpdated}
+Cache Age: ${Math.round(cacheInfo.cacheAge / 1000)}s
+Players: ${cacheInfo.players.length > 0 ? '\n' + cacheInfo.players.join('\n') : 'None'}`;
+    
+    window.gameRoom.logger.i('debugTop20Cache', debugMessage);
+    return debugMessage;
+}
+
+// Admin command to manually clear and refresh TOP 20 cache
+export function clearTop20Cache(): void {
+    top20Cache = [];
+    cacheLastUpdated = 0;
+    window.gameRoom.logger.i('clearTop20Cache', 'TOP 20 cache cleared, will refresh on next check');
+    updateTop20Cache(); // Try to get fresh data immediately
 }
 
 export function decideTier(rating: number, playerId?: number): Tier {
@@ -114,7 +160,16 @@ export function decideTier(rating: number, playerId?: number): Tier {
     if (playerId) {
         const top20Check = isPlayerInTop20(playerId);
         if (top20Check.isTop20) {
-            return (Tier.Tier8 + (top20Check.rank - 1)) as Tier; // Top 1-20
+            window.gameRoom.logger.i('decideTier', `Player ${playerId} is in TOP 20 - Rank: ${top20Check.rank}, Real ELO: ${top20Check.realElo}`);
+            
+            // Validate rank is within expected range
+            if (top20Check.rank >= 1 && top20Check.rank <= 20) {
+                const tierValue = (Tier.Tier8 + (top20Check.rank - 1)) as Tier;
+                window.gameRoom.logger.i('decideTier', `Assigning tier ${tierValue} for TOP ${top20Check.rank} player`);
+                return tierValue;
+            } else {
+                window.gameRoom.logger.w('decideTier', `Invalid TOP 20 rank ${top20Check.rank} for player ${playerId}, falling back to rating-based tier`);
+            }
         }
     }
 

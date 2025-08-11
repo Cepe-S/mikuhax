@@ -1,5 +1,5 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { debugTop20Cache, forceUpdateTop20Cache, isPlayerInTop20 } from "../../model/Statistics/Tier";
+import { debugTop20Cache, clearTop20Cache, isPlayerInTop20 } from "../../model/Statistics/Tier";
 import { registerCommand } from "../CommandRegistry";
 
 export async function cmdDebugTop20(byPlayer: PlayerObject): Promise<void> {
@@ -30,8 +30,8 @@ export async function cmdDebugTop20(byPlayer: PlayerObject): Promise<void> {
         window.gameRoom._room.sendAnnouncement(debugMsg, byPlayer.id, 0x00FFFF, "normal", 1);
         
         // Force cache update for testing
-        window.gameRoom._room.sendAnnouncement("🔄 Forzando actualización del caché...", byPlayer.id, 0xFFFF00, "normal", 1);
-        forceUpdateTop20Cache();
+        window.gameRoom._room.sendAnnouncement("🔄 Limpiando y actualizando caché...", byPlayer.id, 0xFFFF00, "normal", 1);
+        clearTop20Cache();
         
         // Check again after update
         setTimeout(() => {

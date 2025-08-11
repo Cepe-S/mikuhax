@@ -15,6 +15,12 @@ playerRouter.get('/', async (ctx: Context) => {
     await controller.getAllPlayers(ctx);
 });
 
+// /v1/player/top20 GET
+// get top 20 players by rating
+playerRouter.get('/top20', async (ctx: Context) => {
+    await controller.getTop20Players(ctx);
+});
+
 // /v1/player POST
 // register new player
 playerRouter.post('/', async (ctx: Context) => {
