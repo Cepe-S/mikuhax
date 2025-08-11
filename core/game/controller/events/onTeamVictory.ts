@@ -293,6 +293,5 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
     // Update TOP 20 cache after match completion
     setTimeout(() => {
         updateTop20Cache();
-        window.gameRoom.logger.i('onTeamVictory', 'TOP 20 cache update initiated after match completion');
     }, 3000); // Wait a bit longer to ensure all ELO changes are processed
 }

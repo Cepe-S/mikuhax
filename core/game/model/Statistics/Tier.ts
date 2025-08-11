@@ -12,8 +12,6 @@ let cacheLastUpdated: number = 0;
 // Update TOP 20 cache (call this at the end of each match)
 export function updateTop20Cache(): void {
     try {
-        window.gameRoom.logger.i('updateTop20Cache', 'Updating TOP 20 cache...');
-        
         // Get all eligible players from database via API
         fetch('/api/v1/ranking/top20')
             .then(response => response.json())
@@ -26,7 +24,6 @@ export function updateTop20Cache(): void {
                         rank: index + 1
                     }));
                     cacheLastUpdated = Date.now();
-                    window.gameRoom.logger.i('updateTop20Cache', `TOP 20 cache updated with ${top20Cache.length} players`);
                 }
             })
             .catch(error => {
@@ -56,7 +53,6 @@ function updateTop20CacheFromSession(): void {
         }));
         
         cacheLastUpdated = Date.now();
-        window.gameRoom.logger.i('updateTop20CacheFromSession', `TOP 20 cache updated from session with ${top20Cache.length} players`);
     } catch (error) {
         window.gameRoom.logger.e('updateTop20CacheFromSession', `Error updating cache from session: ${error}`);
     }
@@ -66,30 +62,21 @@ function updateTop20CacheFromSession(): void {
 export function isPlayerInTop20(playerId: number): { isTop20: boolean; rank: number; realElo: number } {
     // Auto-update cache if too old (older than 5 minutes) or empty
     if (Date.now() - cacheLastUpdated > 300000 || top20Cache.length === 0) {
-        window.gameRoom.logger.i('isPlayerInTop20', `Cache is old or empty. Updating from session data...`);
         updateTop20CacheFromSession(); // Use session data for immediate update
     }
     
     // Get player auth from current session
     const currentPlayer = window.gameRoom.playerList.get(playerId);
     if (!currentPlayer) {
-        window.gameRoom.logger.w('isPlayerInTop20', `Player ${playerId} not found in session`);
         return { isTop20: false, rank: 999, realElo: 0 };
     }
     
     const playerAuth = currentPlayer.auth;
     
-    // Debug: Log current player lookup
-    window.gameRoom.logger.i('isPlayerInTop20', `Looking for playerAuth ${playerAuth} (ID:${playerId}) in cache of ${top20Cache.length} players`);
-    
     const topPlayer = top20Cache.find(player => player.playerAuth === playerAuth);
     if (topPlayer) {
-        window.gameRoom.logger.i('isPlayerInTop20', `Found player ${playerAuth} at rank ${topPlayer.rank} with ${topPlayer.rating} ELO`);
         return { isTop20: true, rank: topPlayer.rank, realElo: topPlayer.rating };
     }
-    
-    // Debug: Log cache contents for troubleshooting
-    window.gameRoom.logger.i('isPlayerInTop20', `Player ${playerAuth} not found. Cache contains: ${top20Cache.map(p => `${p.playerAuth}:${p.playerName}`).join(', ')}`);
     
     return { isTop20: false, rank: 999, realElo: 0 };
 }
@@ -101,7 +88,6 @@ export function getTop20Cache(): Top20Player[] {
 
 // Force immediate cache update from session data (for debugging)
 export function forceUpdateTop20Cache(): void {
-    window.gameRoom.logger.i('forceUpdateTop20Cache', 'Forcing immediate cache update from session data...');
     updateTop20CacheFromSession();
 }
 

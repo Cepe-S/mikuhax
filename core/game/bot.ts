@@ -202,7 +202,6 @@ function makeRoom(): void {
     // Initialize TOP 20 cache at startup
     setTimeout(() => {
         updateTop20Cache();
-        window.gameRoom.logger.i('initialisation', 'TOP 20 cache initialized at startup');
     }, 5000); // Wait 5 seconds after room creation to ensure everything is ready
     // =========================
 }
