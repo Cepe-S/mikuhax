@@ -293,16 +293,16 @@ export const welcomeSystem = {
 ░░░░╚══════╝╚══════╝╚═╝░░╚═╝░░╚═══╝░░╚══════╝╚═╝░░╚═╝░░░░`
     ],
     motivationalMessages: {
-        tierNew: '🌟 Estás forjando tu destino. Te faltan {remainingMatches} partidas para revelar tu verdadero poder. Como Spider-Man aprendió, cada decisión cuenta.',
-        tier1: '🥊 En el bronce se forjan los campeones. Como Rocky nos enseñó, no importa cuántas veces caigas, sino cuántas te levantas. Tu ascenso ha comenzado.',
+        tierNew: '🌟 Estás forjando tu destino. Te faltan {remainingMatches} partidas para revelar tu verdadero poder.',
+        tier1: '🥊 En el bronce se forjan los campeones. No importa cuántas veces caigas, sino cuántas te levantas. Tu ascenso ha comenzado.',
         tier2: '⚡ La plata brilla con promesa. Estás demostrando que el fracaso es solo un paso hacia el éxito. Mantén esa determinación inquebrantable.',
         tier3: '🏆 El oro reconoce tu talento. Has descubierto que tus límites van al infinito y más allá. La gloria te espera.',
         tier4: '💎 El platino es para los que entienden la cancha. Tu nivel de juego se ha vuelto una fuerza de la naturaleza, eres inevitable en el campo.',
-        tier5: '🌟 La esmeralda simboliza maestría. Has desarrollado una conexión especial con el juego, como un Jedi con la Fuerza. Pocos alcanzan este nivel.',
+        tier5: '🌟 La esmeralda simboliza maestría. Has desarrollado una conexión especial con el juego. Pocos alcanzan este nivel.',
         tier6: '💠 El diamante es eterno, como tu leyenda. Eres el héroe que otros admiran y rivales respetan. Tu presencia cambia el juego.',
-        tier7: '👑 Maestro del juego, arquitecto de victorias. Como Tony Stark, has combinado talento y dedicación para crear algo extraordinario. Eres el futuro.',
-        challenger: '🚀 Challenger: has conquistado lo imposible. Como los astronautas del Apollo, has llegado donde pocos se atreven a soñar. Eres pura excelencia.',
-        topRanked: '🌸 TOP {rank} MUNDIAL: Eres parte de la élite absoluta. Como los Avengers, representas lo mejor de lo mejor. Tu nombre es leyenda.',
+        tier7: '👑 Maestro del juego, arquitecto de victorias. Has combinado talento y dedicación para crear algo extraordinario. Eres el futuro.',
+        challenger: '🚀 Challenger: has conquistado lo imposible. Has llegado donde pocos se atreven a soñar. Eres pura excelencia.',
+        topRanked: '🌸 TOP {rank} MUNDIAL: Eres parte de la élite absoluta. Representas lo mejor de lo mejor. Tu nombre es leyenda.',
         default: '🎮 Que la fuerza te acompañe en esta aventura. Cada gran historia comienza con un primer paso. Tu destino te espera.'
     }
 }
