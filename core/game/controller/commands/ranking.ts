@@ -1,12 +1,80 @@
 import * as LangRes from "../../resource/strings";
 import * as Tst from "../Translator";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { decideTier, getTierName, getTierColor, Tier, getDisplayElo } from "../../model/Statistics/Tier";
+import { decideTier, getTierName, getTierColor, Tier, getDisplayElo, getTop20Cache } from "../../model/Statistics/Tier";
 import { getAllPlayersFromDB } from "../Storage";
 import { registerCommand } from "../CommandRegistry";
 
 export async function cmdRanking(byPlayer: PlayerObject): Promise<void> {
     try {
+        // First try to use the cached TOP 20 data
+        const cachedTop20 = getTop20Cache();
+        
+        if (cachedTop20.length > 0) {
+            // Use cached data - much faster!
+            window.gameRoom.logger.i('cmdRanking', `Using cached TOP 20 data (${cachedTop20.length} players)`);
+            
+            let rankingMessage = "🏆 TOP 20 RANKING 🏆\n";
+            rankingMessage += `👥 Datos del caché TOP 20 actualizado\n`;
+            rankingMessage += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+            
+            // Show cached top 20 players
+            for (let i = 0; i < 20; i++) {
+                const rank = i + 1;
+                
+                if (i < cachedTop20.length) {
+                    const player = cachedTop20[i];
+                    
+                    // Use special formatting for top 3
+                    let prefix = "";
+                    if (rank === 1) prefix = "🥇 ";
+                    else if (rank === 2) prefix = "🥈 ";
+                    else if (rank === 3) prefix = "🥉 ";
+                    
+                    // Show real ELO from cache
+                    rankingMessage += `${prefix}#${rank} 🏆${rank}°🏆 ${Math.round(player.rating)} ELO ➤ ${player.playerName}\n`;
+                } else {
+                    // Fill remaining slots with placeholders
+                    rankingMessage += `#${rank} 🏆${rank}°🏆 [Posición Vacante]\n`;
+                }
+            }
+            
+            // Check current player's position in cached data
+            const currentPlayerData = window.gameRoom.playerList.get(byPlayer.id);
+            if (currentPlayerData) {
+                const currentPlayerInTop20 = cachedTop20.find(p => p.playerAuth === currentPlayerData.auth);
+                
+                if (currentPlayerInTop20) {
+                    rankingMessage += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+                    rankingMessage += `🎉 ¡Estás en el TOP 20! Posición #${currentPlayerInTop20.rank}`;
+                } else {
+                    // Player not in TOP 20, try to get their position from full database (fallback)
+                    rankingMessage += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+                    const placementRemaining = window.gameRoom.config.HElo.factor.placement_match_chances - (currentPlayerData.stats.totals || 0);
+                    if (placementRemaining > 0) {
+                        rankingMessage += `⌈⚪⌋ Aún estás en partidas de colocación (${placementRemaining} restantes)`;
+                    } else {
+                        // Calculate how many ELO points needed to reach TOP 20
+                        const currentPlayerElo = Math.round(currentPlayerData.stats.rating);
+                        const top20MinElo = cachedTop20.length >= 20 ? Math.round(cachedTop20[19].rating) : 0;
+                        
+                        if (top20MinElo > 0 && currentPlayerElo < top20MinElo) {
+                            const eloNeeded = top20MinElo - currentPlayerElo + 1; // +1 to surpass the #20
+                            rankingMessage += `📍 Estas fuera del TOP 20 - ${currentPlayerElo} ELO (Te faltan ${eloNeeded} puntos para TOP 20)`;
+                        } else {
+                            rankingMessage += `📍 Estas fuera del TOP 20 - ${currentPlayerElo} ELO`;
+                        }
+                    }
+                }
+            }
+            
+            window.gameRoom._room.sendAnnouncement(rankingMessage, byPlayer.id, 0xFFD700, "normal", 1);
+            return;
+        }
+        
+        // Fallback: If cache is empty, query database directly (legacy behavior)
+        window.gameRoom.logger.w('cmdRanking', 'TOP 20 cache is empty, falling back to direct database query');
+        
         // Get all players from database who have completed placement matches
         const allPlayersFromDB = await getAllPlayersFromDB();
         const allPlayers = allPlayersFromDB
