@@ -15,7 +15,8 @@ import { TeamID } from "./model/GameObject/TeamID";
 import { EmergencyTools } from "./model/ExposeLibs/EmergencyTools";
 import { refreshBanVoteCache } from "./model/OperateHelper/Vote";
 import { GameRoomConfig } from "./model/Configuration/GameRoomConfig";
-import { setDefaultStadiums } from "./controller/RoomTools";
+import { setDefaultStadiums } from './controller/RoomTools';
+import { updateTop20Cache } from './model/Statistics/Tier';
 // ====================================================================================================
 // load initial configurations
 const loadedConfig: GameRoomConfig = JSON.parse(localStorage.getItem('_initConfig')!);
@@ -197,5 +198,11 @@ function makeRoom(): void {
     
     // Asegurar que el mapa correcto se carga al inicio (ready mode por defecto)
     setDefaultStadiums();
+    
+    // Initialize TOP 20 cache at startup
+    setTimeout(() => {
+        updateTop20Cache();
+        window.gameRoom.logger.i('initialisation', 'TOP 20 cache initialized at startup');
+    }, 5000); // Wait 5 seconds after room creation to ensure everything is ready
     // =========================
 }

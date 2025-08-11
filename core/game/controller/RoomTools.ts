@@ -2,6 +2,7 @@ import * as Tst from "./Translator";
 import * as LangRes from "../resource/strings";
 import { PlayerObject } from "../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../model/GameObject/TeamID";
+import { getPlayerDisplayName } from "../model/Statistics/Tier";
 
 export function setDefaultStadiums(): void {
     // set stadium maps as default setting
@@ -55,7 +56,7 @@ export function updateAdmins(): void {
     if (players.find((player: PlayerObject) => player.admin) != null) return; // Do nothing if any admin player is still left.
 
     placeholderUpdateAdmins.playerID = players[0].id;
-    placeholderUpdateAdmins.playerName = window.gameRoom.playerList.get(players[0].id)!.name;
+    placeholderUpdateAdmins.playerName = getPlayerDisplayName(players[0].id, window.gameRoom.playerList.get(players[0].id)!.name, true, window.gameRoom.playerList.get(players[0].id)!.permissions.superadmin);
 
     window.gameRoom._room.setPlayerAdmin(players[0]!.id, true); // Give admin to the first non admin player in the list
     window.gameRoom.playerList.get(players[0].id)!.admin = true;

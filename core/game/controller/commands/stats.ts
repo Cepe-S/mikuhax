@@ -2,7 +2,7 @@ import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
 import * as StatCalc from "../Statistics";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { decideTier, getAvatarByTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
+import { decideTier, getAvatarByTier, getTierName, getTierColor, Tier, getPlayerDisplayName } from "../../model/Statistics/Tier";
 import { registerCommand } from "../CommandRegistry";
 
 /**
@@ -30,7 +30,7 @@ export function cmdStats(byPlayer: PlayerObject, fullMessage?: string): void {
                 const superAdminIndicator = targetPlayerData.permissions.superadmin ? '👑' : '';
                 let placeholder = {
                     ticketTarget: targetStatsID
-                    , targetName: superAdminIndicator + adminIndicator + targetPlayerData.name
+                    , targetName: getPlayerDisplayName(targetStatsID, targetPlayerData.name, targetPlayer?.admin || false, targetPlayerData.permissions.superadmin)
                     , targetAfkReason: window.gameRoom.playerList.get(targetStatsID)!.permissions.afkreason
                     , targetStatsRatingAvatar: (() => {
                         const tier = decideTier(window.gameRoom.playerList.get(targetStatsID)!.stats.rating, targetStatsID);
@@ -72,7 +72,7 @@ export function cmdStats(byPlayer: PlayerObject, fullMessage?: string): void {
         const superAdminIndicator = playerData.permissions.superadmin ? '👑' : '';
         let placeholder = {
             ticketTarget: byPlayer.id
-            , targetName: superAdminIndicator + adminIndicator + playerData.name
+            , targetName: getPlayerDisplayName(byPlayer.id, playerData.name, byPlayer.admin, playerData.permissions.superadmin)
             , targetAfkReason: window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkreason
             , targetStatsRatingAvatar: (() => {
                 const tier = decideTier(window.gameRoom.playerList.get(byPlayer.id)!.stats.rating, byPlayer.id);

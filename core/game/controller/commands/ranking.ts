@@ -1,7 +1,7 @@
 import * as LangRes from "../../resource/strings";
 import * as Tst from "../Translator";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { decideTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
+import { decideTier, getTierName, getTierColor, Tier, getDisplayElo } from "../../model/Statistics/Tier";
 import { getAllPlayersFromDB } from "../Storage";
 import { registerCommand } from "../CommandRegistry";
 
@@ -18,17 +18,41 @@ export async function cmdRanking(byPlayer: PlayerObject): Promise<void> {
             return;
         }
 
+        // Always guarantee TOP 20 (fill with placeholders if needed)
         const top20 = allPlayers.slice(0, 20);
-        let rankingMessage = "🏆 TOP 20 RANKING 🏆\n";
+        const totalPlayers = allPlayers.length;
         
-        top20.forEach((player, index) => {
-            const rank = index + 1;
-            const tier = decideTier(player.rating, 0);
-            const tierName = getTierName(tier);
-            const winRate = player.totals > 0 ? Math.round((player.wins / player.totals) * 100) : 0;
+        let rankingMessage = "🏆 TOP 20 RANKING 🏆\n";
+        rankingMessage += `👥 Total de jugadores calificados: ${totalPlayers}\n`;
+        rankingMessage += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+        
+        // Show actual top players
+        for (let i = 0; i < 20; i++) {
+            const rank = i + 1;
             
-            rankingMessage += `#${rank} ${tierName} ${player.rating} ➤ ${player.name} (${winRate}% WR)\n`;
-        });
+            if (i < top20.length) {
+                const player = top20[i];
+                const tier = decideTier(player.rating, 0);
+                const tierName = getTierName(tier);
+                const winRate = player.totals > 0 ? Math.round((player.wins / player.totals) * 100) : 0;
+                
+                // Use special formatting for top 3
+                let prefix = "";
+                if (rank === 1) prefix = "🥇 ";
+                else if (rank === 2) prefix = "🥈 ";
+                else if (rank === 3) prefix = "🥉 ";
+                
+                // Show real ELO for all players (TOP 20 format with real ELO)
+                if (rank <= 20) {
+                    rankingMessage += `${prefix}#${rank} 🏆${rank}°🏆 ${Math.round(player.rating)} ELO ➤ ${player.name} (${winRate}% WR)\n`;
+                } else {
+                    rankingMessage += `${prefix}#${rank} ${tierName} ${player.rating} ➤ ${player.name} (${winRate}% WR)\n`;
+                }
+            } else {
+                // Fill remaining slots with placeholders to always show 20 positions
+                rankingMessage += `#${rank} 🏆${rank}°🏆 [Posición Vacante]\n`;
+            }
+        }
 
         // Show current player's position if not in top 20
         const currentPlayerData = window.gameRoom.playerList.get(byPlayer.id);
@@ -36,16 +60,34 @@ export async function cmdRanking(byPlayer: PlayerObject): Promise<void> {
             const currentPlayerIndex = allPlayers.findIndex(p => p.auth === currentPlayerData.auth);
             if (currentPlayerIndex >= 20 && currentPlayerIndex !== -1) {
                 const currentPlayer = allPlayers[currentPlayerIndex];
-                const tier = decideTier(currentPlayer.rating, 0);
-                const tierName = getTierName(tier);
+                const tier = decideTier(currentPlayer.rating, byPlayer.id);
+                const tierName = getTierName(tier, byPlayer.id);
                 const winRate = currentPlayer.totals > 0 ? Math.round((currentPlayer.wins / currentPlayer.totals) * 100) : 0;
                 
-                rankingMessage += `\n📍 Tu posición: #${currentPlayerIndex + 1} ${tierName} ${currentPlayer.rating} ➤ ${currentPlayer.name} (${winRate}% WR)`;
+                rankingMessage += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+                rankingMessage += `📍 Tu posición: #${currentPlayerIndex + 1} ${tierName} ${currentPlayer.rating} ➤ ${currentPlayer.name} (${winRate}% WR)`;
+                
+                if (currentPlayerIndex < 50) {
+                    rankingMessage += "\n🔥 ¡Estás cerca del TOP 50!";
+                } else if (currentPlayerIndex < 100) {
+                    rankingMessage += "\n⭐ ¡Estás en el TOP 100!";
+                }
+            } else if (currentPlayerIndex >= 0 && currentPlayerIndex < 20) {
+                rankingMessage += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+                rankingMessage += `🎉 ¡Estás en el TOP 20! Posición #${currentPlayerIndex + 1}`;
+            } else {
+                // Player not found in database, probably still in placement matches
+                const placementRemaining = window.gameRoom.config.HElo.factor.placement_match_chances - (currentPlayerData.stats.totals || 0);
+                if (placementRemaining > 0) {
+                    rankingMessage += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+                    rankingMessage += `⌈⚪⌋ Aún estás en partidas de colocación (${placementRemaining} restantes)`;
+                }
             }
         }
 
         window.gameRoom._room.sendAnnouncement(rankingMessage, byPlayer.id, 0xFFD700, "normal", 1);
     } catch (error) {
+        window.gameRoom.logger.e('cmdRanking', `Error in ranking command: ${error}`);
         window.gameRoom._room.sendAnnouncement("❌ Error al obtener el ranking.", byPlayer.id, 0xFF0000, "normal", 1);
     }
 }

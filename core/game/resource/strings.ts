@@ -176,9 +176,10 @@ export const command = {
            '📑 【⌈🟦⌋】 Platino: {tierCutoff3}-{tierCutoff4} pts\n' +
            '📑 【⌈🟩⌋】 Esmeralda: {tierCutoff4}-{tierCutoff5} pts\n' +
            '📑 【⌈✨💎✨⌋】 Diamante: {tierCutoff5}-{tierCutoff6} pts\n' +
-           '📑 【⌈✨👑✨⌋】 Maestro: {tierCutoff6}+ pts\n' +
-           '📑 【⌈✨🚀✨⌋】 Challenger & 【⌈✨🌸✨⌋】 Top 1-20: Rankings especiales\n' +
-           '📊 Los tiers se muestran en colores distintivos. Usa !stats para ver tu tier actual'
+           '📑 【⌈✨👑✨⌋】 Maestro: {tierCutoff6}-{tierCutoff7} pts\n' +
+           '📑 【⌈✨🚀✨⌋】 Challenger: {tierCutoff7}+ pts\n' +
+           '📑 【⌈✨🌸✨⌋】 Top 1-20: Rankings especiales basados en posición global\n' +
+           '📊 Sistema mejorado con mejor distribución de ELO y garantía de progreso para ganadores'
     ,notice: {
         _ErrorNoMessage: '❌ No hay avisos disponibles actualmente.'
     }

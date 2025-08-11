@@ -11,6 +11,7 @@ import { getUnixTimestamp } from "../Statistics";
 import { MatchEvent } from "../../model/GameObject/MatchEvent";
 import { set } from "node-persist";
 import { MatchSummary } from "../../model/GameObject/MatchSummary";
+import { updateTop20Cache } from "../../model/Statistics/Tier";
 
 export async function onTeamVictoryListener(scores: ScoresObject): Promise<void> {
     // Event called when a team 'wins'. not just when game ended.
@@ -77,10 +78,11 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
         redStatsRecords.forEach((eachItem: StatsRecord, idx: number) => {
             let diffArray: number[] = [];
             let oldRating: number = window.gameRoom.playerList.get(redTeamPlayers[idx].id)!.stats.rating;
+            let playerTotals: number = window.gameRoom.playerList.get(redTeamPlayers[idx].id)!.stats.totals;
             for (let i: number = 0; i < blueStatsRecords.length; i++) {
-                diffArray.push(ratingHelper.calcBothDiff(eachItem, blueStatsRecords[i], winTeamRatingsMean, loseTeamRatingsMean, eachItem.matchKFactor));
+                diffArray.push(ratingHelper.calcBothDiff(eachItem, blueStatsRecords[i], winTeamRatingsMean, loseTeamRatingsMean, eachItem.matchKFactor, playerTotals));
             }
-            let newRating: number = ratingHelper.calcNewRating(eachItem.rating, diffArray);
+            let newRating: number = ratingHelper.calcNewRatingWithActivityBonus(eachItem.rating, diffArray, playerTotals);
             let eloChange: number = newRating - oldRating;
             
             window.gameRoom.playerList.get(redTeamPlayers[idx].id)!.stats.rating = newRating;
@@ -98,10 +100,11 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
         blueStatsRecords.forEach((eachItem: StatsRecord, idx: number) => {
             let diffArray: number[] = [];
             let oldRating: number = window.gameRoom.playerList.get(blueTeamPlayers[idx].id)!.stats.rating;
+            let playerTotals: number = window.gameRoom.playerList.get(blueTeamPlayers[idx].id)!.stats.totals;
             for (let i: number = 0; i < redStatsRecords.length; i++) {
-                diffArray.push(ratingHelper.calcBothDiff(eachItem, redStatsRecords[i], winTeamRatingsMean, loseTeamRatingsMean, eachItem.matchKFactor));
+                diffArray.push(ratingHelper.calcBothDiff(eachItem, redStatsRecords[i], winTeamRatingsMean, loseTeamRatingsMean, eachItem.matchKFactor, playerTotals));
             }
-            let newRating: number = ratingHelper.calcNewRating(eachItem.rating, diffArray);
+            let newRating: number = ratingHelper.calcNewRatingWithActivityBonus(eachItem.rating, diffArray, playerTotals);
             let eloChange: number = newRating - oldRating;
             
             window.gameRoom.playerList.get(blueTeamPlayers[idx].id)!.stats.rating = newRating;
@@ -286,4 +289,10 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
             }
         }, 2000);
     }
+    
+    // Update TOP 20 cache after match completion
+    setTimeout(() => {
+        updateTop20Cache();
+        window.gameRoom.logger.i('onTeamVictory', 'TOP 20 cache update initiated after match completion');
+    }, 3000); // Wait a bit longer to ensure all ELO changes are processed
 }

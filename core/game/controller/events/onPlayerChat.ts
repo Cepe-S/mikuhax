@@ -6,7 +6,7 @@ import { isCommandString, parseCommand } from "../Parser";
 import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { isIncludeBannedWords } from "../TextFilter";
-import { decideTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
+import { decideTier, getTierName, getTierColor, Tier, isPlayerInTop20 } from "../../model/Statistics/Tier";
 import { qDetector } from "../QDetector";
 
 export function onPlayerChatListener(player: PlayerObject, message: string): boolean {
@@ -118,8 +118,16 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                 const customMessage = `${tierEmoji} « 🆔:${player.id} » ${teamEmoji} ~ ${adminIndicator}${player.name}: ${message}`;
                 let msgColor = 0xFFFFFF; // default white
                 
+                // Check if player is TOP 20 or admin for bold formatting
+                const top20Check = isPlayerInTop20(player.id);
+                const isAdmin = player.admin || playerData.permissions.superadmin;
+                const isTop20 = top20Check.isTop20;
+                
+                // Use bold formatting for TOP 20 players and admins
+                const messageStyle = (isTop20 || isAdmin) ? "bold" : "normal";
+                
                 // Los admins tienen color dorado, independientemente del equipo
-                if (player.admin || playerData.permissions.superadmin) {
+                if (isAdmin) {
                     msgColor = 0xFFD700; // dorado
                 } else {
                     // Colores por equipo para jugadores normales
@@ -129,7 +137,7 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                 }
         
         // Reproducir sonido de mensaje para todos los jugadores
-        window.gameRoom._room.sendAnnouncement(customMessage, null, msgColor, "normal", 1);
+        window.gameRoom._room.sendAnnouncement(customMessage, null, msgColor, messageStyle, 1);
         return false; // Bloquear el mensaje original
     }
 }
