@@ -1,0 +1,29 @@
+name: Test SSH Connection
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test SSH connection
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 34.39.128.106
+          username: github-actions
+          key: -----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABDeTs9sgL
+mfm+A3R+Qve5yuAAAAEAAAAAEAAAAzAAAAC3NzaC1lZDI1NTE5AAAAIIyLVpDJidjATL7G
+4pjsNVYm6DW9cjX1kWK5GZ/VqMM8AAAAoC6oB33ZtVXrT7l0xa78uEdK3q8+O4c3eQm9W9
+pm6tTAHW5pQWdnO12qEfy4F4t4WTFCbGDpE6+32kqDt7U2/s+CYcklMV6Y4SXP0NwxCXCB
+pICT6ffc5l+gKRC4GsiMNY6NI19qAclY57n8to3AbYai/TwhWfaDrUwTQDgjDmXXHH+6ww
+0HWxl5u+riB+X6GGQUXR5xUcHY09TgviM/dq0=
+-----END OPENSSH PRIVATE KEY-----
+
+          script: |
+            echo "¡Conexión SSH exitosa!"
+
+
+            echo "Clave SSH añadida correctamente."
+            ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'echo "Conexión SSH al servidor exitosa."'
