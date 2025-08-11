@@ -4,6 +4,7 @@ import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { TeamID } from "../../model/GameObject/TeamID";
 import { getUnixTimestamp } from "../Statistics";
 import { roomActivePlayersNumberCheck, assignPlayerToBalancedTeam, balanceTeamsAfterLeave } from "../../model/OperateHelper/Quorum";
+import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { registerCommand } from "../CommandRegistry";
 
 export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
@@ -20,8 +21,16 @@ export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
         
         // Balancear equipos cuando un jugador sale del AFK
         if (window.gameRoom.config.rules.autoOperating === true) {
-            assignPlayerToBalancedTeam(byPlayer.id);
-            window.gameRoom.logger.i('cmdAfk', `Player ${byPlayer.name}#${byPlayer.id} returned from AFK and was assigned to balanced team`);
+            const queueSystem = QueueSystem.getInstance();
+            
+            // Check if queue system should handle the returning player
+            const queueHandled = queueSystem.onPlayerReturnsFromAFK(byPlayer.id);
+            
+            if (!queueHandled) {
+                // Queue system doesn't need to handle it, use normal assignment
+                assignPlayerToBalancedTeam(byPlayer.id);
+                window.gameRoom.logger.i('cmdAfk', `Player ${byPlayer.name}#${byPlayer.id} returned from AFK and was assigned to balanced team`);
+            }
         }
         
         if(window.gameRoom.config.settings.antiAFKFlood === true && window.gameRoom.playerList.get(byPlayer.id)!.permissions.mute === true) {
@@ -46,8 +55,14 @@ export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
         window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkdate = getUnixTimestamp(); // set afk beginning time stamp
         window.gameRoom.playerList.get(byPlayer.id)!.afktrace = { exemption: false, count: 0}; // reset for afk trace
 
-        // Balancear equipos después de que alguien se ponga AFK
+        // Handle AFK with queue system integration
         if (window.gameRoom.config.rules.autoOperating === true) {
+            const queueSystem = QueueSystem.getInstance();
+            
+            // Notify queue system that player went AFK (will process queue if active)
+            queueSystem.onPlayerGoesAFK(byPlayer.id);
+            
+            // Also use the traditional balance system as backup
             setTimeout(() => {
                 balanceTeamsAfterLeave();
                 window.gameRoom.logger.i('cmdAfk', `Teams rebalanced after player ${byPlayer.name}#${byPlayer.id} went AFK`);

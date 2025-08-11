@@ -3,6 +3,7 @@ import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { recuritBothTeamFully, assignPlayerToBalancedTeam, fetchActiveSpecPlayers } from "../../model/OperateHelper/Quorum";
+import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { setDefaultRoomLimitation, setDefaultStadiums } from "../RoomTools";
 
 export function onGameStopListener(byPlayer: PlayerObject): void {
@@ -78,15 +79,27 @@ export function onGameStopListener(byPlayer: PlayerObject): void {
 
     // when auto emcee mode is enabled
     if(window.gameRoom.config.rules.autoOperating === true) {
-        // Use new balanced team assignment system
-        const specPlayers = fetchActiveSpecPlayers();
+        const queueSystem = QueueSystem.getInstance();
         
-        // Assign spectators to balanced teams before starting new game
-        for (const specPlayer of specPlayers) {
-            assignPlayerToBalancedTeam(specPlayer.id);
+        // Check if queue system should be active
+        if (queueSystem.shouldQueueBeActive()) {
+            queueSystem.activateQueue();
+            
+            // Process queue instead of direct assignment
+            window.gameRoom.logger.i('onGameStop', `🎯 Using queue system for team assignment`);
+            queueSystem.processQueue();
+        } else {
+            // Use original balanced team assignment system
+            const specPlayers = fetchActiveSpecPlayers();
+            
+            // Assign spectators to balanced teams before starting new game
+            for (const specPlayer of specPlayers) {
+                assignPlayerToBalancedTeam(specPlayer.id);
+            }
+            
+            window.gameRoom.logger.i('onGameStop', `🔄 Teams balanced automatically for next game`);
         }
         
-        window.gameRoom.logger.i('onGameStop', `🔄 Teams balanced automatically for next game`);
         window.gameRoom._room.startGame(); // start next new game
     }
 }

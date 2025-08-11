@@ -56,7 +56,7 @@ export const command = {
     _ErrorWrongCommand : '❌ Comando incorrecto. 📑 Usa !help o !help COMMAND para más detalles.'
     ,_ErrorNoPermission: '❌ Solo los administradores pueden usar este comando.'
     ,_ErrorDisabled: '❌ Este comando no está habilitado en esta sala.'
-    ,help: '📄 !about, notice, stats, statsreset, tier, ranking, avatar, afk, vote, poss, streak, scout, list, powershot, goleadores, asistidores, llamaradmin, memide, discord, nv, bb\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Los super admins tienen acceso a comandos adicionales de administrador.'
+    ,help: '📄 !about, notice, stats, statsreset, tier, ranking, avatar, afk, vote, poss, streak, scout, list, powershot, goleadores, asistidores, llamaradmin, memide, discord, nv, bb, cola\n📑 Usa !help COMMAND para más detalles (Ej: !help stats)\n📑 Los super admins tienen acceso a comandos adicionales de administrador.'
     ,helpadmin: '📄 !freeze, mute, powershotadmin, balance\n📑 Usa !help COMMAND para más detalles'
     ,helpman: { // descripción detallada para un comando
         _ErrorWrongMan : '❌ No hay una descripción disponible para el comando solicitado.'
@@ -86,6 +86,7 @@ export const command = {
         ,discord: '📑 !discord : Muestra la información del servidor Discord oficial para unirse a la comunidad.'
         ,nv: '📑 !nv : Te despides y sales del servidor. El sistema enviará un mensaje de despedida a todos los jugadores.'
         ,bb: '📑 !bb : Dices bye bye y sales del servidor. El sistema enviará un mensaje de despedida a todos los jugadores.'
+        ,cola: '📑 !cola : Muestra tu posición en la cola de jugadores cuando hay más jugadores que espacios disponibles.\n📑 !cola full : [ADMIN] Muestra la cola completa con todos los jugadores esperando.\n📑 Aliases: !queue, !q'
     } 
     ,about: '📄 Nombre de la sala : {RoomName} ({_LaunchTime})\n💬 Esta sala está gestionada por el bot Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [Discord] https://discord.gg/qfg45B2 [Apóyanos] https://www.patreon.com/dapucita'
     ,stats: {

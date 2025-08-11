@@ -5,6 +5,7 @@ import { updateAdmins, setDefaultStadiums } from "../RoomTools";
 import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, balanceTeamsAfterLeave, forceTeamBalance } from "../../model/OperateHelper/Quorum";
+import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { convertToPlayerStorage, getBanlistDataFromDB, setBanlistDataToDB, setPlayerDataToDB } from "../Storage";
 
 export async function onPlayerLeaveListener(player: PlayerObject): Promise<void> {
@@ -37,6 +38,10 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
     };
 
     window.gameRoom.logger.i('onPlayerLeave', `${player.name}#${player.id} has left.`);
+
+    // Remove player from queue if they're in it
+    const queueSystemRemove = QueueSystem.getInstance();
+    queueSystemRemove.removePlayerFromQueue(player.id);
 
     // Reset powershot if the leaving player was the powershot holder
     if (window.gameRoom.ballStack.getPowershotPlayer() === player.id) {
@@ -108,6 +113,14 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
 
     if(window.gameRoom.config.rules.autoAdmin === true) { // if auto admin option is enabled
         updateAdmins(); // update admin
+    }
+
+    // Process queue if there are now available spots
+    const queueSystem = QueueSystem.getInstance();
+    if (queueSystem.shouldQueueBeActive()) {
+        queueSystem.processQueue();
+    } else {
+        queueSystem.deactivateQueue();
     }
 
     // emit websocket event

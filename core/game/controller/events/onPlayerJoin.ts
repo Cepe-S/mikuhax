@@ -7,6 +7,7 @@ import { getUnixTimestamp } from "../Statistics";
 import { setDefaultStadiums, updateAdmins } from "../RoomTools";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, assignPlayerToBalancedTeam, getTeamsEloInfo } from "../../model/OperateHelper/Quorum";
+import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { decideTier, getAvatarByTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
 import { isExistNickname, isIncludeBannedWords } from "../TextFilter";
 import { trackPlayerConnection } from "../ConnectionTracker";
@@ -358,16 +359,27 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
             
             // Rebalancear todos los jugadores cuando se cambia a modo estadísticas
             if (window.gameRoom.config.rules.autoOperating === true) {
+                const queueSystem = QueueSystem.getInstance();
                 const allPlayers = window.gameRoom._room.getPlayerList().filter((p: PlayerObject) => p.id !== 0 && window.gameRoom.playerList.has(p.id) && !window.gameRoom.playerList.get(p.id)!.permissions.afkmode);
+                
+                // Mover todos a espectadores primero
                 allPlayers.forEach((p: PlayerObject) => {
-                    window.gameRoom._room.setPlayerTeam(p.id, TeamID.Spec); // Mover todos a espectadores primero
+                    window.gameRoom._room.setPlayerTeam(p.id, TeamID.Spec);
                 });
                 
                 setTimeout(() => {
-                    // Luego asignar a equipos balanceados
-                    allPlayers.forEach((p: PlayerObject) => {
-                        assignPlayerToBalancedTeam(p.id);
-                    });
+                    // Verificar si cola debe estar activa antes de asignar equipos
+                    if (queueSystem.shouldQueueBeActive()) {
+                        queueSystem.activateQueue();
+                        queueSystem.processQueue();
+                        window.gameRoom.logger.i('onPlayerJoin', 'Used queue system for team assignment when switching to stats mode');
+                    } else {
+                        // Luego asignar a equipos balanceados usando método normal
+                        allPlayers.forEach((p: PlayerObject) => {
+                            assignPlayerToBalancedTeam(p.id);
+                        });
+                        window.gameRoom.logger.i('onPlayerJoin', 'Used normal team assignment when switching to stats mode');
+                    }
                 }, 100);
             }
             
@@ -389,11 +401,19 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         setTimeout(() => {
             // Lógica diferente para asignación de equipos según el modo
             if (window.gameRoom.isStatRecord === false) {
-                // Modo ready/training: asignar al equipo rojo por defecto para que pueda jugar
-                window.gameRoom._room.setPlayerTeam(player.id, TeamID.Red);
-                window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} assigned to Red team in ready mode`);
+                // Modo ready/training: verificar si cola debe estar activa primero
+                const queueSystem = QueueSystem.getInstance();
+                if (queueSystem.shouldQueueBeActive()) {
+                    queueSystem.activateQueue();
+                    queueSystem.addPlayerToQueue(player.id);
+                    window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} added to queue in ready mode`);
+                } else {
+                    // Si no hay cola, asignar al equipo rojo por defecto para que pueda jugar
+                    window.gameRoom._room.setPlayerTeam(player.id, TeamID.Red);
+                    window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} assigned to Red team in ready mode`);
+                }
             } else {
-                // Modo estadísticas: usar balanceo normal
+                // Modo estadísticas: usar balanceo normal (ya integrado con cola)
                 assignPlayerToBalancedTeam(player.id);
             }
             

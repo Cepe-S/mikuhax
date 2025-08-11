@@ -1,5 +1,6 @@
 import { PlayerObject } from "../GameObject/PlayerObject";
 import { TeamID } from "../GameObject/TeamID";
+import { QueueSystem } from "./QueueSystem";
 
 export function roomPlayersNumberCheck(): number {
     // return number of all players of this room (except bot host)
@@ -21,6 +22,15 @@ export function fetchActiveSpecPlayers(): PlayerObject[] {
 }
 
 function recruitPlayers() {
+    const queueSystem = QueueSystem.getInstance();
+    
+    // Check if queue is active and should handle recruitment
+    if (queueSystem.shouldQueueBeActive()) {
+        queueSystem.activateQueue();
+        queueSystem.processQueue();
+        return;
+    }
+    
     const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
     const activeSpecPlayersList: PlayerObject[] = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Spec);
 
@@ -43,6 +53,15 @@ function recruitPlayers() {
 export function assignPlayerToBalancedTeam(playerId: number) {
     if (!window.gameRoom.playerList.has(playerId)) return;
     
+    const queueSystem = QueueSystem.getInstance();
+    
+    // Check if queue should be active
+    if (queueSystem.shouldQueueBeActive()) {
+        queueSystem.activateQueue();
+        queueSystem.addPlayerToQueue(playerId);
+        return;
+    }
+    
     const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.has(player.id) && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
     
     const redCount = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
@@ -57,6 +76,15 @@ export function assignPlayerToBalancedTeam(playerId: number) {
 }
 
 export function shuffleTeamsByElo() {
+    const queueSystem = QueueSystem.getInstance();
+    
+    // Don't shuffle if queue system should be active
+    if (queueSystem.shouldQueueBeActive()) {
+        window.gameRoom.logger.i('shuffleTeamsByElo', 'Cannot shuffle - queue system should be active');
+        queueSystem.activateQueue();
+        return;
+    }
+    
     const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList()
         .filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.has(player.id) && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
     
@@ -77,6 +105,16 @@ export function shuffleTeamsByElo() {
 }
 
 export function balanceTeams() {
+    const queueSystem = QueueSystem.getInstance();
+    
+    // Don't balance if queue system should be active - queue handles team assignment
+    if (queueSystem.shouldQueueBeActive()) {
+        window.gameRoom.logger.i('balanceTeams', 'Cannot balance - queue system should be active');
+        queueSystem.activateQueue();
+        queueSystem.processQueue();
+        return;
+    }
+    
     const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.has(player.id) && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
     
     const redPlayers = activePlayersList.filter((player: PlayerObject) => player.team === TeamID.Red);
@@ -155,6 +193,15 @@ export function forceTeamBalance() {
  * Incluye verificaciones adicionales y logging detallado
  */
 export function smartTeamBalance() {
+    const queueSystem = QueueSystem.getInstance();
+    
+    // Check if queue should be active first
+    if (queueSystem.shouldQueueBeActive()) {
+        queueSystem.activateQueue();
+        queueSystem.processQueue();
+        return;
+    }
+    
     const activePlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList()
         .filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.has(player.id) && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
     
