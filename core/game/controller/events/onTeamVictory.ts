@@ -37,10 +37,26 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
 
     let winningMessage: string = '';
 
-    let allActivePlayers: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false); // non afk players
-    let teamPlayers: PlayerObject[] = allActivePlayers.filter((eachPlayer: PlayerObject) => eachPlayer.team !== TeamID.Spec); // except Spectators players
-    let redTeamPlayers: PlayerObject[] = teamPlayers.filter((eachPlayer: PlayerObject) => eachPlayer.team === TeamID.Red);
-    let blueTeamPlayers: PlayerObject[] = teamPlayers.filter((eachPlayer: PlayerObject) => eachPlayer.team === TeamID.Blue);
+    // Use initial teams for ELO calculation but current teams for win/loss determination
+    const { EloIntegrityTracker } = require('../../model/Statistics/EloIntegrityTracker');
+    const eloTracker = EloIntegrityTracker.getInstance();
+    const playersAtStart = eloTracker.getPlayersAtMatchStart();
+    
+    let allActivePlayers: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => 
+        player.id !== 0 && 
+        window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false &&
+        playersAtStart.has(player.id)
+    );
+    
+    // For ELO calculation: use initial teams
+    let initialRedTeamPlayers: PlayerObject[] = allActivePlayers.filter((player: PlayerObject) => 
+        eloTracker.getInitialTeam(player.id) === TeamID.Red
+    );
+    let initialBlueTeamPlayers: PlayerObject[] = allActivePlayers.filter((player: PlayerObject) => 
+        eloTracker.getInitialTeam(player.id) === TeamID.Blue
+    );
+    
+    let teamPlayers: PlayerObject[] = [...initialRedTeamPlayers, ...initialBlueTeamPlayers];
 
     let winnerTeamID: TeamID;
     let loserTeamID: TeamID;
@@ -67,63 +83,95 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
         // make diffs array (key: index by teamPlayers order, value: number[])
 
 
-        // make stat records
-        let redStatsRecords: StatsRecord[] = ratingHelper.makeStasRecord(winnerTeamID === TeamID.Red ? MatchResult.Win : MatchResult.Lose, redTeamPlayers);
-        let blueStatsRecords: StatsRecord[] = ratingHelper.makeStasRecord(winnerTeamID === TeamID.Blue ? MatchResult.Win : MatchResult.Lose, blueTeamPlayers);
+        // make stat records using initial teams for ratings but final teams for win/loss
+        let redStatsRecords: StatsRecord[] = [];
+        let blueStatsRecords: StatsRecord[] = [];
+        
+        // Create records for initial red team players
+        initialRedTeamPlayers.forEach((player: PlayerObject) => {
+            const isWinner = player.team === winnerTeamID; // Use current team for win/loss
+            redStatsRecords.push({
+                rating: window.gameRoom.playerList.get(player.id)!.stats.rating,
+                realResult: isWinner ? MatchResult.Win : MatchResult.Lose,
+                matchKFactor: window.gameRoom.playerList.get(player.id)!.matchRecord.factorK,
+                matchGoal: window.gameRoom.playerList.get(player.id)!.matchRecord.goals,
+                matchOG: window.gameRoom.playerList.get(player.id)!.matchRecord.ogs,
+                matchPassSuccRate: (
+                    window.gameRoom.playerList.get(player.id)!.matchRecord.balltouch === 0
+                    ? 0
+                    : parseFloat((window.gameRoom.playerList.get(player.id)!.matchRecord.passed / window.gameRoom.playerList.get(player.id)!.matchRecord.balltouch).toFixed(2))
+                )
+            });
+        });
+        
+        // Create records for initial blue team players
+        initialBlueTeamPlayers.forEach((player: PlayerObject) => {
+            const isWinner = player.team === winnerTeamID; // Use current team for win/loss
+            blueStatsRecords.push({
+                rating: window.gameRoom.playerList.get(player.id)!.stats.rating,
+                realResult: isWinner ? MatchResult.Win : MatchResult.Lose,
+                matchKFactor: window.gameRoom.playerList.get(player.id)!.matchRecord.factorK,
+                matchGoal: window.gameRoom.playerList.get(player.id)!.matchRecord.goals,
+                matchOG: window.gameRoom.playerList.get(player.id)!.matchRecord.ogs,
+                matchPassSuccRate: (
+                    window.gameRoom.playerList.get(player.id)!.matchRecord.balltouch === 0
+                    ? 0
+                    : parseFloat((window.gameRoom.playerList.get(player.id)!.matchRecord.passed / window.gameRoom.playerList.get(player.id)!.matchRecord.balltouch).toFixed(2))
+                )
+            });
+        });
 
-        // calc average of team ratings
-        let winTeamRatingsMean: number = ratingHelper.calcTeamRatingsMean(winnerTeamID === TeamID.Red ? redTeamPlayers : blueTeamPlayers);
-        let loseTeamRatingsMean: number = ratingHelper.calcTeamRatingsMean(loserTeamID === TeamID.Red ? redTeamPlayers : blueTeamPlayers);
+        // calc average of initial team ratings
+        let winTeamRatingsMean: number = ratingHelper.calcTeamRatingsMean(initialRedTeamPlayers);
+        let loseTeamRatingsMean: number = ratingHelper.calcTeamRatingsMean(initialBlueTeamPlayers);
 
         // get diff and update rating
         redStatsRecords.forEach((eachItem: StatsRecord, idx: number) => {
             let diffArray: number[] = [];
-            let oldRating: number = window.gameRoom.playerList.get(redTeamPlayers[idx].id)!.stats.rating;
-            let playerTotals: number = window.gameRoom.playerList.get(redTeamPlayers[idx].id)!.stats.totals;
+            let oldRating: number = window.gameRoom.playerList.get(initialRedTeamPlayers[idx].id)!.stats.rating;
+            let playerTotals: number = window.gameRoom.playerList.get(initialRedTeamPlayers[idx].id)!.stats.totals;
             for (let i: number = 0; i < blueStatsRecords.length; i++) {
                 diffArray.push(ratingHelper.calcBothDiff(eachItem, blueStatsRecords[i], winTeamRatingsMean, loseTeamRatingsMean, eachItem.matchKFactor, playerTotals));
             }
             let newRating: number = ratingHelper.calcNewRatingWithActivityBonus(eachItem.rating, diffArray, playerTotals);
             let eloChange: number = newRating - oldRating;
             
-            window.gameRoom.playerList.get(redTeamPlayers[idx].id)!.stats.rating = newRating;
-            window.gameRoom.logger.i('onTeamVictory', `Red Player ${redTeamPlayers[idx].name}#${redTeamPlayers[idx].id}'s rating has become ${newRating} from ${oldRating}.`);
+            window.gameRoom.playerList.get(initialRedTeamPlayers[idx].id)!.stats.rating = newRating;
             
             eloChanges.push({
-                playerId: redTeamPlayers[idx].id,
-                playerName: redTeamPlayers[idx].name,
+                playerId: initialRedTeamPlayers[idx].id,
+                playerName: initialRedTeamPlayers[idx].name,
                 oldRating: oldRating,
                 newRating: newRating,
                 change: eloChange,
-                isWinner: winnerTeamID === TeamID.Red
+                isWinner: initialRedTeamPlayers[idx].team === winnerTeamID
             });
         });
         blueStatsRecords.forEach((eachItem: StatsRecord, idx: number) => {
             let diffArray: number[] = [];
-            let oldRating: number = window.gameRoom.playerList.get(blueTeamPlayers[idx].id)!.stats.rating;
-            let playerTotals: number = window.gameRoom.playerList.get(blueTeamPlayers[idx].id)!.stats.totals;
+            let oldRating: number = window.gameRoom.playerList.get(initialBlueTeamPlayers[idx].id)!.stats.rating;
+            let playerTotals: number = window.gameRoom.playerList.get(initialBlueTeamPlayers[idx].id)!.stats.totals;
             for (let i: number = 0; i < redStatsRecords.length; i++) {
                 diffArray.push(ratingHelper.calcBothDiff(eachItem, redStatsRecords[i], winTeamRatingsMean, loseTeamRatingsMean, eachItem.matchKFactor, playerTotals));
             }
             let newRating: number = ratingHelper.calcNewRatingWithActivityBonus(eachItem.rating, diffArray, playerTotals);
             let eloChange: number = newRating - oldRating;
             
-            window.gameRoom.playerList.get(blueTeamPlayers[idx].id)!.stats.rating = newRating;
-            window.gameRoom.logger.i('onTeamVictory', `Blue Player ${blueTeamPlayers[idx].name}#${blueTeamPlayers[idx].id}'s rating has become ${newRating} from ${oldRating}.`);
+            window.gameRoom.playerList.get(initialBlueTeamPlayers[idx].id)!.stats.rating = newRating;
             
             eloChanges.push({
-                playerId: blueTeamPlayers[idx].id,
-                playerName: blueTeamPlayers[idx].name,
+                playerId: initialBlueTeamPlayers[idx].id,
+                playerName: initialBlueTeamPlayers[idx].name,
                 oldRating: oldRating,
                 newRating: newRating,
                 change: eloChange,
-                isWinner: winnerTeamID === TeamID.Blue
+                isWinner: initialBlueTeamPlayers[idx].team === winnerTeamID
             });
         });
 
         // record stats part ================
         teamPlayers.forEach(async (eachPlayer: PlayerObject) => {
-            if (eachPlayer.team === winnerTeamID) { // if this player is winner
+            if (eachPlayer.team === winnerTeamID) { // if this player's current team won
                 window.gameRoom.playerList.get(eachPlayer.id)!.stats.wins++; //records a win
             }
             window.gameRoom.playerList.get(eachPlayer.id)!.stats.totals++; // records game count and other stats
@@ -187,8 +235,8 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
         const matchSummary = {
             matchId: matchId,
             totalMatchTime: window.gameRoom.config.rules.requisite.timeLimit,
-            team1Players: redTeamPlayers.map(player => window.gameRoom.playerList.get(player.id)!.auth),
-            team2Players: blueTeamPlayers.map(player => window.gameRoom.playerList.get(player.id)!.auth),
+            team1Players: initialRedTeamPlayers.map(player => window.gameRoom.playerList.get(player.id)!.auth),
+            team2Players: initialBlueTeamPlayers.map(player => window.gameRoom.playerList.get(player.id)!.auth),
             serverRuid: window.gameRoom.config._RUID,
             timestamp: getUnixTimestamp()
         } as MatchSummary;
@@ -308,39 +356,32 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
     window.gameRoom.logger.i('onTeamVictory', `The game has ended. Scores ${scores.red}:${scores.blue}.`);
     window.gameRoom._room.sendAnnouncement(winningMessage, null, 0x00FF00, "bold", 1);
     
-    // Show ELO changes if stats were recorded
+    // Show individual ELO changes if stats were recorded
     if (window.gameRoom.config.rules.statsRecord == true && window.gameRoom.isStatRecord == true && typeof eloChanges !== 'undefined') {
         setTimeout(() => {
-            // Separar ganadores y perdedores
-            const winners = eloChanges.filter(p => p.isWinner).sort((a, b) => b.change - a.change);
-            const losers = eloChanges.filter(p => !p.isWinner).sort((a, b) => a.change - b.change);
-            
-            // Mensaje para ganadores
-            if (winners.length > 0) {
-                let winnersMsg = "🏆 Cambios de ELO - GANADORES:";
-                winners.forEach(player => {
-                    const changeStr = player.change >= 0 ? `+${Math.round(player.change)}` : `${Math.round(player.change)}`;
-                    winnersMsg += `\n⬆️ ${player.playerName}: ${Math.round(player.oldRating)} → ${Math.round(player.newRating)} (${changeStr})`;
-                });
-                window.gameRoom._room.sendAnnouncement(winnersMsg, null, 0x00FF88, "normal", 1);
-            }
-            
-            // Mensaje para perdedores
-            if (losers.length > 0) {
-                setTimeout(() => {
-                    let losersMsg = "💔 Cambios de ELO - PERDEDORES:";
-                    losers.forEach(player => {
-                        const changeStr = player.change >= 0 ? `+${Math.round(player.change)}` : `${Math.round(player.change)}`;
-                        losersMsg += `\n⬇️ ${player.playerName}: ${Math.round(player.oldRating)} → ${Math.round(player.newRating)} (${changeStr})`;
-                    });
-                    window.gameRoom._room.sendAnnouncement(losersMsg, null, 0xFF6666, "normal", 1);
-                }, 1500);
-            }
+            // Enviar mensaje individual a cada jugador
+            eloChanges.forEach(player => {
+                const changeStr = player.change >= 0 ? `+${Math.round(player.change)}` : `${Math.round(player.change)}`;
+                const resultIcon = player.isWinner ? "🏆" : "💔";
+                const resultText = player.isWinner ? "GANASTE" : "PERDISTE";
+                
+                let personalMsg = `${resultIcon} ${resultText}\n📊 Tu cambio de ELO: ${Math.round(player.oldRating)} → ${Math.round(player.newRating)} (${changeStr})`;
+                
+                const color = player.isWinner ? 0x00FF88 : 0xFF6666;
+                window.gameRoom._room.sendAnnouncement(personalMsg, player.playerId, color, "bold", 1);
+            });
         }, 2000);
+    }
+    
+    // Clear ELO violations for next match
+    if (window.gameRoom.config.rules.statsRecord == true && window.gameRoom.isStatRecord == true) {
+        setTimeout(() => {
+            eloTracker.clearViolations();
+        }, 4000);
     }
     
     // Update TOP 20 cache after match completion
     setTimeout(() => {
         updateTop20Cache();
-    }, 3000); // Wait a bit longer to ensure all ELO changes are processed
+    }, 5000); // Wait a bit longer to ensure all ELO changes are processed
 }

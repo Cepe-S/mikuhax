@@ -17,10 +17,18 @@ export class HElo {
         return this.instance;
     }
 
-    // E(A)
+    // Chess.com K-Factor system
+    private getKFactor(rating: number, totalGames: number): number {
+        if (totalGames < 30) return 40;  // Provisional period
+        if (rating < 1200) return 32;   // Beginners
+        if (rating < 1600) return 24;   // Intermediate
+        if (rating < 2000) return 16;   // Advanced
+        return 12;                      // Expert
+    }
+
+    // E(A) - Expected Result
     private calcExpectedResult(targetRating: number, counterpartRating: number): number {
         let res: number = parseFloat((1 / (1 + Math.pow(10, (counterpartRating - targetRating) / 400))).toFixed(2));
-
         return res;
     }
 
@@ -58,83 +66,38 @@ export class HElo {
         return res;
     }
 
-    // Enhanced K*MoVM*(S-E) with win bonus guarantee
+    // Chess.com style ELO calculation
     public calcBothDiff(targetRecord: StatsRecord, counterpartRecord: StatsRecord, ratingWinnersMean: number, ratingLosersMean: number, factorK: number, playerTotals?: number): number {
-        let baseDiff: number = 
-            parseFloat((factorK 
-            * this.calcMoVMultiplier(this.calcPD(targetRecord, counterpartRecord), this.calcQMultiplier(ratingWinnersMean, ratingLosersMean))
-            * (this.calcResultDifference(targetRecord.realResult, targetRecord.rating, counterpartRecord.rating))
-            ).toFixed(2));
-
-        // Win bonus: Ensure winners always gain meaningful ELO for better distribution
-        if (targetRecord.realResult === MatchResult.Win) {
-            const minWinGain = Math.max(8, factorK * 0.15); // Minimum 8 points or 15% of K factor (more generous)
-            if (baseDiff < minWinGain) {
-                baseDiff = minWinGain;
-            }
-            
-            // Additional bonus for lower-rated players beating higher-rated opponents
-            if (targetRecord.rating < counterpartRecord.rating) {
-                const ratingDifference = counterpartRecord.rating - targetRecord.rating;
-                const upsetBonus = Math.min(ratingDifference * 0.1, factorK * 0.3); // Up to 30% of K factor bonus
-                baseDiff += upsetBonus;
-            }
-        }
-        // Loss protection: More generous protection to prevent rating deflation
-        else if (targetRecord.realResult === MatchResult.Lose) {
-            const maxLoss = -(factorK * 0.7); // Maximum loss is 70% of K factor (reduced from 80%)
-            if (baseDiff < maxLoss) {
-                baseDiff = maxLoss;
-            }
-            
-            // Protection for higher-rated players losing to lower-rated opponents
-            if (targetRecord.rating > counterpartRecord.rating) {
-                const ratingDifference = targetRecord.rating - counterpartRecord.rating;
-                const protectionFactor = Math.min(ratingDifference * 0.05, factorK * 0.2); // Up to 20% protection
-                baseDiff = Math.max(baseDiff, -Math.abs(baseDiff) + protectionFactor);
-            }
-        }
-
-        return parseFloat(baseDiff.toFixed(2));
+        // Use Chess.com K-factor instead of passed factorK
+        const chessComK = this.getKFactor(targetRecord.rating, playerTotals || 0);
+        
+        // Simple Chess.com formula: K * (S - E)
+        const expectedScore = this.calcExpectedResult(targetRecord.rating, counterpartRecord.rating);
+        const actualScore = targetRecord.realResult;
+        
+        let ratingChange = chessComK * (actualScore - expectedScore);
+        
+        return parseFloat(ratingChange.toFixed(2));
     }
 
-    // R' = R + sum of all diffs
+    // R' = R + sum of all diffs with Chess.com bounds
     public calcNewRating(originalRating: number, diffs: number[]): number {
         let sumDiffs: number = diffs.reduce((acc, curr) => { return acc + curr}, 0);
         let res: number = Math.round(originalRating + sumDiffs);
-        if(res < 0) res = 0; // minimum rating is 0.
+        
+        // Chess.com rating bounds
+        const MIN_RATING = 100;
+        const MAX_RATING = 3200;
+        
+        if(res < MIN_RATING) res = MIN_RATING;
+        if(res > MAX_RATING) res = MAX_RATING;
 
         return res;
     }
 
-    // R' = R + sum of all diffs + activity bonus (enhanced version for activity rewards)
+    // Chess.com style rating with bounds (no activity bonus)
     public calcNewRatingWithActivityBonus(originalRating: number, diffs: number[], playerTotals: number): number {
-        let sumDiffs: number = diffs.reduce((acc, curr) => { return acc + curr}, 0);
-        
-        // Activity bonus: Reward players who play many games
-        let activityBonus = 0;
-        if (playerTotals > 0) {
-            // Progressive bonus based on total games played
-            if (playerTotals >= 500) {
-                activityBonus = Math.max(sumDiffs * 0.15, 2); // 15% bonus for 500+ games, minimum 2 points
-            } else if (playerTotals >= 200) {
-                activityBonus = Math.max(sumDiffs * 0.10, 1.5); // 10% bonus for 200+ games
-            } else if (playerTotals >= 100) {
-                activityBonus = Math.max(sumDiffs * 0.05, 1); // 5% bonus for 100+ games
-            } else if (playerTotals >= 50) {
-                activityBonus = Math.max(sumDiffs * 0.02, 0.5); // 2% bonus for 50+ games
-            }
-            
-            // Only apply bonus if gaining ELO
-            if (sumDiffs > 0) {
-                sumDiffs += activityBonus;
-            }
-        }
-        
-        let res: number = Math.round(originalRating + sumDiffs);
-        if(res < 0) res = 0; // minimum rating is 0.
-
-        return res;
+        return this.calcNewRating(originalRating, diffs);
     }
 
     public calcTeamRatingsMean(eachTeamPlayers: PlayerObject[]): number {

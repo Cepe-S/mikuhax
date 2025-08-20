@@ -8,6 +8,8 @@ import { decideTier, getAvatarByTier, Tier } from "../../model/Statistics/Tier";
 import { setBanlistDataToDB } from "../Storage";
 import { getRandomMatch } from "../../resource/realTeams";
 import { qDetector } from "../QDetector";
+import { HElo, MatchResult, StatsRecord } from "../../model/Statistics/HElo";
+import { EloIntegrityTracker } from "../../model/Statistics/EloIntegrityTracker";
 
 export function onGameStartListener(byPlayer: PlayerObject | null): void {
     // Reiniciar almacenamiento temporal de eventos de partido
@@ -39,6 +41,12 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
     let allPlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList(); // all list
 
     window.gameRoom.isGamingNow = true; // turn on
+    
+    // Initialize ELO integrity tracking for this match
+    if (window.gameRoom.config.rules.statsRecord === true && window.gameRoom.isStatRecord === true) {
+        const eloTracker = EloIntegrityTracker.getInstance();
+        eloTracker.onMatchStart();
+    }
 
     if (window.gameRoom.config.settings.antiChatFlood === true) { // if anti-chat flood option is enabled
         window.gameRoom.antiTrollingChatFloodCount = []; // clear and init again
@@ -102,7 +110,7 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
             setTimeout(() => {
                 const teamsInfo = getTeamsEloInfo();
                 
-                // Mostrar información de ELO de equipos en lugar de expectativas
+                // Mostrar información de ELO de equipos
                 const redEloMsg = `🔴 Equipo Rojo: ${teamsInfo.redCount} jugadores | ELO Total: ${teamsInfo.redElo} | Promedio: ${teamsInfo.redCount > 0 ? Math.round(teamsInfo.redElo / teamsInfo.redCount) : 0}`;
                 const blueEloMsg = `🔵 Equipo Azul: ${teamsInfo.blueCount} jugadores | ELO Total: ${teamsInfo.blueElo} | Promedio: ${teamsInfo.blueCount > 0 ? Math.round(teamsInfo.blueElo / teamsInfo.blueCount) : 0}`;
                 const balanceMsg = `⚖️ Diferencia de ELO: ${Math.abs(teamsInfo.redElo - teamsInfo.blueElo)} puntos`;
@@ -111,6 +119,9 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
                 window.gameRoom._room.sendAnnouncement(redEloMsg, null, 0xFD2C2D, "normal", 0);
                 window.gameRoom._room.sendAnnouncement(blueEloMsg, null, 0x18fde8, "normal", 0);
                 window.gameRoom._room.sendAnnouncement(balanceMsg, null, 0xFFFF00, "normal", 0);
+                
+                // Mostrar predicciones de ELO individuales
+                showEloExpectations();
             }, 200);
         } else {
             // Modo manual - solo mostrar información de equipos
@@ -121,6 +132,9 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
             window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.startRecord, placeholderStart), null, 0x00FF00, "normal", 0);
             window.gameRoom._room.sendAnnouncement(redEloMsg, null, 0xFD2C2D, "normal", 0);
             window.gameRoom._room.sendAnnouncement(blueEloMsg, null, 0x18fde8, "normal", 0);
+            
+            // Mostrar predicciones de ELO individuales
+            showEloExpectations();
         }
 
         // Auto-pause removed - game starts immediately
@@ -145,4 +159,74 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
     window.gameRoom.ballStack.initPowershotSystem();
 
     window.gameRoom.logger.i('onGameStart', msg);
+}
+
+function showEloExpectations(): void {
+    const ratingHelper: HElo = HElo.getInstance();
+    
+    let allActivePlayers: PlayerObject[] = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.id !== 0 && window.gameRoom.playerList.get(player.id)!.permissions.afkmode === false);
+    let teamPlayers: PlayerObject[] = allActivePlayers.filter((eachPlayer: PlayerObject) => eachPlayer.team !== TeamID.Spec);
+    let redTeamPlayers: PlayerObject[] = teamPlayers.filter((eachPlayer: PlayerObject) => eachPlayer.team === TeamID.Red);
+    let blueTeamPlayers: PlayerObject[] = teamPlayers.filter((eachPlayer: PlayerObject) => eachPlayer.team === TeamID.Blue);
+    
+    if (redTeamPlayers.length === 0 || blueTeamPlayers.length === 0) return;
+    
+    // Calcular promedios de equipos
+    let redTeamRatingsMean: number = ratingHelper.calcTeamRatingsMean(redTeamPlayers);
+    let blueTeamRatingsMean: number = ratingHelper.calcTeamRatingsMean(blueTeamPlayers);
+    
+    // Crear registros simulados para predicciones
+    let redStatsRecordsWin: StatsRecord[] = ratingHelper.makeStasRecord(MatchResult.Win, redTeamPlayers);
+    let blueStatsRecordsWin: StatsRecord[] = ratingHelper.makeStasRecord(MatchResult.Win, blueTeamPlayers);
+    let redStatsRecordsLose: StatsRecord[] = ratingHelper.makeStasRecord(MatchResult.Lose, redTeamPlayers);
+    let blueStatsRecordsLose: StatsRecord[] = ratingHelper.makeStasRecord(MatchResult.Lose, blueTeamPlayers);
+    
+    // Calcular y mostrar expectativas para cada jugador
+    setTimeout(() => {
+        // Jugadores del equipo rojo
+        redStatsRecordsWin.forEach((eachItem: StatsRecord, idx: number) => {
+            let diffArrayWin: number[] = [];
+            let diffArrayLose: number[] = [];
+            let playerTotals: number = window.gameRoom.playerList.get(redTeamPlayers[idx].id)!.stats.totals;
+            
+            // Calcular cambios si gana
+            for (let i: number = 0; i < blueStatsRecordsLose.length; i++) {
+                diffArrayWin.push(ratingHelper.calcBothDiff(eachItem, blueStatsRecordsLose[i], redTeamRatingsMean, blueTeamRatingsMean, eachItem.matchKFactor, playerTotals));
+            }
+            
+            // Calcular cambios si pierde
+            for (let i: number = 0; i < blueStatsRecordsWin.length; i++) {
+                diffArrayLose.push(ratingHelper.calcBothDiff(redStatsRecordsLose[idx], blueStatsRecordsWin[i], blueTeamRatingsMean, redTeamRatingsMean, redStatsRecordsLose[idx].matchKFactor, playerTotals));
+            }
+            
+            let winChange = Math.round(diffArrayWin.reduce((acc, curr) => acc + curr, 0));
+            let loseChange = Math.round(diffArrayLose.reduce((acc, curr) => acc + curr, 0));
+            
+            let expectationMsg = `📊 Expectativas ELO:\n🏆 Si ganas: +${winChange} puntos\n💔 Si pierdes: ${loseChange} puntos`;
+            window.gameRoom._room.sendAnnouncement(expectationMsg, redTeamPlayers[idx].id, 0xFFD700, "normal", 1);
+        });
+        
+        // Jugadores del equipo azul
+        blueStatsRecordsWin.forEach((eachItem: StatsRecord, idx: number) => {
+            let diffArrayWin: number[] = [];
+            let diffArrayLose: number[] = [];
+            let playerTotals: number = window.gameRoom.playerList.get(blueTeamPlayers[idx].id)!.stats.totals;
+            
+            // Calcular cambios si gana
+            for (let i: number = 0; i < redStatsRecordsLose.length; i++) {
+                diffArrayWin.push(ratingHelper.calcBothDiff(eachItem, redStatsRecordsLose[i], blueTeamRatingsMean, redTeamRatingsMean, eachItem.matchKFactor, playerTotals));
+            }
+            
+            // Calcular cambios si pierde
+            for (let i: number = 0; i < redStatsRecordsWin.length; i++) {
+                diffArrayLose.push(ratingHelper.calcBothDiff(blueStatsRecordsLose[idx], redStatsRecordsWin[i], redTeamRatingsMean, blueTeamRatingsMean, blueStatsRecordsLose[idx].matchKFactor, playerTotals));
+            }
+            
+            let winChange = Math.round(diffArrayWin.reduce((acc, curr) => acc + curr, 0));
+            let loseChange = Math.round(diffArrayLose.reduce((acc, curr) => acc + curr, 0));
+            
+            let expectationMsg = `📊 Expectativas ELO:\n🏆 Si ganas: +${winChange} puntos\n💔 Si pierdes: ${loseChange} puntos`;
+            window.gameRoom._room.sendAnnouncement(expectationMsg, blueTeamPlayers[idx].id, 0xFFD700, "normal", 1);
+        });
+    }, 1000);
 }

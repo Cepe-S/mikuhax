@@ -6,6 +6,7 @@ import { getUnixTimestamp } from "../Statistics";
 import { roomActivePlayersNumberCheck, assignPlayerToBalancedTeam, balanceTeamsAfterLeave } from "../../model/OperateHelper/Quorum";
 import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { registerCommand } from "../CommandRegistry";
+import { EloIntegrityTracker } from "../../model/Statistics/EloIntegrityTracker";
 
 export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
     var placeholder = {
@@ -45,6 +46,10 @@ export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
             window.gameRoom._room.sendAnnouncement(LangRes.antitrolling.afkAbusing.cannotReason, byPlayer.id, 0xFF7777, "normal", 2); //warn
             return; //abort this event
         }
+        // Check for ELO integrity violation before going AFK
+        const eloTracker = EloIntegrityTracker.getInstance();
+        const violationDetected = eloTracker.onPlayerAFK(byPlayer, true);
+        
         window.gameRoom._room.setPlayerTeam(byPlayer.id, TeamID.Spec); // Moves this player to Spectators team.
         // Mantener permisos de admin para superadmins incluso en AFK
         if (!window.gameRoom.playerList.get(byPlayer.id)!.permissions.superadmin) {

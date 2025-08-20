@@ -12,6 +12,9 @@ export function onPlayerTeamChangeListener(changedPlayer: PlayerObject, byPlayer
         targetPlayerName: changedPlayer.name,
         targetAfkReason: ''
     }
+    
+    // Store original team for integrity tracking
+    const originalTeam = window.gameRoom.playerList.get(changedPlayer.id)?.team || changedPlayer.team;
 
     if(window.gameRoom.config.rules.autoOperating === true && window.gameRoom.playerList.has(changedPlayer.id) === true) {
         let matchEntryTime: number = window.gameRoom._room.getScores()?.time ?? 0; // get match time (it will be null if the game isn't in progress)

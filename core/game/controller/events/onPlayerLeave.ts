@@ -7,6 +7,7 @@ import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, balanceTeamsAfterLeave, forceTeamBalance } from "../../model/OperateHelper/Quorum";
 import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { convertToPlayerStorage, getBanlistDataFromDB, setBanlistDataToDB, setPlayerDataToDB } from "../Storage";
+import { EloIntegrityTracker } from "../../model/Statistics/EloIntegrityTracker";
 
 export async function onPlayerLeaveListener(player: PlayerObject): Promise<void> {
     // Event called when a player leaves the room.
@@ -88,17 +89,11 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
         window.gameRoom.playerList.get(player.id)!.stats.disconns++;
         placeholderLeft.playerStatsDisconns = window.gameRoom.playerList.get(player.id)!.stats.disconns;
         
-        // PENALIZACIONES POR ABANDONO DESHABILITADAS - No más sanciones por salir de partida
-        /*if(window.gameRoom.config.settings.antiGameAbscond === true) { // if anti abscond option is enabled
-            window.gameRoom.playerList.get(player.id)!.stats.rating -= window.gameRoom.config.settings.gameAbscondRatingPenalty; // rating penalty
-            if(await getBanlistDataFromDB(window.gameRoom.playerList.get(player.id)!.conn) === undefined ) { // if this player is in match(team player), fixed-term ban this player
-                // check this player already registered in ban list to prevent overwriting other ban reason.
-                window.gameRoom.logger.i('onPlayerLeave', `${player.name}#${player.id} has been added in fixed term ban list for abscond.`);
-                await setBanlistDataToDB({ conn: window.gameRoom.playerList.get(player.id)!.conn, reason: LangRes.antitrolling.gameAbscond.banReason, register: leftTimeStamp, expire: leftTimeStamp + window.gameRoom.config.settings.gameAbscondBanMillisecs });
-            }
-        }*/
+        // Check for ELO integrity violation on disconnect
+        const eloTracker = EloIntegrityTracker.getInstance();
+        const violationDetected = eloTracker.onPlayerDisconnect(player);
         
-        window.gameRoom.logger.i('onPlayerLeave', `${player.name}#${player.id} left during game - no penalties applied`);
+        window.gameRoom.logger.i('onPlayerLeave', `${player.name}#${player.id} left during game${violationDetected ? ' (ELO penalty applied)' : ' - no penalties applied'}`);
     }
 
     if (window.gameRoom.config.settings.banVoteEnable) { // check vote and reduce
