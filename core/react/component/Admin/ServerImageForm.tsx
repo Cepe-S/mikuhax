@@ -367,6 +367,271 @@ export default function ServerImageForm({
                         </AccordionDetails>
                     </Accordion>
 
+                    {/* Anti-AFK System */}
+                    <Accordion>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Typography variant="h6">💤 Sistema Anti-AFK</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
+                                    <Typography variant="body2" color="textSecondary" style={{ marginBottom: '16px' }}>
+                                        Configura el sistema de detección automática de jugadores inactivos (AFK). 
+                                        El sistema verifica cada 15 segundos si los jugadores muestran actividad.
+                                    </Typography>
+                                </Grid>
+                                
+                                {/* Detección Automática */}
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle1" style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                                        🔍 Detección Automática
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        label="Límite de Inactividad (conteos)"
+                                        value={settingsFormField.afkCountLimit || 20}
+                                        onChange={(e) => setSettingsFormField({
+                                            ...settingsFormField,
+                                            afkCountLimit: parseInt(e.target.value) || 20
+                                        })}
+                                        helperText="Número de verificaciones (15s c/u) antes del kick automático"
+                                        inputProps={{ min: 1, max: 100 }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <Typography variant="body2" color="textSecondary" style={{ padding: '16px 0' }}>
+                                        ⏱️ Tiempo total: {Math.round((settingsFormField.afkCountLimit || 20) * 15 / 60)} minutos
+                                        <br />
+                                        📊 Verificaciones cada 15 segundos
+                                        <br />
+                                        🎯 Solo afecta jugadores en equipos durante partidas
+                                    </Typography>
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                    <Divider style={{ margin: '16px 0' }} />
+                                </Grid>
+
+                                {/* Comando Manual AFK */}
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle1" style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                                        🎮 Comando Manual (!afk)
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settingsFormField.afkCommandAutoKick || false}
+                                                onChange={(e) => setSettingsFormField({
+                                                    ...settingsFormField,
+                                                    afkCommandAutoKick: e.target.checked
+                                                })}
+                                            />
+                                        }
+                                        label="Auto-kick por AFK prolongado"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        label="Tiempo máximo AFK (minutos)"
+                                        value={Math.round((settingsFormField.afkCommandAutoKickAllowMillisecs || 300000) / 60000)}
+                                        onChange={(e) => setSettingsFormField({
+                                            ...settingsFormField,
+                                            afkCommandAutoKickAllowMillisecs: (parseInt(e.target.value) || 5) * 60000
+                                        })}
+                                        disabled={!settingsFormField.afkCommandAutoKick}
+                                        helperText="Tiempo máximo que un jugador puede estar AFK manualmente"
+                                        inputProps={{ min: 1, max: 60 }}
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                    <Divider style={{ margin: '16px 0' }} />
+                                </Grid>
+
+                                {/* Protecciones Anti-Abuso */}
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle1" style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                                        🛡️ Protecciones Anti-Abuso
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settingsFormField.antiAFKFlood || true}
+                                                onChange={(e) => setSettingsFormField({
+                                                    ...settingsFormField,
+                                                    antiAFKFlood: e.target.checked
+                                                })}
+                                            />
+                                        }
+                                        label="Anti-spam del comando !afk"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settingsFormField.antiAFKAbusing || false}
+                                                onChange={(e) => setSettingsFormField({
+                                                    ...settingsFormField,
+                                                    antiAFKAbusing: e.target.checked
+                                                })}
+                                            />
+                                        }
+                                        label="Prevenir AFK durante partidas"
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Typography variant="body2" color="textSecondary">
+                                        ℹ️ <strong>Nota importante:</strong> Los superadministradores nunca son kickeados por AFK para prevenir la pérdida accidental de administradores.
+                                    </Typography>
+                                </Grid>
+                            </Grid>
+                        </AccordionDetails>
+                    </Accordion>
+
+                    {/* Anti-Trolling & Security */}
+                    <Accordion>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Typography variant="h6">🛡️ Seguridad y Anti-Trolling</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
+                                    <Typography variant="body2" color="textSecondary" style={{ marginBottom: '16px' }}>
+                                        Configuraciones adicionales para prevenir comportamientos maliciosos y abuso del sistema.
+                                    </Typography>
+                                </Grid>
+                                
+                                {/* Anti-Flood Systems */}
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle1" style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                                        🌊 Sistemas Anti-Flood
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settingsFormField.antiJoinFlood || true}
+                                                onChange={(e) => setSettingsFormField({
+                                                    ...settingsFormField,
+                                                    antiJoinFlood: e.target.checked
+                                                })}
+                                            />
+                                        }
+                                        label="Anti-flood de conexiones"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settingsFormField.antiChatFlood || true}
+                                                onChange={(e) => setSettingsFormField({
+                                                    ...settingsFormField,
+                                                    antiChatFlood: e.target.checked
+                                                })}
+                                            />
+                                        }
+                                        label="Anti-spam de chat"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settingsFormField.antiPlayerKickAbusing || true}
+                                                onChange={(e) => setSettingsFormField({
+                                                    ...settingsFormField,
+                                                    antiPlayerKickAbusing: e.target.checked
+                                                })}
+                                            />
+                                        }
+                                        label="Anti-abuso de kicks"
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                    <Divider style={{ margin: '16px 0' }} />
+                                </Grid>
+
+                                {/* Game Behavior */}
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle1" style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                                        🎮 Comportamiento en Juego
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settingsFormField.antiGameAbscond || true}
+                                                onChange={(e) => setSettingsFormField({
+                                                    ...settingsFormField,
+                                                    antiGameAbscond: e.target.checked
+                                                })}
+                                            />
+                                        }
+                                        label="Penalizar abandono de partidas"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settingsFormField.guaranteePlayingTime || true}
+                                                onChange={(e) => setSettingsFormField({
+                                                    ...settingsFormField,
+                                                    guaranteePlayingTime: e.target.checked
+                                                })}
+                                            />
+                                        }
+                                        label="Garantizar tiempo de juego mínimo"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        label="Tiempo mínimo garantizado (segundos)"
+                                        value={settingsFormField.guaranteedPlayingTimeSeconds || 20}
+                                        onChange={(e) => setSettingsFormField({
+                                            ...settingsFormField,
+                                            guaranteedPlayingTimeSeconds: parseInt(e.target.value) || 20
+                                        })}
+                                        disabled={!settingsFormField.guaranteePlayingTime}
+                                        helperText="Tiempo mínimo que un jugador debe jugar antes de poder salir"
+                                        inputProps={{ min: 5, max: 300 }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        label="Penalización por abandono (rating)"
+                                        value={settingsFormField.gameAbscondRatingPenalty || 10}
+                                        onChange={(e) => setSettingsFormField({
+                                            ...settingsFormField,
+                                            gameAbscondRatingPenalty: parseInt(e.target.value) || 10
+                                        })}
+                                        disabled={!settingsFormField.antiGameAbscond}
+                                        helperText="Puntos de rating perdidos por abandonar partidas"
+                                        inputProps={{ min: 1, max: 100 }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </AccordionDetails>
+                    </Accordion>
+
                     {/* Room Configuration */}
                     <Accordion>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
