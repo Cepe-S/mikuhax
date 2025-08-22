@@ -28,6 +28,8 @@ export interface GameCommands {
     _helpMandiscord: string
     _helpMannv: string
     _helpManbb: string
+    _helpManbanlist: string
+    _helpManunban: string
 
     _listSubafk: string
     _listSubmute: string
@@ -41,6 +43,7 @@ export interface GameCommands {
     _superSubthordeprive: string
     _superSubkick: string
     _superSubban: string
+    _superSubunban: string
 
     _disabledCommandList?: string[]
 
@@ -72,4 +75,6 @@ export interface GameCommands {
     discord: string
     nv: string
     bb: string
+    banlist: string
+    unban: string
 }

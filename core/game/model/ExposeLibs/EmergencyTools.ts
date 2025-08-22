@@ -29,11 +29,11 @@ export const EmergencyTools = {
     },
     ban: function(playerID: number, msg?: string): void { // ban the player
         if(msg) {
-            window.gameRoom._room.kickPlayer(playerID, msg, true);
-            console.log(`[EMERGENCY.BAN] #${playerID} is banned. reason:${msg}`);
+            window.gameRoom._room.kickPlayer(playerID, msg, false);
+            console.log(`[EMERGENCY.BAN] #${playerID} is kicked. reason:${msg}`);
         } else {
-            window.gameRoom._room.kickPlayer(playerID, 'by haxbotron', true);
-            console.log(`[EMERGENCY.BAN] #${playerID} is banned.`);
+            window.gameRoom._room.kickPlayer(playerID, 'by haxbotron', false);
+            console.log(`[EMERGENCY.BAN] #${playerID} is kicked.`);
         }
     },
     /*

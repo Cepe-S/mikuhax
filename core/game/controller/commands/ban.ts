@@ -40,14 +40,15 @@ export function cmdBan(byPlayer: PlayerObject, message?: string): void {
                         reason,
                         durationMinutes,
                         byPlayer.auth,
-                        byPlayer.name
+                        byPlayer.name,
+                        targetPlayer.name
                     ).then(() => {
                         // Kick with ban
                         const banMsg = durationMinutes > 0 
                             ? `Banned for ${durationMinutes} minutes. Reason: ${reason}`
                             : `Permanently banned. Reason: ${reason}`;
                         
-                        window.gameRoom._room.kickPlayer(target, banMsg, true);
+                        window.gameRoom._room.kickPlayer(target, banMsg, false);
                         
                         const successMsg = durationMinutes > 0
                             ? `🚫 ${targetPlayer.name} has been banned for ${durationMinutes} minutes. Reason: ${reason}`

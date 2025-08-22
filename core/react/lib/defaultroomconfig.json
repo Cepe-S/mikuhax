@@ -151,6 +151,8 @@
 		"_helpMandiscord": "discord",
 		"_helpMannv": "nv",
 		"_helpManbb": "bb",
+		"_helpManbanlist": "banlist",
+		"_helpManunban": "unban",
 		"_listSubafk": "afk",
 		"_listSubmute": "mute",
 		"_listSubred": "red",
@@ -162,6 +164,7 @@
 		"_superSubthordeprive": "deprive",
 		"_superSubkick": "kick",
 		"_superSubban": "ban",
+		"_superSubunban": "unban",
 		"_disabledCommandList": [
 			"SampleDisabledCommandName1",
 			"SampleDisabledCommandName2"
@@ -193,6 +196,8 @@
 		"memide": "memide",
 		"discord": "discord",
 		"nv": "nv",
-		"bb": "bb"
+		"bb": "bb",
+		"banlist": "banlist",
+		"unban": "unban"
 	}
 }

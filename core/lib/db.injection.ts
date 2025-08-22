@@ -414,10 +414,11 @@ export interface BanListItem {
     expire: number;
     adminAuth?: string;
     adminName?: string;
+    playerName?: string;
 }
 
 // Enhanced Ban functions
-export async function createBanDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string): Promise<void> {
+export async function createBanDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string, playerName?: string): Promise<void> {
     try {
         const now = Date.now();
         const expire = durationMinutes > 0 ? now + (durationMinutes * 60 * 1000) : -1; // -1 for permanent
@@ -429,7 +430,8 @@ export async function createBanDB(ruid: string, auth: string, conn: string, reas
             register: now,
             expire,
             adminAuth,
-            adminName
+            adminName,
+            playerName
         };
         
         const result = await axios.post(`${dbConnAddr}room/${ruid}/banlist`, banData);
@@ -546,4 +548,47 @@ export async function deleteMuteByAuthDB(ruid: string, auth: string): Promise<bo
         }
     }
     return false;
+}
+
+// Get all bans from database
+export async function getAllBansFromDB(ruid: string): Promise<BanListItem[]> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/banlist`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`200 Succeed on getAllBansFromDB`);
+            return result.data;
+        }
+        return [];
+    } catch (error) {
+        winstonLogger.error(`Error caught on getAllBansFromDB: ${error}`);
+        return [];
+    }
+}
+
+// Enhanced function to clean expired bans from database
+export async function cleanExpiredBansDB(ruid: string): Promise<number> {
+    try {
+        const allBans = await getAllBansFromDB(ruid);
+        const now = Date.now();
+        let clearedCount = 0;
+        
+        const clearPromises = allBans.map(async (ban) => {
+            // Check if ban is expired
+            if (ban.expire !== -1 && ban.expire <= now) {
+                try {
+                    await deleteBanByAuthDB(ruid, ban.auth);
+                    clearedCount++;
+                    winstonLogger.info(`Cleared expired ban for auth: ${ban.auth}`);
+                } catch (error) {
+                    winstonLogger.error(`Failed to clear expired ban for auth ${ban.auth}: ${error}`);
+                }
+            }
+        });
+        
+        await Promise.all(clearPromises);
+        return clearedCount;
+    } catch (error) {
+        winstonLogger.error(`Error during expired bans cleanup: ${error}`);
+        return 0;
+    }
 }

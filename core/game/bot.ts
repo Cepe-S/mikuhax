@@ -96,6 +96,17 @@ var scheduledTimer60 = setInterval(() => {
         }
         window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.scheduler.banVoteAutoNotify, placeholderVote), null, 0x00FF00, "normal", 0); //notify it
     }
+    
+    // Clean expired bans automatically every 5 minutes
+    if (typeof window._cleanExpiredBansDB === 'function') {
+        window._cleanExpiredBansDB(window.gameRoom.config._RUID).then((clearedCount: number) => {
+            if (clearedCount > 0) {
+                window.gameRoom.logger.i('scheduler', `Auto-cleared ${clearedCount} expired bans`);
+            }
+        }).catch((error: any) => {
+            window.gameRoom.logger.w('scheduler', `Error during auto-cleanup of expired bans: ${error}`);
+        });
+    }
 }, 300000); // 300secs (5 minutes)
 
 var scheduledTimer5 = setInterval(() => {

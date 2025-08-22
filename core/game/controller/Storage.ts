@@ -132,3 +132,44 @@ export async function trackConnectionToDB(connectionData: {
 export async function getConnectionAnalyticsFromDB(auth: string): Promise<any> {
     return await window._getConnectionAnalyticsDB(auth);
 }
+
+// Utility function to clear all native Haxball bans
+export function clearAllNativeBans(): void {
+    try {
+        // Get all current players and try to clear their bans
+        const allPlayers = window.gameRoom._room.getPlayerList();
+        let clearedCount = 0;
+        
+        for (const player of allPlayers) {
+            if (player.id !== 0) { // Skip host
+                try {
+                    window.gameRoom._room.clearBan(player.id);
+                    clearedCount++;
+                } catch (e) {
+                    // Ignore errors - player might not be banned
+                }
+            }
+        }
+        
+        window.gameRoom.logger.i('clearBans', `Attempted to clear native bans for ${clearedCount} players`);
+    } catch (error) {
+        window.gameRoom.logger.w('clearBans', `Error clearing native bans: ${error}`);
+    }
+}
+
+// Enhanced function to clean expired bans from database and native system
+export async function cleanExpiredBans(): Promise<number> {
+    try {
+        // Use the DB function to clean expired bans
+        const clearedCount = await window._cleanExpiredBansDB(window.gameRoom.config._RUID);
+        
+        // Also clear native bans as a safety measure
+        clearAllNativeBans();
+        
+        window.gameRoom.logger.i('cleanExpiredBans', `Cleaned ${clearedCount} expired bans from database and native system`);
+        return clearedCount;
+    } catch (error) {
+        window.gameRoom.logger.w('cleanExpiredBans', `Error during expired bans cleanup: ${error}`);
+        return 0;
+    }
+}

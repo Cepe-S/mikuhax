@@ -167,6 +167,11 @@ export class HeadlessBrowser {
             waitUntil: 'networkidle2'
         });
 
+        // Wait for HBInit to be available before proceeding
+        await page.waitForFunction(() => typeof window.HBInit === 'function', {
+            timeout: 30000 // 30 seconds timeout
+        });
+
         // convey configuration values via html5 localStorage
         await page.evaluate((initConfig: string, defaultMap: string, readyMap: string) => {
             localStorage.setItem('_initConfig', initConfig);
@@ -231,6 +236,8 @@ export class HeadlessBrowser {
         await page.exposeFunction('_createBanDB', dbUtilityInject.createBanDB);
         await page.exposeFunction('_readBanByAuthDB', dbUtilityInject.readBanByAuthDB);
         await page.exposeFunction('_deleteBanByAuthDB', dbUtilityInject.deleteBanByAuthDB);
+        await page.exposeFunction('_getAllBansFromDB', dbUtilityInject.getAllBansFromDB);
+        await page.exposeFunction('_cleanExpiredBansDB', dbUtilityInject.cleanExpiredBansDB);
         await page.exposeFunction('_createMuteDB', dbUtilityInject.createMuteDB);
         await page.exposeFunction('_readMuteByAuthDB', dbUtilityInject.readMuteByAuthDB);
         await page.exposeFunction('_deleteMuteByAuthDB', dbUtilityInject.deleteMuteByAuthDB);

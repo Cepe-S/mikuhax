@@ -55,6 +55,7 @@ export class BanListRepository implements IRepository<BanList> {
             newBan.expire = banlist.expire;
             newBan.adminAuth = banlist.adminAuth;
             newBan.adminName = banlist.adminName;
+            newBan.playerName = banlist.playerName;
         } else {
             // Update existing ban
             newBan.conn = banlist.conn;
@@ -63,6 +64,7 @@ export class BanListRepository implements IRepository<BanList> {
             newBan.expire = banlist.expire;
             newBan.adminAuth = banlist.adminAuth;
             newBan.adminName = banlist.adminName;
+            newBan.playerName = banlist.playerName;
         }
         return await repository.save(newBan);
     }
@@ -83,6 +85,7 @@ export class BanListRepository implements IRepository<BanList> {
             newBan.expire = banlist.expire;
             newBan.adminAuth = banlist.adminAuth;
             newBan.adminName = banlist.adminName;
+            newBan.playerName = banlist.playerName;
         } else {
             throw new Error('Such player is not banned yet.');
         }

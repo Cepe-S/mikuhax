@@ -55,7 +55,7 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
 
         if (playerBanChecking.expire == -1) { // Permanent ban
             window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} was joined but kicked for registered in permanent ban list. (auth:${player.auth},reason:${playerBanChecking.reason})`);
-            window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.onJoin.banList.permanentBan, placeholderJoin), true); // auto ban
+            window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.onJoin.banList.permanentBan, placeholderJoin), false); // auto kick
             return;
         }
         if (playerBanChecking.expire > joinTimeStamp) { // Fixed-term ban (time limited ban)
@@ -66,12 +66,26 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         if (playerBanChecking.expire != -1 && playerBanChecking.expire <= joinTimeStamp) { // time-over from expiration date
             // ban clear for this player
             window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} is deleted from the ban list because the date has expired. (auth:${player.auth},reason:${playerBanChecking.reason})`);
-            await removeBanByAuthFromDB(player.auth);
-            // Also try to remove old conn-based ban for cleanup
+            
+            // Clear from both auth-based and conn-based systems
+            try {
+                await removeBanByAuthFromDB(player.auth);
+            } catch (e) {
+                window.gameRoom.logger.w('onPlayerJoin', `Failed to remove auth-based ban for ${player.auth}: ${e}`);
+            }
+            
             try {
                 await removeBanlistDataFromDB(player.conn);
             } catch (e) {
                 // Ignore if old ban doesn't exist
+            }
+            
+            // Clear from Haxball's native system as well
+            try {
+                window.gameRoom._room.clearBan(player.id);
+                window.gameRoom.logger.i('onPlayerJoin', `Cleared native ban for ${player.name}#${player.id}`);
+            } catch (e) {
+                // Ignore if player wasn't banned in native system
             }
         }
     }

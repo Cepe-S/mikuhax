@@ -6,4 +6,5 @@ export interface BanListModel {
     expire: number;
     adminAuth?: string;
     adminName?: string;
+    playerName?: string;
 }

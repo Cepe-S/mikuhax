@@ -30,7 +30,7 @@ export async function cmdSuper(byPlayer: PlayerObject, fullMessage?: string): Pr
                         
                             if(window.gameRoom.playerList.get(byPlayer.id)!.permissions.malActCount >= window.gameRoom.config.settings.maliciousBehaviourBanCriterion) {
                                 // This player will be permanently banned if it fails to exceed limit.
-                                window.gameRoom._room.kickPlayer(byPlayer.id, LangRes.antitrolling.malAct.banReason, true); // ban
+                                window.gameRoom._room.kickPlayer(byPlayer.id, LangRes.antitrolling.malAct.banReason, false); // kick
                             }
                         }
                     } else {
@@ -109,7 +109,7 @@ export async function cmdSuper(byPlayer: PlayerObject, fullMessage?: string): Pr
                     if (submessage !== undefined && submessage.charAt(0) == "#") {
                         let target: number = parseInt(submessage.substr(1), 10);
                         if (isNaN(target) != true && window.gameRoom.playerList.has(target) == true) {
-                            window.gameRoom._room.kickPlayer(target, LangRes.command.super.ban.banMsg, true); // kick
+                            window.gameRoom._room.kickPlayer(target, LangRes.command.super.ban.banMsg, false); // kick
                             window.gameRoom._room.sendAnnouncement(LangRes.command.super.ban.banSuccess, byPlayer.id, 0x479947, "normal", 2);
                         } else {
                             window.gameRoom._room.sendAnnouncement(LangRes.command.super.ban.noID, byPlayer.id, 0xFF7777, "normal", 2);

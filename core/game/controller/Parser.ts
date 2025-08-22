@@ -24,6 +24,7 @@ import "./commands/list";
 import "./commands/freeze";
 import "./commands/mute";
 import "./commands/ban";
+import "./commands/banlist";
 import "./commands/unban";
 import "./commands/unmute";
 import "./commands/debugpowershot";

@@ -28,4 +28,7 @@ export class BanList {
 
     @Column({ nullable: true })
     adminName?: string; // Name of admin who applied the ban
+
+    @Column({ nullable: true })
+    playerName?: string; // Name of the banned player
 }
