@@ -2,7 +2,7 @@
 import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { isCommandString, parseCommand } from "../Parser";
+import { isCommandString, parseCommand, isPrivateMessage, handlePrivateMessage } from "../Parser";
 import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { isIncludeBannedWords } from "../TextFilter";
@@ -35,6 +35,12 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
     };
 
     // =========
+
+    // Check for private messages before processing commands
+    if (isPrivateMessage(message)) {
+        handlePrivateMessage(player, message);
+        return false; // Hide the message from public chat
+    }
 
     if (isCommandString(message) === true) { // if this message is command chat
         parseCommand(player, message); // evaluate it
@@ -141,3 +147,5 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
         return false; // Bloquear el mensaje original
     }
 }
+
+
