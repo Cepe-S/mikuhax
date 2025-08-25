@@ -2,7 +2,7 @@ import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { balanceTeamsAfterLeave, smartTeamBalance } from "../../model/OperateHelper/Quorum";
+import { balanceTeams } from "../../model/OperateHelper/Quorum";
 
 export function onPlayerTeamChangeListener(changedPlayer: PlayerObject, byPlayer: PlayerObject): void {
     // Event called when a player team is changed.
@@ -45,9 +45,18 @@ export function onPlayerTeamChangeListener(changedPlayer: PlayerObject, byPlayer
         
         // Si un jugador se mueve a espectadores durante una partida, intentar balancear
         if (window.gameRoom.config.rules.autoOperating === true && window.gameRoom.isGamingNow === true && changedPlayer.team === TeamID.Spec && byPlayer !== null && byPlayer.id === changedPlayer.id) {
+            // Cleanup subteams first in case player left
+            try {
+                if (typeof (global as any).cleanupSubteams === 'function') {
+                    (global as any).cleanupSubteams();
+                }
+            } catch (e) {
+                window.gameRoom.logger.w('onPlayerTeamChange', `Error cleaning up subteams: ${e}`);
+            }
+            
             setTimeout(() => {
-                balanceTeamsAfterLeave();
-                window.gameRoom.logger.i('onPlayerTeamChange', `Player moved to spec, attempting team balance`);
+                balanceTeams();
+                window.gameRoom.logger.i('onPlayerTeamChange', `Player moved to spec, attempting subteam-aware balance`);
             }, 500); // Delay aumentado para consistencia
         }
     }

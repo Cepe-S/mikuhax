@@ -119,6 +119,7 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                     playerName: editData.config.playerName || 'Host',
                     password: editData.config.password || '',
                     maxPlayers: editData.config.maxPlayers || 30,
+                    maxSubPlayers: editData.config.maxSubPlayers || undefined,
                     noPlayer: editData.config.noPlayer || false,
                     geo: editData.config.geo || undefined,
                     public: editData.config.public !== false,
@@ -266,6 +267,7 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                 playerName: configFormField.playerName || 'Host',
                 password: configFormField.password,
                 maxPlayers: configFormField.maxPlayers,
+                maxSubPlayers: configFormField.maxSubPlayers,
                 public: roomPublicFormField,
                 noPlayer: configFormField.noPlayer || false,
                 geo: configFormField.geo
@@ -358,8 +360,8 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
 
     const onChangeRoomConfig = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        if (name === 'maxPlayers' && isNumber(parseInt(value))) {
-            setConfigFormField({ ...configFormField, maxPlayers: parseInt(value) });
+        if (['maxPlayers', 'maxSubPlayers'].includes(name) && isNumber(parseInt(value))) {
+            setConfigFormField({ ...configFormField, [name]: parseInt(value) });
         } else {
             setConfigFormField({ ...configFormField, [name]: value });
         }
@@ -367,7 +369,7 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
 
     const onChangeRulesRequisite = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        if (['minimumPlayers', 'eachTeamPlayers', 'timeLimit', 'scoreLimit'].includes(name) && isNumber(parseInt(value))) {
+        if (['minimumPlayers', 'eachTeamPlayers', 'maxSubPlayers', 'timeLimit', 'scoreLimit'].includes(name) && isNumber(parseInt(value))) {
             setRulesFormField({
                 ...rulesFormField,
                 requisite: { ...rulesFormField.requisite, [name]: parseInt(value) }
@@ -492,6 +494,21 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                 <Grid item xs={6} sm={3}>
                                     <TextField
                                         fullWidth
+                                        id="maxSubPlayers"
+                                        name="maxSubPlayers"
+                                        label="Max Sub Players"
+                                        variant="outlined"
+                                        margin="normal"
+                                        type="number"
+                                        size="small"
+                                        value={configFormField.maxSubPlayers || ''}
+                                        onChange={onChangeRoomConfig}
+                                        helperText="Maximum substitute players allowed"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        fullWidth
                                         id="password"
                                         name="password"
                                         label="Room Password (Optional)"
@@ -599,6 +616,21 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                         type="number"
                                         size="small"
                                         required
+                                    />
+                                </Grid>
+                                <Grid item xs={6} sm={3}>
+                                    <TextField
+                                        fullWidth
+                                        value={rulesFormField?.requisite?.maxSubPlayers || ''}
+                                        onChange={onChangeRulesRequisite}
+                                        id="maxSubPlayers"
+                                        name="maxSubPlayers"
+                                        label="Max Sub Players"
+                                        variant="outlined"
+                                        margin="normal"
+                                        type="number"
+                                        size="small"
+                                        helperText="Máximo jugadores por sub equipo"
                                     />
                                 </Grid>
                                 <Grid item xs={6} sm={3}>

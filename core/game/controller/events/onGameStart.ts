@@ -3,7 +3,7 @@ import * as LangRes from "../../resource/strings";
 import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
-import { roomTeamPlayersNumberCheck, shuffleTeamsByElo, getTeamsEloInfo } from "../../model/OperateHelper/Quorum";
+import { roomTeamPlayersNumberCheck, getTeamsEloInfo } from "../../model/OperateHelper/Quorum";
 import { decideTier, getAvatarByTier, Tier } from "../../model/Statistics/Tier";
 import { setBanlistDataToDB } from "../Storage";
 import { getRandomMatch } from "../../resource/realTeams";
@@ -102,27 +102,23 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
                     } // or default value is Normal match
                 });
 
-        // Mezclar equipos por ELO antes de iniciar
+        // NO mezclar equipos durante el juego - solo mostrar información
         if (window.gameRoom.config.rules.autoOperating === true) {
-            shuffleTeamsByElo();
+            // Solo mostrar información de equipos sin mezclar
+            const teamsInfo = getTeamsEloInfo();
             
-            // Esperar un momento para que se complete el shuffle
-            setTimeout(() => {
-                const teamsInfo = getTeamsEloInfo();
-                
-                // Mostrar información de ELO de equipos
-                const redEloMsg = `🔴 Equipo Rojo: ${teamsInfo.redCount} jugadores | ELO Total: ${teamsInfo.redElo} | Promedio: ${teamsInfo.redCount > 0 ? Math.round(teamsInfo.redElo / teamsInfo.redCount) : 0}`;
-                const blueEloMsg = `🔵 Equipo Azul: ${teamsInfo.blueCount} jugadores | ELO Total: ${teamsInfo.blueElo} | Promedio: ${teamsInfo.blueCount > 0 ? Math.round(teamsInfo.blueElo / teamsInfo.blueCount) : 0}`;
-                const balanceMsg = `⚖️ Diferencia de ELO: ${Math.abs(teamsInfo.redElo - teamsInfo.blueElo)} puntos`;
-                
-                window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.startRecord, placeholderStart), null, 0x00FF00, "normal", 0);
-                window.gameRoom._room.sendAnnouncement(redEloMsg, null, 0xFD2C2D, "normal", 0);
-                window.gameRoom._room.sendAnnouncement(blueEloMsg, null, 0x18fde8, "normal", 0);
-                window.gameRoom._room.sendAnnouncement(balanceMsg, null, 0xFFFF00, "normal", 0);
-                
-                // Mostrar predicciones de ELO individuales
-                showEloExpectations();
-            }, 200);
+            // Mostrar información de ELO de equipos
+            const redEloMsg = `🔴 Equipo Rojo: ${teamsInfo.redCount} jugadores | ELO Total: ${teamsInfo.redElo} | Promedio: ${teamsInfo.redCount > 0 ? Math.round(teamsInfo.redElo / teamsInfo.redCount) : 0}`;
+            const blueEloMsg = `🔵 Equipo Azul: ${teamsInfo.blueCount} jugadores | ELO Total: ${teamsInfo.blueElo} | Promedio: ${teamsInfo.blueCount > 0 ? Math.round(teamsInfo.blueElo / teamsInfo.blueCount) : 0}`;
+            const balanceMsg = `⚖️ Diferencia de ELO: ${Math.abs(teamsInfo.redElo - teamsInfo.blueElo)} puntos`;
+            
+            window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.startRecord, placeholderStart), null, 0x00FF00, "normal", 0);
+            window.gameRoom._room.sendAnnouncement(redEloMsg, null, 0xFD2C2D, "normal", 0);
+            window.gameRoom._room.sendAnnouncement(blueEloMsg, null, 0x18fde8, "normal", 0);
+            window.gameRoom._room.sendAnnouncement(balanceMsg, null, 0xFFFF00, "normal", 0);
+            
+            // Mostrar predicciones de ELO individuales
+            showEloExpectations();
         } else {
             // Modo manual - solo mostrar información de equipos
             const teamsInfo = getTeamsEloInfo();

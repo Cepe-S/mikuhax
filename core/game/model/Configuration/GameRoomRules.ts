@@ -4,6 +4,7 @@ export interface GameRoomRule {
     requisite: {
         minimumPlayers: number // minimum number of players needs for apply this rule
         eachTeamPlayers: number // how many players are need in each team?
+        maxSubPlayers: number // maximum number of substitute players
         timeLimit: number // limit time for end the game
         scoreLimit: number // limit score for end the game
         teamLock: boolean // limit moving teams by self

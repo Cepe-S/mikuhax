@@ -6,7 +6,7 @@ import { convertToPlayerStorage, getBanlistDataFromDB, getPlayerDataFromDB, remo
 import { getUnixTimestamp } from "../Statistics";
 import { setDefaultStadiums, updateAdmins } from "../RoomTools";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, assignPlayerToBalancedTeam, getTeamsEloInfo } from "../../model/OperateHelper/Quorum";
+import { roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, assignPlayerToBalancedTeam, getTeamsEloInfo } from "../../model/OperateHelper/Quorum";
 import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { decideTier, getAvatarByTier, getTierName, getTierColor, Tier } from "../../model/Statistics/Tier";
 import { isExistNickname, isIncludeBannedWords } from "../TextFilter";
@@ -381,20 +381,18 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
                     window.gameRoom._room.setPlayerTeam(p.id, TeamID.Spec);
                 });
                 
-                setTimeout(() => {
-                    // Verificar si cola debe estar activa antes de asignar equipos
-                    if (queueSystem.shouldQueueBeActive()) {
-                        queueSystem.activateQueue();
-                        queueSystem.processQueue();
-                        window.gameRoom.logger.i('onPlayerJoin', 'Used queue system for team assignment when switching to stats mode');
-                    } else {
-                        // Luego asignar a equipos balanceados usando método normal
-                        allPlayers.forEach((p: PlayerObject) => {
-                            assignPlayerToBalancedTeam(p.id);
-                        });
-                        window.gameRoom.logger.i('onPlayerJoin', 'Used normal team assignment when switching to stats mode');
-                    }
-                }, 100);
+                // Verificar si cola debe estar activa antes de asignar equipos (sin delay)
+                if (queueSystem.shouldQueueBeActive()) {
+                    queueSystem.activateQueue();
+                    queueSystem.processQueue();
+                    window.gameRoom.logger.i('onPlayerJoin', 'Used queue system for team assignment when switching to stats mode');
+                } else {
+                    // Asignar a equipos balanceados usando método normal inmediatamente
+                    allPlayers.forEach((p: PlayerObject) => {
+                        assignPlayerToBalancedTeam(p.id);
+                    });
+                    window.gameRoom.logger.i('onPlayerJoin', 'Used normal team assignment when switching to stats mode');
+                }
             }
             
             if (window.gameRoom.config.rules.autoOperating === true && window.gameRoom.isGamingNow === true) {
@@ -412,55 +410,54 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
 
     // when auto emcee mode is enabled
     if (window.gameRoom.config.rules.autoOperating === true) {
-        setTimeout(() => {
-            // Lógica diferente para asignación de equipos según el modo
-            if (window.gameRoom.isStatRecord === false) {
-                // Modo ready/training: verificar si cola debe estar activa primero
-                const queueSystem = QueueSystem.getInstance();
-                if (queueSystem.shouldQueueBeActive()) {
-                    queueSystem.activateQueue();
-                    queueSystem.addPlayerToQueue(player.id);
-                    window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} added to queue in ready mode`);
-                } else {
-                    // Si no hay cola, asignar al equipo rojo por defecto para que pueda jugar
-                    window.gameRoom._room.setPlayerTeam(player.id, TeamID.Red);
-                    window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} assigned to Red team in ready mode`);
-                }
+        // Lógica diferente para asignación de equipos según el modo
+        if (window.gameRoom.isStatRecord === false) {
+            // Modo ready/training: verificar si cola debe estar activa primero
+            const queueSystem = QueueSystem.getInstance();
+            if (queueSystem.shouldQueueBeActive()) {
+                queueSystem.activateQueue();
+                queueSystem.addPlayerToQueue(player.id);
+                window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} added to queue in ready mode`);
             } else {
-                // Modo estadísticas: usar balanceo normal (ya integrado con cola)
-                assignPlayerToBalancedTeam(player.id);
+                // Si no hay cola, asignar al equipo rojo por defecto para que pueda jugar
+                window.gameRoom._room.setPlayerTeam(player.id, TeamID.Red);
+                window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} assigned to Red team in ready mode`);
             }
+        } else {
+            // Modo estadísticas: asignar al equipo con menos jugadores
+            const currentPlayers = window.gameRoom._room.getPlayerList().filter(p => p.id !== 0 && p.id !== player.id);
+            const redCount = currentPlayers.filter(p => p.team === TeamID.Red).length;
+            const blueCount = currentPlayers.filter(p => p.team === TeamID.Blue).length;
             
-            // Solo iniciar juego automáticamente si no hay partida en curso
-            if (window.gameRoom._room.getScores() === null) {
-                setTimeout(() => {
-                    const teamsInfo = getTeamsEloInfo();
-                    
-                    window.gameRoom.logger.i('onPlayerJoin', `Current teams after assignment - Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount}`);
-                    
-                    // Lógica diferente según el modo del juego
-                    if (window.gameRoom.isStatRecord === false) {
-                        // Modo ready/training: iniciar juego automáticamente incluso con un solo jugador
-                        setTimeout(() => {
-                            window.gameRoom._room.startGame();
-                            window.gameRoom.logger.i('onPlayerJoin', `Game started automatically in ready mode (Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount})`);
-                        }, 500);
-                    } else {
-                        // Modo estadísticas: solo iniciar si hay al menos 1 jugador por equipo
-                        if (teamsInfo.redCount > 0 && teamsInfo.blueCount > 0) {
-                            setTimeout(() => {
-                                window.gameRoom._room.startGame();
-                                window.gameRoom.logger.i('onPlayerJoin', `Game started automatically in stats mode (Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount})`);
-                            }, 500);
-                        } else {
-                            window.gameRoom.logger.i('onPlayerJoin', `Game not started - insufficient balanced teams for stats mode (Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount})`);
-                        }
-                    }
-                }, 500);
+            const targetTeam = redCount <= blueCount ? TeamID.Red : TeamID.Blue;
+            window.gameRoom._room.setPlayerTeam(player.id, targetTeam);
+            window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} assigned to ${targetTeam === TeamID.Red ? 'Red' : 'Blue'} team`);
+        }
+            
+        // Solo iniciar juego automáticamente si no hay partida en curso
+        if (window.gameRoom._room.getScores() === null) {
+            const teamsInfo = getTeamsEloInfo();
+            
+            window.gameRoom.logger.i('onPlayerJoin', `Current teams after assignment - Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount}`);
+            
+            // Lógica diferente según el modo del juego
+            if (window.gameRoom.isStatRecord === false) {
+                // Modo ready/training: iniciar juego inmediatamente
+                window.gameRoom._room.startGame();
+                window.gameRoom.logger.i('onPlayerJoin', `Game started immediately in ready mode (Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount})`);
             } else {
-                window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} assigned to team - game in progress`);
+                // Modo estadísticas: solo iniciar si hay al menos 1 jugador por equipo
+                if (teamsInfo.redCount > 0 && teamsInfo.blueCount > 0) {
+                    window.gameRoom._room.startGame();
+                    window.gameRoom.logger.i('onPlayerJoin', `Game started immediately in stats mode (Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount})`);
+                } else {
+                    window.gameRoom.logger.i('onPlayerJoin', `Game not started - insufficient balanced teams for stats mode (Red: ${teamsInfo.redCount}, Blue: ${teamsInfo.blueCount})`);
+                }
             }
-        }, 500);
+        } else {
+            window.gameRoom.logger.i('onPlayerJoin', `Player ${player.id} assigned to team - game in progress`);
+        }
+
     }
 
     // emit websocket event

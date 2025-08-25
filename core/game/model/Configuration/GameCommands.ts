@@ -30,6 +30,7 @@ export interface GameCommands {
     _helpManbb: string
     _helpManbanlist: string
     _helpManunban: string
+    _helpManteamuptoggle: string
 
     _listSubafk: string
     _listSubmute: string
@@ -77,4 +78,5 @@ export interface GameCommands {
     bb: string
     banlist: string
     unban: string
+    teamuptoggle: string
 }

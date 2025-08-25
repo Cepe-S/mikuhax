@@ -75,6 +75,7 @@
 		"requisite": {
 			"minimumPlayers": 1,
 			"eachTeamPlayers": 12,
+			"maxSubPlayers": 0,
 			"timeLimit": 3,
 			"scoreLimit": 1,
 			"teamLock": true
@@ -153,6 +154,7 @@
 		"_helpManbb": "bb",
 		"_helpManbanlist": "banlist",
 		"_helpManunban": "unban",
+		"_helpManteamuptoggle": "teamuptoggle",
 		"_listSubafk": "afk",
 		"_listSubmute": "mute",
 		"_listSubred": "red",
@@ -198,6 +200,7 @@
 		"nv": "nv",
 		"bb": "bb",
 		"banlist": "banlist",
-		"unban": "unban"
+		"unban": "unban",
+		"teamuptoggle": "teamuptoggle"
 	}
 }

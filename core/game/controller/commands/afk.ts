@@ -3,7 +3,7 @@ import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { TeamID } from "../../model/GameObject/TeamID";
 import { getUnixTimestamp } from "../Statistics";
-import { roomActivePlayersNumberCheck, assignPlayerToBalancedTeam, balanceTeamsAfterLeave } from "../../model/OperateHelper/Quorum";
+import { roomActivePlayersNumberCheck, assignPlayerToBalancedTeam, balanceTeams } from "../../model/OperateHelper/Quorum";
 import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { registerCommand } from "../CommandRegistry";
 import { EloIntegrityTracker } from "../../model/Statistics/EloIntegrityTracker";
@@ -69,7 +69,7 @@ export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
             
             // Also use the traditional balance system as backup
             setTimeout(() => {
-                balanceTeamsAfterLeave();
+                balanceTeams();
                 window.gameRoom.logger.i('cmdAfk', `Teams rebalanced after player ${byPlayer.name}#${byPlayer.id} went AFK`);
             }, 500); // Pequeño delay para asegurar que el cambio de equipo se procesó
         }

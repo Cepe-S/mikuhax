@@ -2,7 +2,7 @@ import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { recuritBothTeamFully, assignPlayerToBalancedTeam, fetchActiveSpecPlayers } from "../../model/OperateHelper/Quorum";
+import { balanceTeams, fetchActiveSpecPlayers } from "../../model/OperateHelper/Quorum";
 import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { setDefaultRoomLimitation, setDefaultStadiums } from "../RoomTools";
 
@@ -77,6 +77,10 @@ export function onGameStopListener(byPlayer: PlayerObject): void {
         window.gameRoom.logger.w('onGameStop', `❌ Replay not sent. Missing: ${missing.join(', ')}`);
     }
 
+    // DON'T clean up subteams when game stops - preserve them for next game
+    // Subteams should only be cleaned when players actually leave the server
+    window.gameRoom.logger.i('onGameStop', 'Preserving subteams for next game');
+
     // when auto emcee mode is enabled
     if(window.gameRoom.config.rules.autoOperating === true) {
         const queueSystem = QueueSystem.getInstance();
@@ -85,21 +89,20 @@ export function onGameStopListener(byPlayer: PlayerObject): void {
         if (queueSystem.shouldQueueBeActive()) {
             queueSystem.activateQueue();
             
-            // Process queue instead of direct assignment
-            window.gameRoom.logger.i('onGameStop', `🎯 Using queue system for team assignment`);
             queueSystem.processQueue();
+            // Después del queue, balancear equipos
+            setTimeout(() => {
+                balanceTeams();
+            }, 2000);
         } else {
-            // Use original balanced team assignment system
-            const specPlayers = fetchActiveSpecPlayers();
-            
-            // Assign spectators to balanced teams before starting new game
-            for (const specPlayer of specPlayers) {
-                assignPlayerToBalancedTeam(specPlayer.id);
-            }
-            
-            window.gameRoom.logger.i('onGameStop', `🔄 Teams balanced automatically for next game`);
+            // Usar el nuevo sistema de balanceo
+            setTimeout(() => {
+                balanceTeams();
+            }, 2000);
         }
         
         window.gameRoom._room.startGame(); // start next new game
     }
 }
+
+

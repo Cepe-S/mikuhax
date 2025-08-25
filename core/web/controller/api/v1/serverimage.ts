@@ -272,7 +272,13 @@ export async function deployFromImage(ctx: Context) {
             _RUID: imageData.ruid,
             _config: config,
             settings: imageData.settings,
-            rules: imageData.rules,
+            rules: {
+                ...imageData.rules,
+                requisite: {
+                    ...imageData.rules.requisite,
+                    maxSubPlayers: imageData.rules.requisite.maxSubPlayers ?? 0
+                }
+            },
             HElo: imageData.helo,
             commands: imageData.commands,
             webhooks: imageData.webhooks

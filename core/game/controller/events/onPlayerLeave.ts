@@ -4,10 +4,11 @@ import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { updateAdmins, setDefaultStadiums } from "../RoomTools";
 import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { recuritByOne, roomActivePlayersNumberCheck, roomTeamPlayersNumberCheck, balanceTeamsAfterLeave, forceTeamBalance } from "../../model/OperateHelper/Quorum";
+import { roomActivePlayersNumberCheck, balanceTeams, balanceAfterPlayerLeave } from "../../model/OperateHelper/Quorum";
 import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { convertToPlayerStorage, getBanlistDataFromDB, setBanlistDataToDB, setPlayerDataToDB } from "../Storage";
 import { EloIntegrityTracker } from "../../model/Statistics/EloIntegrityTracker";
+import { validateSubteams } from "../commands/teamup";
 
 export async function onPlayerLeaveListener(player: PlayerObject): Promise<void> {
     // Event called when a player leaves the room.
@@ -59,13 +60,24 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
             setDefaultStadiums(); // Cambiar al mapa de estadísticas cuando hay suficientes jugadores
         }
         // when auto emcee mode is enabled
-        if(window.gameRoom.config.rules.autoOperating === true && window.gameRoom.isGamingNow === true) {
+        if(window.gameRoom.config.rules.autoOperating === true) {
             if(player.team !== TeamID.Spec) {
-                // Usar el nuevo sistema de balanceo mejorado con delay mayor
-                setTimeout(() => {
-                    balanceTeamsAfterLeave();
-                    window.gameRoom.logger.i('onPlayerLeave', `Player ${player.name}#${player.id} left from ${player.team === TeamID.Red ? 'Red' : 'Blue'} team, attempting balance`);
-                }, 600); // Delay aumentado para asegurar procesamiento completo
+                // Solo balancear si hay desbalance significativo
+                const currentPlayers = window.gameRoom._room.getPlayerList().filter(p => p.id !== 0);
+                const redCount = currentPlayers.filter(p => p.team === TeamID.Red).length;
+                const blueCount = currentPlayers.filter(p => p.team === TeamID.Blue).length;
+                
+                // Durante el juego, ser más conservador con el balanceo
+                const shouldBalance = window.gameRoom.isGamingNow ? 
+                    Math.abs(redCount - blueCount) > 2 : // Durante juego: solo si diferencia > 2
+                    Math.abs(redCount - blueCount) > 1;   // Fuera de juego: si diferencia > 1
+                
+                if (shouldBalance) {
+                    balanceAfterPlayerLeave();
+                    window.gameRoom.logger.i('onPlayerLeave', `Player ${player.name}#${player.id} left, rebalancing teams (Red: ${redCount}, Blue: ${blueCount}, Gaming: ${window.gameRoom.isGamingNow})`);
+                } else {
+                    window.gameRoom.logger.i('onPlayerLeave', `Player ${player.name}#${player.id} left, teams remain balanced (Red: ${redCount}, Blue: ${blueCount}, Gaming: ${window.gameRoom.isGamingNow})`);
+                }
             }
         }
     } else {
@@ -117,6 +129,8 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
     } else {
         queueSystem.deactivateQueue();
     }
+
+    validateSubteams();
 
     // emit websocket event
     window._emitSIOPlayerInOutEvent(player.id);

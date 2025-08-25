@@ -144,15 +144,14 @@ export class QueueSystem {
 
             this.queue.push(queuePlayer);
             
-            // Move player to spectators immediately
-            window.gameRoom._room.setPlayerTeam(player.id, TeamID.Spec);
-            window.gameRoom.logger.i('QueueSystem', `Player ${player.name}#${player.id} moved to spectators and added to queue at position ${queuePlayer.queuePosition}`);
+            // NO mover jugadores a espectadores - mantenerlos en sus equipos hasta que sea su turno
+            window.gameRoom.logger.i('QueueSystem', `Player ${player.name}#${player.id} added to queue at position ${queuePlayer.queuePosition} (staying in current team until queue processes)`);
         });
 
         this.nextPosition += losingPlayers.length;
         this.sortQueue();
 
-        window.gameRoom.logger.i('QueueSystem', `Added ${losingPlayers.length} losing team players to queue. Total queue size: ${this.queue.length}`);
+        window.gameRoom.logger.i('QueueSystem', `Added ${losingPlayers.length} losing team players to queue without moving to spectators. Total queue size: ${this.queue.length}`);
         
         // Notify all players in queue of their positions
         setTimeout(() => {
@@ -305,6 +304,13 @@ export class QueueSystem {
     private sortQueue(): void {
         this.queue.sort((a, b) => a.queuePosition - b.queuePosition);
     }
+    
+    /**
+     * Normalizes player names for comparison
+     */
+    private normalizePlayerName(name: string): string {
+        return name.toLowerCase().replace(/[_\s]/g, '');
+    }
 
     /**
      * Handles when a player goes AFK and creates space in teams
@@ -437,11 +443,46 @@ export class QueueSystem {
                     const currentRedCount = currentActiveList.filter((player: PlayerObject) => player.team === TeamID.Red).length;
                     const currentBlueCount = currentActiveList.filter((player: PlayerObject) => player.team === TeamID.Blue).length;
                     
-                    // Strict team assignment logic - only assign if there's actual space
+                    // Subteam-aware team assignment logic
                     let targetTeam: TeamID | null = null;
+                    
+                    // Check if player has subteam members already in teams
+                    let redSubteamMembers = 0;
+                    let blueSubteamMembers = 0;
+                    
+                    try {
+                        if (typeof (global as any).getPlayerSubteam === 'function') {
+                            const subteam = (global as any).getPlayerSubteam(nextPlayer.name);
+                            if (subteam) {
+                                // Count subteam members in each team
+                                for (const teamPlayer of currentActiveList) {
+                                    if (teamPlayer.team === TeamID.Red || teamPlayer.team === TeamID.Blue) {
+                                        for (const memberName of subteam.members) {
+                                            if (this.normalizePlayerName(memberName) === this.normalizePlayerName(teamPlayer.name)) {
+                                                if (teamPlayer.team === TeamID.Red) redSubteamMembers++;
+                                                else if (teamPlayer.team === TeamID.Blue) blueSubteamMembers++;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        window.gameRoom.logger.w('QueueSystem', `Error checking subteam for ${nextPlayer.name}: ${e}`);
+                    }
+                    
+                    // Assign to team with subteam members if possible, otherwise balance normally
                     if (currentRedCount < maxPlayersPerTeam && currentBlueCount < maxPlayersPerTeam) {
-                        // Both teams have space, assign to team with fewer players
-                        targetTeam = currentRedCount <= currentBlueCount ? TeamID.Red : TeamID.Blue;
+                        // Both teams have space - prefer team with more subteam members
+                        if (redSubteamMembers > blueSubteamMembers) {
+                            targetTeam = TeamID.Red;
+                        } else if (blueSubteamMembers > redSubteamMembers) {
+                            targetTeam = TeamID.Blue;
+                        } else {
+                            // No subteam preference, assign to team with fewer players
+                            targetTeam = currentRedCount <= currentBlueCount ? TeamID.Red : TeamID.Blue;
+                        }
                     } else if (currentRedCount < maxPlayersPerTeam) {
                         targetTeam = TeamID.Red;
                     } else if (currentBlueCount < maxPlayersPerTeam) {
@@ -450,7 +491,8 @@ export class QueueSystem {
                     
                     if (targetTeam !== null) {
                         window.gameRoom._room.setPlayerTeam(nextPlayer.id, targetTeam);
-                        window.gameRoom.logger.i('QueueSystem', `Player ${nextPlayer.name}#${nextPlayer.id} assigned from queue to ${targetTeam === TeamID.Red ? 'Red' : 'Blue'} team (Red:${currentRedCount}, Blue:${currentBlueCount})`);
+                        const subteamInfo = redSubteamMembers > 0 || blueSubteamMembers > 0 ? ` (subteam-aware: R:${redSubteamMembers}, B:${blueSubteamMembers})` : '';
+                        window.gameRoom.logger.i('QueueSystem', `Player ${nextPlayer.name}#${nextPlayer.id} assigned from queue to ${targetTeam === TeamID.Red ? 'Red' : 'Blue'} team (Red:${currentRedCount}, Blue:${currentBlueCount})${subteamInfo}`);
                     } else {
                         // No space available, put player back in queue and stop processing
                         window.gameRoom.logger.w('QueueSystem', `No space available for player ${nextPlayer.name}#${nextPlayer.id}, keeping in queue`);

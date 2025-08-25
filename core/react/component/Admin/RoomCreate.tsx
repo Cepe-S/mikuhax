@@ -247,7 +247,7 @@ export default function RoomCreate({ styleClass }: styleClass) {
 
     const onChangeRulesRequisite = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        if(['minimumPlayers','eachTeamPlayers','timeLimit','scoreLimit'].includes(name) && isNumber(parseInt(value))) {
+        if(['minimumPlayers','eachTeamPlayers','maxSubPlayers','timeLimit','scoreLimit'].includes(name) && isNumber(parseInt(value))) {
             setRulesFormField({
                 ...rulesFormField,
                 requisite: {
@@ -377,6 +377,11 @@ export default function RoomCreate({ styleClass }: styleClass) {
                                     <Grid item xs={4} sm={2}>
                                         <TextField
                                             fullWidth value={rulesFormField?.requisite && rulesFormField.requisite.eachTeamPlayers} onChange={onChangeRulesRequisite} id="eachTeamPlayers" name="eachTeamPlayers" label="Number of Team Players" variant="outlined" margin="normal" type="number" size="small" required
+                                        />
+                                    </Grid>
+                                    <Grid item xs={4} sm={2}>
+                                        <TextField
+                                            fullWidth value={rulesFormField?.requisite && rulesFormField.requisite.maxSubPlayers} onChange={onChangeRulesRequisite} id="maxSubPlayers" name="maxSubPlayers" label="Max Sub Players" variant="outlined" margin="normal" type="number" size="small" required
                                         />
                                     </Grid>
                                     <Grid item xs={4} sm={2}>

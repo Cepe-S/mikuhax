@@ -4,7 +4,7 @@ import { ScoresObject } from "../../model/GameObject/ScoresObject";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { shuffleArray } from "../RoomTools";
-import { fetchActiveSpecPlayers, roomActivePlayersNumberCheck, assignPlayerToBalancedTeam } from "../../model/OperateHelper/Quorum";
+import { fetchActiveSpecPlayers, roomActivePlayersNumberCheck, balanceTeams } from "../../model/OperateHelper/Quorum";
 import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { HElo, MatchResult, StatsRecord } from "../../model/Statistics/HElo";
 import { convertToPlayerStorage, setPlayerDataToDB, setMatchEventDataToDB, setMatchSummaryDataToDB } from "../Storage";
@@ -260,41 +260,18 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
                 if (queueSystem.shouldQueueBeActive()) {
                     window.gameRoom.logger.i('onTeamVictory', 'Reroll needed but queue system should be active - using queue instead');
                     
-                    // Move all players to spectators first
-                    let allPlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList();
-                    allPlayersList.forEach((eachPlayer: PlayerObject) => {
-                        if (eachPlayer.id !== 0) {
-                            window.gameRoom._room.setPlayerTeam(eachPlayer.id, TeamID.Spec);
-                        }
-                    });
-                    
-                    // Activate queue and process it
                     queueSystem.activateQueue();
                     setTimeout(() => {
                         queueSystem.processQueue();
-                        window.gameRoom.logger.i('onTeamVictory', 'Queue system handled reroll scenario');
+                        // Después del queue, balancear equipos
+                        setTimeout(() => {
+                            balanceTeams();
+                        }, 2000);
                     }, 100);
                 } else {
-                    // Original reroll behavior when queue is not needed
-                    window.gameRoom.logger.i('onTeamVictory', 'Performing traditional reroll - queue not needed');
-                    
-                    // get new active players list and shuffle it randomly
-                    let allPlayersList: PlayerObject[] = window.gameRoom._room.getPlayerList();
-                    let shuffledIDList: number[] = shuffleArray(allPlayersList
-                        .filter((eachPlayer: PlayerObject) => eachPlayer.id !== 0 && window.gameRoom.playerList.get(eachPlayer.id)!.permissions.afkmode === false)
-                        .map((eachPlayer: PlayerObject) => eachPlayer.id)
-                    );
-
-                    allPlayersList.forEach((eachPlayer: PlayerObject) => {
-                        window.gameRoom._room.setPlayerTeam(eachPlayer.id, TeamID.Spec); // move all to spec
-                    });
-
-                    for (let i: number = 0; i < shuffledIDList.length; i++) {
-                        if (i < window.gameRoom.config.rules.requisite.eachTeamPlayers) window.gameRoom._room.setPlayerTeam(shuffledIDList[i], TeamID.Red);
-                        if (i >= window.gameRoom.config.rules.requisite.eachTeamPlayers && i < window.gameRoom.config.rules.requisite.eachTeamPlayers * 2) window.gameRoom._room.setPlayerTeam(shuffledIDList[i], TeamID.Blue);
-                    }
-                    
-                    window.gameRoom.logger.i('onTeamVictory', `Whole players are shuffled. (${shuffledIDList.toString()})`);
+                    // Usar el nuevo sistema de balanceo para reroll
+                    window.gameRoom.logger.i('onTeamVictory', 'Using new balance system for reroll');
+                    balanceTeams();
                 }
 
                 winningMessage += '\n' + Tst.maketext(LangRes.onVictory.reroll, placeholderVictory);
@@ -310,44 +287,35 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
                 
                 window.gameRoom.logger.i('onTeamVictory', 'Queue system is active - adding losing team to queue');
                 
-                // Add losing team to queue in random positions
+                // Add losing team to queue but keep winners playing
                 queueSystem.addLosingTeamToQueue(loserTeamID);
+                window.gameRoom.logger.i('onTeamVictory', 'Losing team added to queue, winners remain in game');
                 
-                // Process queue to fill available spots - this will only assign the right number of players
                 setTimeout(() => {
-                    window.gameRoom.logger.i('onTeamVictory', 'Processing queue after team victory');
                     queueSystem.processQueue();
-                    queueSystem.debugStatus();
-                }, 100); // Small delay to ensure teams are properly set up
+                    // Después del queue, balancear equipos
+                    setTimeout(() => {
+                        balanceTeams();
+                    }, 2000);
+                }, 100);
             } else {
-                window.gameRoom.logger.i('onTeamVictory', 'Queue system not active - using original behavior');
-                // Original behavior when queue is not needed
-                // Mover perdedores a espectadores (respetando tiempo de juego garantizado)
-                window.gameRoom._room.getPlayerList()
-                    .filter((player: PlayerObject) => player.team === loserTeamID)
-                    .forEach((player: PlayerObject) => {
-                        if (window.gameRoom.config.settings.guaranteePlayingTime === false || (scores.time - window.gameRoom.playerList.get(player.id)!.entrytime.matchEntryTime) > window.gameRoom.config.settings.guaranteedPlayingTimeSeconds) {
-                            window.gameRoom._room.setPlayerTeam(player.id, TeamID.Spec); // just move all losers to Spec team
-                        }
-                    });
-
-                // Usar el nuevo sistema de balance para rellenar equipos
+                window.gameRoom.logger.i('onTeamVictory', 'Queue system not active - using improved balance behavior');
+                
+                // DON'T clean up subteams after match - preserve them for next game
+                // Subteams should only be cleaned when players actually leave the server
+                window.gameRoom.logger.i('onTeamVictory', 'Preserving subteams for next game');
+                
+                // SISTEMA MEJORADO: Los ganadores siguen jugando, intercambios directos sin espectadores
                 const specPlayers: PlayerObject[] = fetchActiveSpecPlayers();
+                const currentWinners = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.team === winnerTeamID);
                 const currentLosers = window.gameRoom._room.getPlayerList().filter((player: PlayerObject) => player.team === loserTeamID);
-                const needToFill = window.gameRoom.config.rules.requisite.eachTeamPlayers - currentLosers.length;
                 
-                // Asignar jugadores de espectadores al equipo perdedor usando balance inteligente
-                for(let i = 0; i < needToFill && i < specPlayers.length; i++) {
-                    // Forzar al equipo perdedor para mantener el juego
-                    window.gameRoom._room.setPlayerTeam(specPlayers[i].id, loserTeamID);
-                    window.gameRoom.logger.i('onTeamVictory', `Player ${specPlayers[i].id} assigned to losing team ${loserTeamID} to continue game`);
-                }
+                window.gameRoom.logger.i('onTeamVictory', `Current state - Winners: ${currentWinners.length}, Losers: ${currentLosers.length}, Spectators: ${specPlayers.length}`);
                 
-                // Si quedan más espectadores, balancear entre ambos equipos
-                const remainingSpecs = fetchActiveSpecPlayers();
-                for(let i = 0; i < remainingSpecs.length; i++) {
-                    assignPlayerToBalancedTeam(remainingSpecs[i].id);
-                }
+                // Usar el nuevo sistema de balanceo
+                setTimeout(() => {
+                    balanceTeams();
+                }, 2000);
             }
         }
     }
@@ -385,3 +353,5 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
         updateTop20Cache();
     }, 5000); // Wait a bit longer to ensure all ELO changes are processed
 }
+
+

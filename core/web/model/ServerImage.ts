@@ -83,6 +83,7 @@ export interface ServerImage {
         requisite: {
             minimumPlayers: number;
             eachTeamPlayers: number;
+            maxSubPlayers: number;
             timeLimit: number;
             scoreLimit: number;
             teamLock: boolean;
