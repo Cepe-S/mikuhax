@@ -55,6 +55,7 @@ export default function RoomCreate({ styleClass }: styleClass) {
 
     const [heloFormField, setHeloFormField] = useState({} as BrowserHostRoomHEloConfig); // HElo System Configruation Form
     const [heloFormStringifiedField, setHeloFormStringifiedField] = useState(''); // JSON Stringified HElo System Configruation Form
+    const [heloUseDefaultValuesField, setHeloUseDefaultValuesField] = useState(false); // Use Default Values switch
 
     const [commandsFormField, setCommandsFormField] = useState({} as BrowserHostRoomCommands); // Ingame Commands Configuration Form
     const [commandsFormStringifiedField, setCommandsFormStringifiedField] = useState(''); // JSON Stringified Ingame Commands Configuration Form
@@ -77,6 +78,7 @@ export default function RoomCreate({ styleClass }: styleClass) {
         
         setHeloFormField(loadedDefaultSettings.helo);
         setHeloFormStringifiedField(JSON.stringify(loadedDefaultSettings.helo,null,4));
+        setHeloUseDefaultValuesField(loadedDefaultSettings.helo.useDefaultValues || false);
         
         setCommandsFormField(loadedDefaultSettings.commands);
         setCommandsFormStringifiedField(JSON.stringify(loadedDefaultSettings.commands,null,4));
@@ -99,6 +101,7 @@ export default function RoomCreate({ styleClass }: styleClass) {
         
             setHeloFormField(loadedDefaultSettings.helo);
             setHeloFormStringifiedField(JSON.stringify(loadedDefaultSettings.helo));
+            setHeloUseDefaultValuesField(loadedDefaultSettings.helo.useDefaultValues || false);
         
             setCommandsFormField(loadedDefaultSettings.commands);
             setCommandsFormStringifiedField(JSON.stringify(loadedDefaultSettings.commands));
@@ -118,12 +121,12 @@ export default function RoomCreate({ styleClass }: styleClass) {
                 ,autoOperating: rulesSwitchesFormField.autoOperating
                 ,statsRecord: rulesSwitchesFormField.statsRecord
             },
-            helo: heloFormField,
+            helo: { ...heloFormField, useDefaultValues: heloUseDefaultValuesField },
             commands: commandsFormField
         });
     }, [roomUIDFormField, roomPublicFormField, configFormField, // include switch toggle component
         rulesFormField, rulesTeamLockField, rulesSwitchesFormField,
-        settingsFormField, heloFormField, commandsFormField
+        settingsFormField, heloFormField, heloUseDefaultValuesField, commandsFormField
     ]); 
 
     useEffect(() => {
@@ -452,7 +455,7 @@ export default function RoomCreate({ styleClass }: styleClass) {
                                 <Grid container spacing={2}>
                                     <Grid item xs={4} sm={3}>
                                         <FormControlLabel
-                                            control={<Switch checked={heloFormField.useDefaultValues || false} onChange={(e) => setHeloFormField({...heloFormField, useDefaultValues: e.target.checked})} color="primary" />}
+                                            control={<Switch checked={heloUseDefaultValuesField} onChange={(e) => setHeloUseDefaultValuesField(e.target.checked)} color="primary" />}
                                             label="Use Chess.com Default Values" labelPlacement="start"
                                         />
                                     </Grid>

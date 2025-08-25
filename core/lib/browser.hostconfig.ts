@@ -145,6 +145,7 @@ export interface BrowserHostRoomSettings {
 }
 
 export interface BrowserHostRoomHEloConfig {
+    useDefaultValues?: boolean
     factor: {
         placement_match_chances: number
         factor_k_placement: number

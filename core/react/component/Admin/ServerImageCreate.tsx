@@ -12,8 +12,7 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import * as DefaultConfigSet from "../../lib/defaultroomconfig.json";
 import { useHistory } from 'react-router-dom';
-import { Divider, Switch, Accordion, AccordionSummary, AccordionDetails, IconButton } from '@material-ui/core';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
+import { Divider, Switch, Accordion, AccordionSummary, AccordionDetails, IconButton, FormControlLabel } from '@material-ui/core';
 import Alert, { AlertColor } from '../common/Alert';
 import { isNumber } from '../../lib/numcheck';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
@@ -1329,12 +1328,44 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
 
                             <Accordion>
                                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                    <Typography variant="subtitle1" color="primary">Rating System (HElo)</Typography>
+                                    <Typography variant="subtitle1" color="primary">⚡ HElo Rating System</Typography>
                                 </AccordionSummary>
                                 <AccordionDetails>
                                     <Grid container spacing={2}>
                                         <Grid item xs={12}>
-                                            <Typography variant="subtitle2" gutterBottom>Rating Factors</Typography>
+                                            <Typography variant="body2" color="textSecondary" style={{ marginBottom: '16px' }}>
+                                                Configure the HElo rating system based on Chess.com's ELO implementation with adaptive K-factors.
+                                            </Typography>
+                                        </Grid>
+                                        
+                                        {/* Use Default Values Toggle */}
+                                        <Grid item xs={12}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Switch
+                                                        checked={heloFormField?.useDefaultValues !== false}
+                                                        onChange={(e) => setHeloFormField({ 
+                                                            ...heloFormField, 
+                                                            useDefaultValues: e.target.checked 
+                                                        })}
+                                                        size="small"
+                                                        color="primary"
+                                                    />
+                                                }
+                                                label="Use Chess.com Default K-Factor Values"
+                                                labelPlacement="end"
+                                            />
+                                            <Typography variant="body2" color="textSecondary" style={{ marginTop: '8px' }}>
+                                                When enabled, uses Chess.com's proven K-factor system: 40 for new players (&lt;30 games), 
+                                                32 for beginners (&lt;1200), 24 for intermediate (1200-1599), 16 for advanced (1600-1999), 
+                                                and 12 for experts (2000+). When disabled, uses custom values below.
+                                            </Typography>
+                                        </Grid>
+
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle2" gutterBottom style={{ marginTop: '16px' }}>
+                                                🎯 Custom K-Factor Configuration
+                                            </Typography>
                                         </Grid>
                                         <Grid item xs={6} sm={3}>
                                             <TextField
@@ -1348,6 +1379,8 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                 type="number"
                                                 variant="outlined"
                                                 size="small"
+                                                disabled={heloFormField?.useDefaultValues !== false}
+                                                helperText="Number of placement matches for new players"
                                             />
                                         </Grid>
                                         <Grid item xs={6} sm={3}>
@@ -1362,6 +1395,8 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                 type="number"
                                                 variant="outlined"
                                                 size="small"
+                                                disabled={heloFormField?.useDefaultValues !== false}
+                                                helperText="K-factor during placement matches"
                                             />
                                         </Grid>
                                         <Grid item xs={6} sm={3}>
@@ -1376,6 +1411,8 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                 type="number"
                                                 variant="outlined"
                                                 size="small"
+                                                disabled={heloFormField?.useDefaultValues !== false}
+                                                helperText="K-factor for regular players"
                                             />
                                         </Grid>
                                         <Grid item xs={6} sm={3}>
@@ -1386,14 +1423,19 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                     ...heloFormField, 
                                                     factor: { ...heloFormField.factor, factor_k_replace: parseInt(e.target.value) || 0 }
                                                 })}
-                                                label="K Factor Replace"
+                                                label="K Factor High Rating"
                                                 type="number"
                                                 variant="outlined"
                                                 size="small"
+                                                disabled={heloFormField?.useDefaultValues !== false}
+                                                helperText="K-factor for high-rated players (2000+)"
                                             />
                                         </Grid>
+                                        
                                         <Grid item xs={12}>
-                                            <Typography variant="subtitle2" gutterBottom>Tier Thresholds</Typography>
+                                            <Typography variant="subtitle2" gutterBottom style={{ marginTop: '16px' }}>
+                                                🏆 Tier System Configuration
+                                            </Typography>
                                         </Grid>
                                         {[1,2,3,4,5,6,7,8,9].map(tier => (
                                             <Grid item xs={6} sm={3} key={tier}>
@@ -1408,9 +1450,18 @@ export default function ServerImageCreate({ styleClass, editMode = false, editDa
                                                     type="number"
                                                     variant="outlined"
                                                     size="small"
+                                                    helperText={tier === 1 ? "Lowest tier" : tier === 9 ? "Highest tier" : `Tier ${tier} minimum rating`}
                                                 />
                                             </Grid>
                                         ))}
+                                        
+                                        <Grid item xs={12}>
+                                            <Typography variant="body2" color="textSecondary" style={{ marginTop: '16px' }}>
+                                                💡 <strong>HElo System Info:</strong> This system uses an enhanced ELO algorithm based on Chess.com's implementation. 
+                                                It features adaptive K-factors that adjust based on player experience and rating level, 
+                                                providing more accurate rating changes for different skill levels.
+                                            </Typography>
+                                        </Grid>
                                     </Grid>
                                 </AccordionDetails>
                             </Accordion>
