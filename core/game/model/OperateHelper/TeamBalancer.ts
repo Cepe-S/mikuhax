@@ -338,9 +338,9 @@ export class TeamBalancer {
                 }
             }
         } else {
-            // No hay jugadores en spec - solo balancear si el desbalance es muy grande (>2)
-            if (imbalance > 2) {
-                window.gameRoom.logger.i('TeamBalancer', 'Large imbalance with no spec players, using full balance');
+            // No hay jugadores en spec - balancear si el desbalance es >= 2
+            if (imbalance >= 2) {
+                window.gameRoom.logger.i('TeamBalancer', 'Imbalance detected with no spec players, using full balance');
                 this.balanceTeams();
             } else {
                 window.gameRoom.logger.i('TeamBalancer', 'Minor imbalance with no spec players, waiting for new players');

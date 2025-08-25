@@ -62,22 +62,23 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
         // when auto emcee mode is enabled
         if(window.gameRoom.config.rules.autoOperating === true) {
             if(player.team !== TeamID.Spec) {
-                // Solo balancear si hay desbalance significativo
-                const currentPlayers = window.gameRoom._room.getPlayerList().filter(p => p.id !== 0);
-                const redCount = currentPlayers.filter(p => p.team === TeamID.Red).length;
-                const blueCount = currentPlayers.filter(p => p.team === TeamID.Blue).length;
-                
-                // Durante el juego, ser más conservador con el balanceo
-                const shouldBalance = window.gameRoom.isGamingNow ? 
-                    Math.abs(redCount - blueCount) > 2 : // Durante juego: solo si diferencia > 2
-                    Math.abs(redCount - blueCount) > 1;   // Fuera de juego: si diferencia > 1
-                
-                if (shouldBalance) {
-                    balanceAfterPlayerLeave();
-                    window.gameRoom.logger.i('onPlayerLeave', `Player ${player.name}#${player.id} left, rebalancing teams (Red: ${redCount}, Blue: ${blueCount}, Gaming: ${window.gameRoom.isGamingNow})`);
-                } else {
-                    window.gameRoom.logger.i('onPlayerLeave', `Player ${player.name}#${player.id} left, teams remain balanced (Red: ${redCount}, Blue: ${blueCount}, Gaming: ${window.gameRoom.isGamingNow})`);
-                }
+                // Use setTimeout to ensure player has been removed from room before checking balance
+                setTimeout(() => {
+                    // Get current team counts after player has left
+                    const currentPlayers = window.gameRoom._room.getPlayerList().filter(p => p.id !== 0);
+                    const redCount = currentPlayers.filter(p => p.team === TeamID.Red).length;
+                    const blueCount = currentPlayers.filter(p => p.team === TeamID.Blue).length;
+                    
+                    // Balance teams when difference is greater than 1
+                    const teamDifference = Math.abs(redCount - blueCount);
+                    
+                    if (teamDifference > 1) {
+                        balanceAfterPlayerLeave();
+                        window.gameRoom.logger.i('onPlayerLeave', `Player ${player.name}#${player.id} left, rebalancing teams (Red: ${redCount}, Blue: ${blueCount}, Diff: ${teamDifference})`);
+                    } else {
+                        window.gameRoom.logger.i('onPlayerLeave', `Player ${player.name}#${player.id} left, teams remain balanced (Red: ${redCount}, Blue: ${blueCount}, Diff: ${teamDifference})`);
+                    }
+                }, 100); // Small delay to ensure player removal is processed
             }
         }
     } else {
