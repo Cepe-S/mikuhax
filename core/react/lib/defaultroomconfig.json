@@ -88,6 +88,7 @@
 		"customJSONOptions": ""
 	},
 	"helo": {
+		"useDefaultValues": false,
 		"factor": {
 			"placement_match_chances": 10,
 			"factor_k_placement": 300,

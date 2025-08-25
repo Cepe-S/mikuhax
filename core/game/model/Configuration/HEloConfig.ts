@@ -1,4 +1,5 @@
 export interface HEloConfig {
+    useDefaultValues: boolean               // Use Chess.com default values
     factor: {
         placement_match_chances: number     // 30 (Chess.com provisional games)
         factor_k_placement: number          // 40 (provisional K-factor)
@@ -34,6 +35,7 @@ export interface HEloConfig {
 
 // Chess.com style default configuration
 export const defaultChessComConfig: HEloConfig = {
+    useDefaultValues: false,
     factor: {
         placement_match_chances: 30,
         factor_k_placement: 40,

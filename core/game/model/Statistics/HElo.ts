@@ -17,13 +17,23 @@ export class HElo {
         return this.instance;
     }
 
-    // Chess.com K-Factor system
+    // Configurable K-Factor system
     private getKFactor(rating: number, totalGames: number): number {
-        if (totalGames < 30) return 40;  // Provisional period
-        if (rating < 1200) return 32;   // Beginners
-        if (rating < 1600) return 24;   // Intermediate
-        if (rating < 2000) return 16;   // Advanced
-        return 12;                      // Expert
+        const heloConfig = window.gameRoom.config.HElo;
+        
+        if (heloConfig.useDefaultValues) {
+            // Chess.com default values
+            if (totalGames < 30) return 40;  // Provisional period
+            if (rating < 1200) return 32;   // Beginners
+            if (rating < 1600) return 24;   // Intermediate
+            if (rating < 2000) return 16;   // Advanced
+            return 12;                      // Expert
+        }
+        
+        const config = heloConfig.factor;
+        if (totalGames < config.placement_match_chances) return config.factor_k_placement;
+        if (rating >= 2000) return config.factor_k_replace;
+        return config.factor_k_normal;
     }
 
     // E(A) - Expected Result
@@ -85,9 +95,9 @@ export class HElo {
         let sumDiffs: number = diffs.reduce((acc, curr) => { return acc + curr}, 0);
         let res: number = Math.round(originalRating + sumDiffs);
         
-        // Chess.com rating bounds
+        // Configurable rating bounds
         const MIN_RATING = 100;
-        const MAX_RATING = 3200;
+        const MAX_RATING = window.gameRoom.config.HElo.tier.class_tier_9 || 3200;
         
         if(res < MIN_RATING) res = MIN_RATING;
         if(res > MAX_RATING) res = MAX_RATING;
