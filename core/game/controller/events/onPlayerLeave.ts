@@ -9,6 +9,7 @@ import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { convertToPlayerStorage, getBanlistDataFromDB, setBanlistDataToDB, setPlayerDataToDB } from "../Storage";
 import { EloIntegrityTracker } from "../../model/Statistics/EloIntegrityTracker";
 import { validateSubteams } from "../commands/teamup";
+import { clearAfkCooldown } from "../commands/afk";
 
 export async function onPlayerLeaveListener(player: PlayerObject): Promise<void> {
     // Event called when a player leaves the room.
@@ -44,6 +45,9 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
     // Remove player from queue if they're in it
     const queueSystemRemove = QueueSystem.getInstance();
     queueSystemRemove.removePlayerFromQueue(player.id);
+    
+    // Clear AFK cooldown for the leaving player
+    clearAfkCooldown(player.id);
 
     // Reset powershot if the leaving player was the powershot holder
     if (window.gameRoom.ballStack.getPowershotPlayer() === player.id) {

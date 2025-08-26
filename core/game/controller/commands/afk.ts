@@ -8,7 +8,37 @@ import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { registerCommand } from "../CommandRegistry";
 import { EloIntegrityTracker } from "../../model/Statistics/EloIntegrityTracker";
 
+// Mapa para almacenar los cooldowns del comando AFK (playerId -> timestamp)
+const afkCooldowns = new Map<number, number>();
+const AFK_COOLDOWN_SECONDS = 30;
+
+/**
+ * Limpia el cooldown de AFK para un jugador específico (usado cuando se desconecta)
+ */
+export function clearAfkCooldown(playerId: number): void {
+    afkCooldowns.delete(playerId);
+}
+
 export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
+    // Verificar cooldown del comando AFK
+    const currentTime = Math.floor(getUnixTimestamp() / 1000); // Convertir milisegundos a segundos
+    const lastUsed = afkCooldowns.get(byPlayer.id);
+    
+    if (lastUsed && (currentTime - lastUsed) < AFK_COOLDOWN_SECONDS) {
+        const remainingTime = AFK_COOLDOWN_SECONDS - (currentTime - lastUsed);
+        window.gameRoom._room.sendAnnouncement(
+            `⏱️ Debes esperar ${remainingTime} segundos antes de usar !afk nuevamente`,
+            byPlayer.id,
+            0xFFAA00,
+            "normal",
+            1
+        );
+        return;
+    }
+    
+    // Actualizar timestamp del último uso
+    afkCooldowns.set(byPlayer.id, currentTime);
+    
     var placeholder = {
         targetName: byPlayer.name
         ,ticketTarget: byPlayer.id
@@ -123,7 +153,7 @@ export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
 
 // Register the command
 registerCommand("afk", cmdAfk, {
-    helpText: "💤 Te marca como AFK/jugando. Uso: !afk [razón]",
+    helpText: "💤 Te marca como AFK/jugando (cooldown: 30s). Uso: !afk [razón]",
     category: "Basic Commands",
     requiresArgs: false
 });
