@@ -3,7 +3,7 @@ import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { TeamID } from "../../model/GameObject/TeamID";
 import { getUnixTimestamp } from "../Statistics";
-import { roomActivePlayersNumberCheck, assignPlayerToBalancedTeam, balanceTeams } from "../../model/OperateHelper/Quorum";
+import { roomActivePlayersNumberCheck, assignPlayerToBalancedTeam, balanceDuringMatch } from "../../model/OperateHelper/Quorum";
 import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { registerCommand } from "../CommandRegistry";
 import { EloIntegrityTracker } from "../../model/Statistics/EloIntegrityTracker";
@@ -20,17 +20,26 @@ export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
         window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkreason = ''; // init
         window.gameRoom.playerList.get(byPlayer.id)!.afktrace = { exemption: false, count: 0 }; // reset for afk trace
         
-        // Balancear equipos cuando un jugador sale del AFK
+        // Manejar regreso de AFK usando sistemas modernos de balanceo
         if (window.gameRoom.config.rules.autoOperating === true) {
             const queueSystem = QueueSystem.getInstance();
             
-            // Check if queue system should handle the returning player
+            // Let queue system handle assignment if active, otherwise use intelligent balance
             const queueHandled = queueSystem.onPlayerReturnsFromAFK(byPlayer.id);
             
             if (!queueHandled) {
-                // Queue system doesn't need to handle it, use normal assignment
-                assignPlayerToBalancedTeam(byPlayer.id);
-                window.gameRoom.logger.i('cmdAfk', `Player ${byPlayer.name}#${byPlayer.id} returned from AFK and was assigned to balanced team`);
+                // Si hay partida activa, usar balanceo inteligente para AFK return
+                if (window.gameRoom.isGamingNow === true) {
+                    setTimeout(() => {
+                        balanceDuringMatch('player return from AFK');
+                    }, 200); // Pequeño delay para asegurar que el estado se actualice
+                } else {
+                    // Entre partidas, usar asignación simple
+                    assignPlayerToBalancedTeam(byPlayer.id);
+                }
+                window.gameRoom.logger.i('cmdAfk', `Player ${byPlayer.name}#${byPlayer.id} returned from AFK and balance was handled`);
+            } else {
+                window.gameRoom.logger.i('cmdAfk', `Player ${byPlayer.name}#${byPlayer.id} returned from AFK and was handled by QueueSystem`);
             }
         }
         
@@ -60,18 +69,24 @@ export function cmdAfk(byPlayer: PlayerObject, message?: string): void {
         window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkdate = getUnixTimestamp(); // set afk beginning time stamp
         window.gameRoom.playerList.get(byPlayer.id)!.afktrace = { exemption: false, count: 0}; // reset for afk trace
 
-        // Handle AFK with queue system integration
+        // Manejar AFK con integración del sistema de colas
         if (window.gameRoom.config.rules.autoOperating === true) {
             const queueSystem = QueueSystem.getInstance();
             
-            // Notify queue system that player went AFK (will process queue if active)
+            // Notificar al sistema de colas que el jugador se fue AFK
             queueSystem.onPlayerGoesAFK(byPlayer.id);
             
-            // Also use the traditional balance system as backup
-            setTimeout(() => {
-                balanceTeams();
-                window.gameRoom.logger.i('cmdAfk', `Teams rebalanced after player ${byPlayer.name}#${byPlayer.id} went AFK`);
-            }, 500); // Pequeño delay para asegurar que el cambio de equipo se procesó
+            // Respaldo: Si el QueueSystem no está activo y estamos en partida, usar balanceo inteligente
+            if (!queueSystem.shouldQueueBeActive() && window.gameRoom.isGamingNow === true) {
+                setTimeout(() => {
+                    balanceDuringMatch('player AFK during match');
+                    window.gameRoom.logger.i('cmdAfk', `Teams rebalanced after player ${byPlayer.name}#${byPlayer.id} went AFK (backup mechanism)`);
+                }, 700); // Delay mayor para asegurar que onPlayerTeamChange se ejecute primero
+            }
+            
+            // NO ejecutar balanceTeams() aquí - onPlayerTeamChange ya lo hace
+            // Evitar doble balanceo innecesario que mueve jugadores sin razón
+            window.gameRoom.logger.i('cmdAfk', `Player ${byPlayer.name}#${byPlayer.id} went AFK - team change handled by onPlayerTeamChange event`);
         }
 
         if(message !== undefined) { // if the reason is not skipped

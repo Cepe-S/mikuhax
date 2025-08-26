@@ -142,6 +142,7 @@ export class TeamBalancer {
             const currentPlayer = currentPlayers.find(p => p.id === player.id);
             if (currentPlayer && currentPlayer.team !== TeamID.Red) {
                 window.gameRoom._room.setPlayerTeam(player.id, TeamID.Red);
+                this.sendBalanceMessage(player.name, this.getTeamName(currentPlayer.team), this.getTeamName(TeamID.Red), "distribución inicial");
                 window.gameRoom.logger.i('TeamBalancer', `Moved ${player.name}#${player.id} to Red team`);
             }
         }
@@ -150,13 +151,14 @@ export class TeamBalancer {
             const currentPlayer = currentPlayers.find(p => p.id === player.id);
             if (currentPlayer && currentPlayer.team !== TeamID.Blue) {
                 window.gameRoom._room.setPlayerTeam(player.id, TeamID.Blue);
+                this.sendBalanceMessage(player.name, this.getTeamName(currentPlayer.team), this.getTeamName(TeamID.Blue), "distribución inicial");
                 window.gameRoom.logger.i('TeamBalancer', `Moved ${player.name}#${player.id} to Blue team`);
             }
         }
     }
 
     /**
-     * Función principal de balanceo
+     * Función principal de balanceo (para uso entre partidas)
      */
     public balanceTeams(): void {
         const players = this.getPlayersToBalance();
@@ -281,9 +283,18 @@ export class TeamBalancer {
     }
 
     /**
-     * Balancea específicamente cuando hay desbalance de jugadores respetando subteams
+     * Función genérica para balancear equipos durante partidas activas
+     * Maneja todos los casos: players leave, AFK, team changes, etc.
      */
-    public balanceAfterPlayerLeave(): void {
+    public balanceDuringMatch(reason: string = 'unknown'): void {
+        // Validar que estemos en una partida activa
+        if (!window.gameRoom.isGamingNow) {
+            window.gameRoom.logger.w('TeamBalancer', 'balanceDuringMatch called but no match in progress');
+            return;
+        }
+        
+        window.gameRoom.logger.i('TeamBalancer', `Starting conservative balance during match - reason: ${reason}`);
+        
         const currentPlayers = window.gameRoom._room.getPlayerList().filter(p => p.id !== 0);
         const redCount = currentPlayers.filter(p => p.team === TeamID.Red).length;
         const blueCount = currentPlayers.filter(p => p.team === TeamID.Blue).length;
@@ -291,61 +302,300 @@ export class TeamBalancer {
             window.gameRoom.playerList.has(p.id) && 
             !window.gameRoom.playerList.get(p.id)!.permissions.afkmode);
         
-        // Solo balancear si hay desbalance significativo (diferencia > 1)
+        const requiredPerTeam = window.gameRoom.config.rules.requisite.eachTeamPlayers;
         const imbalance = Math.abs(redCount - blueCount);
-        if (imbalance <= 1) {
-            window.gameRoom.logger.i('TeamBalancer', `No balancing needed after player leave - teams balanced (Red: ${redCount}, Blue: ${blueCount})`);
+        
+        window.gameRoom.logger.i('TeamBalancer', 
+            `Current state - Red: ${redCount}/${requiredPerTeam}, Blue: ${blueCount}/${requiredPerTeam}, Spec: ${specPlayers.length}, Imbalance: ${imbalance}`);
+        
+        // Caso especial: Jugador regresa de AFK - priorizar asignación a equipo
+        if (reason === 'player return from AFK' && specPlayers.length > 0) {
+            const totalTeamPlayers = redCount + blueCount;
+            const maxTotalPlayers = requiredPerTeam * 2;
+            
+            // Si hay espacio en los equipos, asignar el jugador que regresa del AFK
+            if (totalTeamPlayers < maxTotalPlayers) {
+                window.gameRoom.logger.i('TeamBalancer', 'AFK return detected - assigning player to team');
+                this.assignAFKReturnPlayer(redCount, blueCount, specPlayers, requiredPerTeam);
+                return;
+            }
+        }
+        
+        // Caso 1: Equipos balanceados, no hacer nada
+        if (imbalance <= 1 && redCount <= requiredPerTeam && blueCount <= requiredPerTeam) {
+            window.gameRoom.logger.i('TeamBalancer', 'Teams are balanced, no action needed');
             return;
         }
         
-        window.gameRoom.logger.i('TeamBalancer', `Team imbalance detected after player leave (Red: ${redCount}, Blue: ${blueCount}, Spec: ${specPlayers.length})`);
+        // Caso 2: Un equipo tiene demasiados jugadores - mover excedentes a spec
+        if (redCount > requiredPerTeam || blueCount > requiredPerTeam) {
+            this.moveExcessPlayersToSpec(redCount, blueCount, requiredPerTeam);
+            return;
+        }
         
-        // Estrategia conservadora: solo mover de spec a equipos, nunca entre equipos
-        if (specPlayers.length > 0) {
-            const targetTeam = redCount < blueCount ? TeamID.Red : TeamID.Blue;
-            const neededPlayers = Math.ceil(imbalance / 2); // Cuántos jugadores necesitamos mover
-            
-            // Buscar jugadores sin subteam primero (más fáciles de mover)
-            const soloSpecPlayers = specPlayers.filter(p => !this.getPlayerSubteam(p.name));
-            
-            if (soloSpecPlayers.length >= neededPlayers) {
-                // Mover solo los jugadores necesarios sin subteam
-                const playersToMove = soloSpecPlayers
-                    .sort((a, b) => window.gameRoom.playerList.get(b.id)!.stats.rating - window.gameRoom.playerList.get(a.id)!.stats.rating)
-                    .slice(0, neededPlayers);
-                
-                for (const player of playersToMove) {
-                    window.gameRoom._room.setPlayerTeam(player.id, targetTeam);
-                    window.gameRoom.logger.i('TeamBalancer', 
-                        `Moved solo player ${player.name}#${player.id} from spec to ${targetTeam === TeamID.Red ? 'Red' : 'Blue'} team`);
-                }
-            } else {
-                // Si no hay suficientes jugadores solo, mover todos los solo disponibles
-                for (const player of soloSpecPlayers) {
-                    window.gameRoom._room.setPlayerTeam(player.id, targetTeam);
-                    window.gameRoom.logger.i('TeamBalancer', 
-                        `Moved solo player ${player.name}#${player.id} from spec to ${targetTeam === TeamID.Red ? 'Red' : 'Blue'} team`);
-                }
-                
-                // Solo si aún hay desbalance significativo después de mover jugadores solo
-                const newRedCount = targetTeam === TeamID.Red ? redCount + soloSpecPlayers.length : redCount;
-                const newBlueCount = targetTeam === TeamID.Blue ? blueCount + soloSpecPlayers.length : blueCount;
-                const remainingImbalance = Math.abs(newRedCount - newBlueCount);
-                
-                if (remainingImbalance > 1) {
-                    window.gameRoom.logger.i('TeamBalancer', 'Significant imbalance remains, using full balance with subteams');
-                    this.balanceTeams();
-                }
-            }
+        // Caso 3: Desbalance numérico - intentar balancear desde spec
+        if (imbalance > 1 && specPlayers.length > 0) {
+            this.balanceFromSpec(redCount, blueCount, specPlayers, requiredPerTeam);
+            return;
+        }
+        
+        // Caso 4: Desbalance sin jugadores en spec - último recurso
+        if (imbalance >= 2 && specPlayers.length === 0) {
+            window.gameRoom.logger.i('TeamBalancer', 'Significant imbalance with no spec players - using minimal disruption balance');
+            this.minimumDisruptionBalance();
         } else {
-            // No hay jugadores en spec - balancear si el desbalance es >= 2
-            if (imbalance >= 2) {
-                window.gameRoom.logger.i('TeamBalancer', 'Imbalance detected with no spec players, using full balance');
-                this.balanceTeams();
+            window.gameRoom.logger.i('TeamBalancer', 'Minor imbalance, waiting for players to join');
+        }
+    }
+    
+    /**
+     * Envía mensaje de balanceo a todos los jugadores
+     */
+    private sendBalanceMessage(playerName: string, fromTeam: string, toTeam: string, reason: string): void {
+        const message = `⚖️ ${playerName} ha sido movido de ${fromTeam} a ${toTeam} (${reason})`;
+        window.gameRoom._room.sendAnnouncement(message, null, 0x00BFFF, "normal", 1);
+    }
+    
+    /**
+     * Convierte TeamID a nombre legible
+     */
+    private getTeamName(teamId: TeamID): string {
+        switch (teamId) {
+            case TeamID.Red: return "🔴 Rojo";
+            case TeamID.Blue: return "🔵 Azul";
+            case TeamID.Spec: return "👁️ Espectadores";
+            default: return "❓ Desconocido";
+        }
+    }
+    
+    /**
+     * Asigna un jugador que regresa del AFK a un equipo balanceado
+     */
+    private assignAFKReturnPlayer(redCount: number, blueCount: number, specPlayers: PlayerObject[], requiredPerTeam: number): void {
+        if (specPlayers.length === 0) return;
+        
+        // Tomar el primer jugador en spec (probablemente el que acaba de regresar del AFK)
+        const playerToAssign = specPlayers[0];
+        
+        // Determinar a qué equipo asignar
+        let targetTeam: TeamID;
+        
+        if (redCount < blueCount) {
+            targetTeam = TeamID.Red;
+        } else if (blueCount < redCount) {
+            targetTeam = TeamID.Blue;
+        } else {
+            // Equipos balanceados, asignar al equipo con menos jugadores del límite
+            if (redCount < requiredPerTeam && blueCount < requiredPerTeam) {
+                // Ambos equipos tienen espacio, elegir aleatoriamente o por preferencia
+                targetTeam = Math.random() < 0.5 ? TeamID.Red : TeamID.Blue;
             } else {
-                window.gameRoom.logger.i('TeamBalancer', 'Minor imbalance with no spec players, waiting for new players');
+                // Si ambos equipos están llenos, quedarse en spec
+                window.gameRoom.logger.i('TeamBalancer', 'Both teams are full, player remains in spec');
+                return;
             }
         }
+        
+        // Asignar el jugador al equipo
+        window.gameRoom._room.setPlayerTeam(playerToAssign.id, targetTeam);
+        this.sendBalanceMessage(playerToAssign.name, this.getTeamName(TeamID.Spec), this.getTeamName(targetTeam), "regreso de AFK");
+        
+        window.gameRoom.logger.i('TeamBalancer', 
+            `Assigned AFK return player ${playerToAssign.name}#${playerToAssign.id} to ${targetTeam === TeamID.Red ? 'Red' : 'Blue'} team`);
+    }
+    
+    /**
+     * Mueve jugadores excedentes a espectadores
+     */
+    private moveExcessPlayersToSpec(redCount: number, blueCount: number, requiredPerTeam: number): void {
+        const currentPlayers = window.gameRoom._room.getPlayerList().filter(p => p.id !== 0);
+        
+        // Mover excedentes del equipo rojo
+        if (redCount > requiredPerTeam) {
+            const redPlayers = currentPlayers.filter(p => p.team === TeamID.Red);
+            const excessCount = redCount - requiredPerTeam;
+            const playersToMove = this.selectPlayersToMove(redPlayers, excessCount);
+            
+            for (const player of playersToMove) {
+                window.gameRoom._room.setPlayerTeam(player.id, TeamID.Spec);
+                this.sendBalanceMessage(player.name, this.getTeamName(TeamID.Red), this.getTeamName(TeamID.Spec), "exceso de jugadores");
+                window.gameRoom.logger.i('TeamBalancer', 
+                    `Moved excess player ${player.name}#${player.id} from Red team to spec`);
+            }
+        }
+        
+        // Mover excedentes del equipo azul
+        if (blueCount > requiredPerTeam) {
+            const bluePlayers = currentPlayers.filter(p => p.team === TeamID.Blue);
+            const excessCount = blueCount - requiredPerTeam;
+            const playersToMove = this.selectPlayersToMove(bluePlayers, excessCount);
+            
+            for (const player of playersToMove) {
+                window.gameRoom._room.setPlayerTeam(player.id, TeamID.Spec);
+                this.sendBalanceMessage(player.name, this.getTeamName(TeamID.Blue), this.getTeamName(TeamID.Spec), "exceso de jugadores");
+                window.gameRoom.logger.i('TeamBalancer', 
+                    `Moved excess player ${player.name}#${player.id} from Blue team to spec`);
+            }
+        }
+    }
+    
+    /**
+     * Balancea equipos moviendo jugadores desde espectadores
+     */
+    private balanceFromSpec(redCount: number, blueCount: number, specPlayers: PlayerObject[], requiredPerTeam: number): void {
+        const targetTeam = redCount < blueCount ? TeamID.Red : TeamID.Blue;
+        const neededPlayers = Math.min(
+            Math.ceil(Math.abs(redCount - blueCount) / 2),
+            requiredPerTeam - Math.min(redCount, blueCount)
+        );
+        
+        // Priorizar jugadores sin subteam
+        const soloPlayers = specPlayers.filter(p => !this.getPlayerSubteam(p.name));
+        const subteamPlayers = specPlayers.filter(p => this.getPlayerSubteam(p.name));
+        
+        let playersToMove: PlayerObject[] = [];
+        
+        // Primero usar jugadores solo
+        if (soloPlayers.length >= neededPlayers) {
+            playersToMove = soloPlayers
+                .sort((a, b) => window.gameRoom.playerList.get(b.id)!.stats.rating - window.gameRoom.playerList.get(a.id)!.stats.rating)
+                .slice(0, neededPlayers);
+        } else {
+            // Usar todos los solo + algunos con subteam si es necesario
+            playersToMove = [...soloPlayers];
+            const stillNeeded = neededPlayers - soloPlayers.length;
+            
+            if (stillNeeded > 0 && subteamPlayers.length > 0) {
+                const additionalPlayers = this.selectSubteamPlayersForBalance(subteamPlayers, stillNeeded, targetTeam);
+                playersToMove.push(...additionalPlayers);
+            }
+        }
+        
+        // Mover jugadores seleccionados
+        for (const player of playersToMove) {
+            window.gameRoom._room.setPlayerTeam(player.id, targetTeam);
+            this.sendBalanceMessage(player.name, this.getTeamName(TeamID.Spec), this.getTeamName(targetTeam), "balanceo de equipos");
+            const subteamInfo = this.getPlayerSubteam(player.name) ? ' (subteam)' : ' (solo)';
+            window.gameRoom.logger.i('TeamBalancer', 
+                `Moved player ${player.name}#${player.id} from spec to ${targetTeam === TeamID.Red ? 'Red' : 'Blue'} team${subteamInfo}`);
+        }
+    }
+    
+    /**
+     * Selecciona jugadores para mover basado en subteams y rating
+     */
+    private selectPlayersToMove(players: PlayerObject[], count: number): PlayerObject[] {
+        // Priorizar jugadores sin subteam o que no rompan cohesión de subteam
+        const playersWithPriority = players.map(player => {
+            const subteam = this.getPlayerSubteam(player.name);
+            let priority = 0;
+            
+            if (!subteam) {
+                priority = 100; // Máxima prioridad para jugadores solo
+            } else {
+                // Verificar si mover este jugador no rompe el subteam
+                const subteamMembersInSameTeam = players.filter(p => 
+                    this.getPlayerSubteam(p.name) === subteam && p.team === player.team
+                ).length;
+                
+                if (subteamMembersInSameTeam === 1) {
+                    priority = 50; // Prioridad media - último miembro del subteam en este equipo
+                } else {
+                    priority = 10; // Prioridad baja - rompería subteam
+                }
+            }
+            
+            return { player, priority };
+        });
+        
+        return playersWithPriority
+            .sort((a, b) => b.priority - a.priority || 
+                window.gameRoom.playerList.get(a.player.id)!.stats.rating - 
+                window.gameRoom.playerList.get(b.player.id)!.stats.rating)
+            .slice(0, count)
+            .map(item => item.player);
+    }
+    
+    /**
+     * Selecciona jugadores de subteam para balancear intentando mantener cohesión
+     */
+    private selectSubteamPlayersForBalance(subteamPlayers: PlayerObject[], needed: number, targetTeam: TeamID): PlayerObject[] {
+        const subteamGroups = new Map<string, PlayerObject[]>();
+        
+        // Agrupar por subteam
+        for (const player of subteamPlayers) {
+            const subteamName = this.getPlayerSubteamName(player.name) || 'unknown';
+            if (!subteamGroups.has(subteamName)) {
+                subteamGroups.set(subteamName, []);
+            }
+            subteamGroups.get(subteamName)!.push(player);
+        }
+        
+        const selected: PlayerObject[] = [];
+        
+        // Priorizar subteams completos que puedan moverse juntos
+        for (const [subteamName, members] of subteamGroups.entries()) {
+            if (selected.length >= needed) break;
+            
+            const remainingNeeded = needed - selected.length;
+            if (members.length <= remainingNeeded) {
+                // Mover todo el subteam junto
+                selected.push(...members);
+                window.gameRoom.logger.i('TeamBalancer', 
+                    `Moving complete subteam '${subteamName}' (${members.length} players) to maintain cohesion`);
+            }
+        }
+        
+        // Si aún necesitamos más jugadores, tomar individuales
+        if (selected.length < needed) {
+            const remaining = subteamPlayers.filter(p => !selected.includes(p));
+            const stillNeeded = needed - selected.length;
+            selected.push(...remaining.slice(0, stillNeeded));
+        }
+        
+        return selected;
+    }
+    
+    /**
+     * Balanceo mínimo cuando no hay jugadores en spec
+     */
+    private minimumDisruptionBalance(): void {
+        window.gameRoom.logger.i('TeamBalancer', 'Attempting minimum disruption balance between teams');
+        
+        const currentPlayers = window.gameRoom._room.getPlayerList().filter(p => p.id !== 0);
+        const redPlayers = currentPlayers.filter(p => p.team === TeamID.Red);
+        const bluePlayers = currentPlayers.filter(p => p.team === TeamID.Blue);
+        
+        const redCount = redPlayers.length;
+        const blueCount = bluePlayers.length;
+        
+        if (redCount > blueCount + 1) {
+            // Mover un jugador de rojo a azul
+            const playerToMove = this.selectPlayersToMove(redPlayers, 1)[0];
+            if (playerToMove) {
+                window.gameRoom._room.setPlayerTeam(playerToMove.id, TeamID.Blue);
+                this.sendBalanceMessage(playerToMove.name, this.getTeamName(TeamID.Red), this.getTeamName(TeamID.Blue), "balanceo mínimo");
+                window.gameRoom.logger.i('TeamBalancer', 
+                    `Moved ${playerToMove.name}#${playerToMove.id} from Red to Blue team (minimum disruption)`);
+            }
+        } else if (blueCount > redCount + 1) {
+            // Mover un jugador de azul a rojo
+            const playerToMove = this.selectPlayersToMove(bluePlayers, 1)[0];
+            if (playerToMove) {
+                window.gameRoom._room.setPlayerTeam(playerToMove.id, TeamID.Red);
+                this.sendBalanceMessage(playerToMove.name, this.getTeamName(TeamID.Blue), this.getTeamName(TeamID.Red), "balanceo mínimo");
+                window.gameRoom.logger.i('TeamBalancer', 
+                    `Moved ${playerToMove.name}#${playerToMove.id} from Blue to Red team (minimum disruption)`);
+            }
+        }
+    }
+
+    /**
+     * Balancea específicamente cuando hay desbalance de jugadores respetando subteams
+     * @deprecated Usar balanceDuringMatch() en su lugar
+     */
+    public balanceAfterPlayerLeave(): void {
+        this.balanceDuringMatch('player leave');
     }
 
     /**
@@ -425,7 +675,11 @@ export class TeamBalancer {
     
     private movePlayersToTeam(players: BalancedPlayer[], team: TeamID): void {
         for (const player of players) {
+            const currentTeam = window.gameRoom._room.getPlayer(player.id)?.team;
             window.gameRoom._room.setPlayerTeam(player.id, team);
+            if (currentTeam !== undefined) {
+                this.sendBalanceMessage(player.name, this.getTeamName(currentTeam), this.getTeamName(team), "distribución de subequipos");
+            }
             window.gameRoom.logger.i('TeamBalancer', 
                 `Moved ${player.name}#${player.id} to ${team === TeamID.Red ? 'Red' : 'Blue'} team`);
         }

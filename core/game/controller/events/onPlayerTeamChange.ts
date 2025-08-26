@@ -2,7 +2,7 @@ import * as Tst from "../Translator";
 import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { balanceTeams } from "../../model/OperateHelper/Quorum";
+import { balanceTeams, balanceDuringMatch } from "../../model/OperateHelper/Quorum";
 
 export function onPlayerTeamChangeListener(changedPlayer: PlayerObject, byPlayer: PlayerObject): void {
     // Event called when a player team is changed.
@@ -43,8 +43,11 @@ export function onPlayerTeamChangeListener(changedPlayer: PlayerObject, byPlayer
         window.gameRoom.playerList.get(changedPlayer.id)!.team = changedPlayer.team;
         window.gameRoom.logger.i('onPlayerTeamChange', `${changedPlayer.name}#${changedPlayer.id} is moved team to ${convertTeamID2Name(changedPlayer.team)}.`);
         
-        // Si un jugador se mueve a espectadores durante una partida, intentar balancear
-        if (window.gameRoom.config.rules.autoOperating === true && window.gameRoom.isGamingNow === true && changedPlayer.team === TeamID.Spec && byPlayer !== null && byPlayer.id === changedPlayer.id) {
+        // Si un jugador se mueve a espectadores durante una partida, usar balanceo inteligente
+        if (window.gameRoom.config.rules.autoOperating === true && 
+            window.gameRoom.isGamingNow === true && 
+            changedPlayer.team === TeamID.Spec && 
+            (byPlayer === null || byPlayer.id === changedPlayer.id)) {
             // Cleanup subteams first in case player left
             try {
                 if (typeof (global as any).cleanupSubteams === 'function') {
@@ -55,9 +58,10 @@ export function onPlayerTeamChangeListener(changedPlayer: PlayerObject, byPlayer
             }
             
             setTimeout(() => {
-                balanceTeams();
-                window.gameRoom.logger.i('onPlayerTeamChange', `Player moved to spec, attempting subteam-aware balance`);
-            }, 500); // Delay aumentado para consistencia
+                // Usar balanceDuringMatch que es más inteligente y genérico
+                balanceDuringMatch('player team change during match');
+                window.gameRoom.logger.i('onPlayerTeamChange', `Player moved to spec during game, using intelligent balance`);
+            }, 500); // Delay para asegurar que el cambio se procesó
         }
     }
 

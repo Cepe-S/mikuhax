@@ -4,7 +4,7 @@ import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { updateAdmins, setDefaultStadiums } from "../RoomTools";
 import { getUnixTimestamp } from "../Statistics";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { roomActivePlayersNumberCheck, balanceTeams, balanceAfterPlayerLeave } from "../../model/OperateHelper/Quorum";
+import { roomActivePlayersNumberCheck, balanceTeams, balanceDuringMatch } from "../../model/OperateHelper/Quorum";
 import { QueueSystem } from "../../model/OperateHelper/QueueSystem";
 import { convertToPlayerStorage, getBanlistDataFromDB, setBanlistDataToDB, setPlayerDataToDB } from "../Storage";
 import { EloIntegrityTracker } from "../../model/Statistics/EloIntegrityTracker";
@@ -73,7 +73,7 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
                     const teamDifference = Math.abs(redCount - blueCount);
                     
                     if (teamDifference > 1) {
-                        balanceAfterPlayerLeave();
+                        balanceDuringMatch('player leave');
                         window.gameRoom.logger.i('onPlayerLeave', `Player ${player.name}#${player.id} left, rebalancing teams (Red: ${redCount}, Blue: ${blueCount}, Diff: ${teamDifference})`);
                     } else {
                         window.gameRoom.logger.i('onPlayerLeave', `Player ${player.name}#${player.id} left, teams remain balanced (Red: ${redCount}, Blue: ${blueCount}, Diff: ${teamDifference})`);

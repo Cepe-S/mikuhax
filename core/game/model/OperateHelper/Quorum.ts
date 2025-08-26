@@ -42,7 +42,20 @@ export function balanceAfterPlayerLeave(): void {
     }
     
     const teamBalancer = TeamBalancer.getInstance();
-    teamBalancer.balanceAfterPlayerLeave();
+    teamBalancer.balanceDuringMatch('player leave');
+}
+
+export function balanceDuringMatch(reason: string = 'unknown'): void {
+    const queueSystem = QueueSystem.getInstance();
+    
+    if (queueSystem.shouldQueueBeActive()) {
+        queueSystem.activateQueue();
+        queueSystem.processQueue();
+        return;
+    }
+    
+    const teamBalancer = TeamBalancer.getInstance();
+    teamBalancer.balanceDuringMatch(reason);
 }
 
 export function assignPlayerToBalancedTeam(playerId: number): void {
@@ -84,8 +97,14 @@ export function assignPlayerToBalancedTeam(playerId: number): void {
         }
     }
     
-    // Solo usar balanceo completo si es necesario
-    balanceTeams();
+    // Solo usar balanceo completo si es realmente necesario y no hay partida en curso
+    if (window.gameRoom.isGamingNow === true) {
+        // Durante partidas, usar balanceo conservador genérico
+        balanceDuringMatch('player assignment');
+    } else {
+        // Entre partidas, usar balanceo completo
+        balanceTeams();
+    }
 }
 
 
