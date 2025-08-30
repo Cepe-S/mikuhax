@@ -16,6 +16,13 @@ export interface HEloConfig {
         class_tier_7: number               // 2800 (Super GM)
         class_tier_8: number               // 3000 (Elite)
         class_tier_9: number               // 3200 (Maximum)
+        placement_games: number            // 10 (placement games threshold)
+        activity_max_bonus: number         // 0.3 (maximum activity bonus)
+        activity_saturation: number        // 200 (activity saturation point)
+        progression_easy_zone: number      // 1200 (easy progression zone)
+        progression_exponent: number       // 1.8 (progression difficulty exponent)
+        top1_protection_threshold: number  // 200 (top 1 protection threshold)
+        challenger_bonus_zone: number      // 100 (challenger bonus zone)
     }
     avatar: {
         avatar_unknown: string
@@ -51,7 +58,14 @@ export const defaultChessComConfig: HEloConfig = {
         class_tier_6: 2400,
         class_tier_7: 2800,
         class_tier_8: 3000,
-        class_tier_9: 3200
+        class_tier_9: 3200,
+        placement_games: 10,
+        activity_max_bonus: 0.3,
+        activity_saturation: 200,
+        progression_easy_zone: 1200,
+        progression_exponent: 1.8,
+        top1_protection_threshold: 200,
+        challenger_bonus_zone: 100
     },
     avatar: {
         avatar_unknown: "❓",
