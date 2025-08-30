@@ -91,9 +91,9 @@
 		"useDefaultValues": false,
 		"factor": {
 			"placement_match_chances": 10,
-			"factor_k_placement": 300,
-			"factor_k_normal": 90,
-			"factor_k_replace": 45
+			"factor_k_placement": 40,
+			"factor_k_normal": 24,
+			"factor_k_replace": 12
 		},
 		"tier": {
 			"class_tier_1": 600,
@@ -107,7 +107,14 @@
 			"class_tier_9": 2200,
 			"top_20_base_elo": 2200,
 			"top_10_base_elo": 2400,
-			"top_1_base_elo": 2600
+			"top_1_base_elo": 2600,
+			"activity_max_bonus": 0.3,
+			"activity_saturation": 200,
+			"progression_easy_zone": 1200,
+			"progression_exponent": 1.8,
+			"top1_protection_threshold": 200,
+			"challenger_bonus_zone": 100,
+			"placement_games": 10
 		},
 		"avatar": {
 			"avatar_unknown": "❔",

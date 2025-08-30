@@ -76,18 +76,158 @@ export class HElo {
         return res;
     }
 
-    // Chess.com style ELO calculation
-    public calcBothDiff(targetRecord: StatsRecord, counterpartRecord: StatsRecord, ratingWinnersMean: number, ratingLosersMean: number, factorK: number, playerTotals?: number): number {
-        // Use Chess.com K-factor instead of passed factorK
-        const chessComK = this.getKFactor(targetRecord.rating, playerTotals || 0);
+    // Team-based ELO calculation (solves multiplicative problem)
+    public calcTeamBasedElo(playerRating: number, opponentTeamAvg: number, result: MatchResult, playerGames: number, isTop1?: boolean, top1Rating?: number, teamSize?: number): number {
+        const games = playerGames || 0;
+        const isPlacement = games < (window.gameRoom.config.HElo.tier.placement_games || 10);
         
-        // Simple Chess.com formula: K * (S - E)
+        // 1. Factor K with limited activity bonus
+        const baseK = this.getKFactor(playerRating, games);
+        const activityK = baseK * this.getActivityMultiplier(games);
+        
+        const expectedScore = this.calcExpectedResult(playerRating, opponentTeamAvg);
+        const actualScore = result;
+        
+        let ratingChange = activityK * (actualScore - expectedScore);
+        
+        // 2. Multitudinal match scaling (reduce impact in large matches)
+        if (teamSize && teamSize > 1) {
+            const scaleFactor = teamSize === 2 ? 0.8 :
+                               teamSize === 3 ? 0.7 :
+                               teamSize >= 4 ? 0.6 : 1.0;
+            ratingChange *= scaleFactor;
+        }
+        
+        // 3. Progressive difficulty curve
+        ratingChange *= this.getProgressionCurve(playerRating, isTop1 || false);
+        
+        // 4. TOP 1 mechanics
+        if (isTop1) {
+            ratingChange *= this.getTop1Protection(playerRating, opponentTeamAvg);
+        } else if (top1Rating) {
+            ratingChange *= this.getChallengerBonus(playerRating, top1Rating);
+        }
+        
+        // 5. Elite protections (apply before limits)
+        if (playerRating > 1400) {
+            if (result === MatchResult.Win && ratingChange < 5) {
+                ratingChange = Math.max(ratingChange, 5); // Minimum gain
+            }
+            if (result === MatchResult.Lose) {
+                ratingChange = ratingChange * 0.5; // 50% loss reduction
+            }
+        }
+        
+        // 6. Match-wide ELO limits (not per opponent)
+        const limits = this.getMatchLimits(games, isPlacement);
+        ratingChange = Math.max(limits.min, Math.min(limits.max, ratingChange));
+        
+        return Math.round(ratingChange);
+    }
+
+    // Advanced motivational ELO system
+    public calcBothDiff(targetRecord: StatsRecord, counterpartRecord: StatsRecord, ratingWinnersMean: number, ratingLosersMean: number, factorK: number, playerTotals?: number, isTop1?: boolean, top1Rating?: number): number {
+        const games = playerTotals || 0;
+        const isPlacement = games < (window.gameRoom.config.HElo.tier.placement_games || 10);
+        
+        // 1. Factor K with limited activity bonus
+        const baseK = this.getKFactor(targetRecord.rating, games);
+        const activityK = baseK * this.getActivityMultiplier(games);
+        
         const expectedScore = this.calcExpectedResult(targetRecord.rating, counterpartRecord.rating);
         const actualScore = targetRecord.realResult;
         
-        let ratingChange = chessComK * (actualScore - expectedScore);
+        let ratingChange = activityK * (actualScore - expectedScore);
         
-        return parseFloat(ratingChange.toFixed(2));
+        // 2. Progressive difficulty curve
+        ratingChange *= this.getProgressionCurve(targetRecord.rating, isTop1 || false);
+        
+        // 3. TOP 1 mechanics
+        if (isTop1) {
+            ratingChange *= this.getTop1Protection(targetRecord.rating, counterpartRecord.rating);
+        } else if (top1Rating) {
+            ratingChange *= this.getChallengerBonus(targetRecord.rating, top1Rating);
+        }
+        
+        // 4. Dynamic ELO limits
+        const limits = this.getEloLimits(games, isPlacement);
+        ratingChange = Math.max(limits.min, Math.min(limits.max, ratingChange));
+        
+        // Small random variation to hide patterns
+        const randomNoise = (Math.random() - 0.5) * 1.5;
+        
+        
+        return Math.round(ratingChange + randomNoise);
+    }
+    
+    private getActivityMultiplier(totalGames: number): number {
+        const config = window.gameRoom.config.HElo.tier;
+        const maxBonus = config.activity_max_bonus || 0.3;
+        const saturationPoint = config.activity_saturation || 200;
+        
+        return 1 + (maxBonus * Math.min(totalGames / saturationPoint, 1));
+    }
+    
+    private getProgressionCurve(currentRating: number, isTop1: boolean): number {
+        if (isTop1) return 0.5;
+        
+        const config = window.gameRoom.config.HElo.tier;
+        const easyZone = config.progression_easy_zone || 1200;
+        const exponent = config.progression_exponent || 1.8;
+        
+        if (currentRating <= easyZone) return 1.1;
+        
+        const difficulty = Math.pow((currentRating - easyZone) / 400, exponent);
+        return Math.max(0.6, 1.1 - difficulty);
+    }
+
+    
+    private getTop1Protection(playerRating: number, opponentRating: number): number {
+        const config = window.gameRoom.config.HElo.tier;
+        const threshold = config.top1_protection_threshold || 200;
+        
+        const ratingDiff = playerRating - opponentRating;
+        if (ratingDiff > threshold) {
+            return 0.7;
+        }
+        return 1.0;
+    }
+    
+    private getChallengerBonus(playerRating: number, top1Rating: number): number {
+        const config = window.gameRoom.config.HElo.tier;
+        const bonusZone = config.challenger_bonus_zone || 100;
+        
+        const diff = top1Rating - playerRating;
+        
+        if (diff > bonusZone) return 1.2;
+        if (diff < 50) return 0.8;
+        
+        return 1.0;
+    }
+    
+    private getEloLimits(totalGames: number, isPlacement: boolean): {min: number, max: number} {
+        if (isPlacement) {
+            return {min: -60, max: 60};
+        }
+        
+        if (totalGames < 50) return {min: -40, max: 40};
+        if (totalGames < 100) return {min: -35, max: 35};
+        if (totalGames < 200) return {min: -30, max: 30};
+        
+        return {min: -25, max: 25};
+    }
+
+    // Match-wide limits (for team-based calculation)
+    private getMatchLimits(totalGames: number, isPlacement: boolean): {min: number, max: number} {
+        if (isPlacement) {
+            return {min: -40, max: 40}; // Reduced from ±60
+        }
+        
+        if (totalGames < 50) return {min: -30, max: 30}; // Reduced from ±40
+        if (totalGames < 100) return {min: -25, max: 25}; // Reduced from ±35
+        if (totalGames < 200) return {min: -20, max: 20}; // Reduced from ±30
+        
+        return {min: -18, max: 18}; // Reduced from ±25
     }
 
     // R' = R + sum of all diffs with Chess.com bounds

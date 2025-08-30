@@ -125,16 +125,29 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
         let winTeamRatingsMean: number = ratingHelper.calcTeamRatingsMean(initialRedTeamPlayers);
         let loseTeamRatingsMean: number = ratingHelper.calcTeamRatingsMean(initialBlueTeamPlayers);
 
-        // get diff and update rating
+        // Get TOP 1 info for advanced calculations
+        const allPlayers = Array.from(window.gameRoom.playerList.values());
+        const top1Player = allPlayers.reduce((prev, current) => (prev.stats.rating > current.stats.rating) ? prev : current);
+        const top1Rating = top1Player.stats.rating;
+        
+        // FIXED: Team-based ELO calculation instead of multiplicative
         redStatsRecords.forEach((eachItem: StatsRecord, idx: number) => {
-            let diffArray: number[] = [];
             let oldRating: number = window.gameRoom.playerList.get(initialRedTeamPlayers[idx].id)!.stats.rating;
             let playerTotals: number = window.gameRoom.playerList.get(initialRedTeamPlayers[idx].id)!.stats.totals;
-            for (let i: number = 0; i < blueStatsRecords.length; i++) {
-                diffArray.push(ratingHelper.calcBothDiff(eachItem, blueStatsRecords[i], winTeamRatingsMean, loseTeamRatingsMean, eachItem.matchKFactor, playerTotals));
-            }
-            let newRating: number = ratingHelper.calcNewRatingWithActivityBonus(eachItem.rating, diffArray, playerTotals);
-            let eloChange: number = newRating - oldRating;
+            let isTop1: boolean = oldRating === top1Rating;
+            
+            // NEW: Single calculation against team average with multitudinal scaling
+            let eloChange: number = ratingHelper.calcTeamBasedElo(
+                oldRating,
+                loseTeamRatingsMean,
+                eachItem.realResult,
+                playerTotals,
+                isTop1,
+                top1Rating,
+                initialRedTeamPlayers.length
+            );
+            
+            let newRating: number = oldRating + eloChange;
             
             window.gameRoom.playerList.get(initialRedTeamPlayers[idx].id)!.stats.rating = newRating;
             
@@ -148,14 +161,22 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
             });
         });
         blueStatsRecords.forEach((eachItem: StatsRecord, idx: number) => {
-            let diffArray: number[] = [];
             let oldRating: number = window.gameRoom.playerList.get(initialBlueTeamPlayers[idx].id)!.stats.rating;
             let playerTotals: number = window.gameRoom.playerList.get(initialBlueTeamPlayers[idx].id)!.stats.totals;
-            for (let i: number = 0; i < redStatsRecords.length; i++) {
-                diffArray.push(ratingHelper.calcBothDiff(eachItem, redStatsRecords[i], winTeamRatingsMean, loseTeamRatingsMean, eachItem.matchKFactor, playerTotals));
-            }
-            let newRating: number = ratingHelper.calcNewRatingWithActivityBonus(eachItem.rating, diffArray, playerTotals);
-            let eloChange: number = newRating - oldRating;
+            let isTop1: boolean = oldRating === top1Rating;
+            
+            // NEW: Single calculation against team average with multitudinal scaling
+            let eloChange: number = ratingHelper.calcTeamBasedElo(
+                oldRating,
+                winTeamRatingsMean,
+                eachItem.realResult,
+                playerTotals,
+                isTop1,
+                top1Rating,
+                initialBlueTeamPlayers.length
+            );
+            
+            let newRating: number = oldRating + eloChange;
             
             window.gameRoom.playerList.get(initialBlueTeamPlayers[idx].id)!.stats.rating = newRating;
             
