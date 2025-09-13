@@ -12,93 +12,120 @@ export class BanListController {
     }
 
     public async getAllBannedPlayers(ctx: Context) {
-        const { ruid } = ctx.params;
-        const { start, count } = ctx.request.query;
+        try {
+            const { ruid } = ctx.params;
+            const { start, count } = ctx.request.query;
 
-        if (start && count) {
-            return this._repository
-                .findAll(ruid, { start: parseInt(<string>start), count: parseInt(<string>count) })
-                .then((players) => {
-                    ctx.status = 200;
-                    ctx.body = players;
-                })
-                .catch((error) => {
-                    ctx.status = 404;
-                    ctx.body = { error: error.message };
+            let players;
+            if (start && count) {
+                players = await this._repository.findAll(ruid, { 
+                    start: parseInt(<string>start), 
+                    count: parseInt(<string>count) 
                 });
-        } else {
-            return this._repository
-                .findAll(ruid)
-                .then((players) => {
-                    ctx.status = 200;
-                    ctx.body = players;
-                })
-                .catch((error) => {
-                    ctx.status = 404;
-                    ctx.body = { error: error.message };
-                });
+            } else {
+                players = await this._repository.findAll(ruid);
+            }
+            
+            ctx.status = 200;
+            ctx.body = players || [];
+        } catch (error) {
+            console.error('Error getting banned players:', error);
+            ctx.status = 500;
+            ctx.body = { error: 'Internal server error', details: error.message };
         }
     }
 
     public async getBannedPlayer(ctx: Context) {
-        const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
-        const { identifier } = ctx.params;
+        try {
+            const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
+            const { identifier } = ctx.params;
 
-        return this._repository
-            .findSingle(ruid, identifier)
-            .then((player) => {
+            if (!identifier) {
+                ctx.status = 400;
+                ctx.body = { error: 'Identifier is required' };
+                return;
+            }
+
+            const player = await this._repository.findSingle(ruid, identifier);
+            
+            if (player) {
                 ctx.status = 200;
                 ctx.body = player;
-            })
-            .catch((error) => {
+            } else {
                 ctx.status = 404;
-                ctx.body = { error: error.message };
-            });
+                ctx.body = { error: 'Player not found in ban list' };
+            }
+        } catch (error) {
+            console.error('Error getting banned player:', error);
+            ctx.status = 500;
+            ctx.body = { error: 'Internal server error', details: error.message };
+        }
     }
 
     public async addBanPlayer(ctx: Context) {
-        const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
-        const banlistModel: BanListModel = ctx.request.body;
+        try {
+            const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
+            const banlistModel: BanListModel = ctx.request.body;
 
-        return this._repository
-            .addSingle(ruid, banlistModel)
-            .then(() => {
-                ctx.status = 204;
-            })
-            .catch((error) => {
+            if (!banlistModel) {
                 ctx.status = 400;
-                ctx.body = { error: error.message };
-            });
+                ctx.body = { error: 'Ban data is required' };
+                return;
+            }
+
+            await this._repository.addSingle(ruid, banlistModel);
+            ctx.status = 204;
+        } catch (error) {
+            console.error('Error adding ban:', error);
+            ctx.status = 500;
+            ctx.body = { error: 'Internal server error', details: error.message };
+        }
     }
 
     public async updateBannedPlayer(ctx: Context) {
-        const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
-        const { identifier } = ctx.params;
-        const banlistModel: BanListModel = ctx.request.body;
+        try {
+            const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
+            const { identifier } = ctx.params;
+            const banlistModel: BanListModel = ctx.request.body;
 
-        return this._repository
-            .updateSingle(ruid, identifier, banlistModel)
-            .then(() => {
-                ctx.status = 204;
-            })
-            .catch((error) => {
-                ctx.status = 404;
-                ctx.body = { error: error.message };
-            });
+            if (!identifier) {
+                ctx.status = 400;
+                ctx.body = { error: 'Identifier is required' };
+                return;
+            }
+
+            if (!banlistModel) {
+                ctx.status = 400;
+                ctx.body = { error: 'Ban data is required' };
+                return;
+            }
+
+            await this._repository.updateSingle(ruid, identifier, banlistModel);
+            ctx.status = 204;
+        } catch (error) {
+            console.error('Error updating ban:', error);
+            ctx.status = 500;
+            ctx.body = { error: 'Internal server error', details: error.message };
+        }
     }
 
     public async deleteBannedPlayer(ctx: Context) {
-        const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
-        const { identifier } = ctx.params;
+        try {
+            const ruid: string = (ctx.params as any).ruid || (ctx.state as any).ruid;
+            const { identifier } = ctx.params;
 
-        return this._repository
-            .deleteSingle(ruid, identifier)
-            .then(() => {
-                ctx.status = 204;
-            })
-            .catch((error) => {
-                ctx.status = 404;
-                ctx.body = { error: error.message };
-            });
+            if (!identifier) {
+                ctx.status = 400;
+                ctx.body = { error: 'Identifier is required' };
+                return;
+            }
+
+            await this._repository.deleteSingle(ruid, identifier);
+            ctx.status = 204;
+        } catch (error) {
+            console.error('Error deleting ban:', error);
+            ctx.status = 500;
+            ctx.body = { error: 'Internal server error', details: error.message };
+        }
     }
 }

@@ -130,7 +130,9 @@ declare global {
         _readMuteByAuthDB(ruid: string, auth: string): Promise<any>;
         _deleteMuteByAuthDB(ruid: string, auth: string): Promise<boolean>;
         _getAllBansFromDB(ruid: string): Promise<any[]>;
+        _getAllMutesFromDB(ruid: string): Promise<any[]>;
         _cleanExpiredBansDB(ruid: string): Promise<number>;
+        _cleanExpiredMutesDB(ruid: string): Promise<number>;
 
         // ==============================
         // Haxball Headless Initial Methods

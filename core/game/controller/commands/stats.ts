@@ -36,7 +36,7 @@ export function cmdStats(byPlayer: PlayerObject, fullMessage?: string): void {
                         const tier = decideTier(window.gameRoom.playerList.get(targetStatsID)!.stats.rating, targetStatsID);
                         return getTierName(tier, targetStatsID);
                     })()
-                    , targetStatsRating: window.gameRoom.playerList.get(targetStatsID)!.stats.rating
+                    , targetStatsRating: Math.round(window.gameRoom.playerList.get(targetStatsID)!.stats.rating)
                     , targetStatsTotal: window.gameRoom.playerList.get(targetStatsID)!.stats.totals
                     , targetStatsDisconns: window.gameRoom.playerList.get(targetStatsID)!.stats.disconns
                     , targetStatsWins: window.gameRoom.playerList.get(targetStatsID)!.stats.wins
@@ -78,7 +78,7 @@ export function cmdStats(byPlayer: PlayerObject, fullMessage?: string): void {
                 const tier = decideTier(window.gameRoom.playerList.get(byPlayer.id)!.stats.rating, byPlayer.id);
                 return getTierName(tier, byPlayer.id);
             })()
-            , targetStatsRating: window.gameRoom.playerList.get(byPlayer.id)!.stats.rating
+            , targetStatsRating: Math.round(window.gameRoom.playerList.get(byPlayer.id)!.stats.rating)
             , targetStatsTotal: window.gameRoom.playerList.get(byPlayer.id)!.stats.totals
             , targetStatsDisconns: window.gameRoom.playerList.get(byPlayer.id)!.stats.disconns
             , targetStatsWins: window.gameRoom.playerList.get(byPlayer.id)!.stats.wins

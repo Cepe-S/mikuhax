@@ -172,7 +172,8 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
             afkdate: 0,
             malActCount: existPlayerData.malActCount,
             superadmin: false,
-            lastPowershotUse: 0
+            lastPowershotUse: 0,
+            lastActivityTime: joinTimeStamp
         }, {
             rejoinCount: existPlayerData.rejoinCount,
             joinDate: joinTimeStamp,
@@ -198,21 +199,41 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         }
 
         // check anti-rejoin flood when this option is enabled
-        if (window.gameRoom.config.settings.antiJoinFlood === true) { //FIXME: Connection Closed Message is shown when anti-rejoin flooding kick (FIND the reason why)
-            if (joinTimeStamp - existPlayerData.leftDate <= window.gameRoom.config.settings.joinFloodIntervalMillisecs) { // when rejoin flood
-                if (existPlayerData.rejoinCount > window.gameRoom.config.settings.joinFloodAllowLimitation) {
-                    // kick this player
-                    window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} was joined but kicked for anti-rejoin flood. (origin:${player.name}#${player.id},conn:${player.conn})`);
-                    window.gameRoom._room.kickPlayer(player.id, LangRes.antitrolling.joinFlood.banReason, false); // kick
-                    //and add into ban list (not permanent ban, but fixed-term ban)
-                    await setBanlistDataToDB({ conn: player.conn, reason: LangRes.antitrolling.joinFlood.banReason, register: joinTimeStamp, expire: joinTimeStamp + window.gameRoom.config.settings.joinFloodBanMillisecs })
-                    return; // exit from this join event
-                } else { //just warn
-                    window.gameRoom._room.sendAnnouncement(LangRes.antitrolling.joinFlood.floodWarning, player.id, 0xFF0000, "bold", 2);
-                    window.gameRoom.playerList.get(player.id)!.entrytime.rejoinCount++; // and add count
+        if (window.gameRoom.config.settings.antiJoinFlood === true) {
+            const timeSinceLastLeft = joinTimeStamp - existPlayerData.leftDate;
+            const isQuickRejoin = timeSinceLastLeft <= window.gameRoom.config.settings.joinFloodIntervalMillisecs && existPlayerData.leftDate > 0;
+            
+            if (isQuickRejoin) {
+                // Increment rejoin count for quick rejoins
+                window.gameRoom.playerList.get(player.id)!.entrytime.rejoinCount = existPlayerData.rejoinCount + 1;
+                
+                // Only kick if exceeding the limit AND it's been less than the interval AND player has actually left before
+                if (existPlayerData.rejoinCount >= window.gameRoom.config.settings.joinFloodAllowLimitation && existPlayerData.leftDate > 0) {
+                    window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} kicked for excessive rejoining: ${existPlayerData.rejoinCount + 1} rejoins in ${Math.floor(timeSinceLastLeft/1000)}s`);
+                    window.gameRoom._room.kickPlayer(player.id, "🚫 Reconexiones frecuentes (5 minutos).", false);
+                    
+                    // Add to ban list with reduced time
+                    try {
+                        await window._createBanDB(
+                            window.gameRoom.config._RUID,
+                            player.auth,
+                            player.conn,
+                            "🚫 Reconexiones frecuentes (5 minutos).",
+                            5, // 5 minutes ban
+                            'system',
+                            'Anti-flood System',
+                            player.name
+                        );
+                    } catch (error) {
+                        window.gameRoom.logger.w('onPlayerJoin', `Failed to create ban record: ${error}`);
+                    }
+                    return;
+                } else if (existPlayerData.rejoinCount >= Math.floor(window.gameRoom.config.settings.joinFloodAllowLimitation / 2) && existPlayerData.leftDate > 0) {
+                    // Warn when approaching limit
+                    window.gameRoom._room.sendAnnouncement("⚠️ Evita reconectarte muy seguido o serás baneado temporalmente.", player.id, 0xFF0000, "bold", 2);
                 }
             } else {
-                // init rejoin count
+                // Reset rejoin count if enough time has passed or if it's first join
                 window.gameRoom.playerList.get(player.id)!.entrytime.rejoinCount = 0;
             }
         }
@@ -239,7 +260,8 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
             afkdate: 0,
             malActCount: 0,
             superadmin: false,
-            lastPowershotUse: 0
+            lastPowershotUse: 0,
+            lastActivityTime: joinTimeStamp
         }, {
             rejoinCount: 0,
             joinDate: joinTimeStamp,
@@ -250,10 +272,10 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
 
     await setPlayerDataToDB(convertToPlayerStorage(window.gameRoom.playerList.get(player.id)!)); // register(or update) this player into DB
 
-    // Track player connection for anti-spam analysis (HTTP version - currently disabled due to CORS)
-    trackPlayerConnection(player).catch(err => {
-        window.gameRoom.logger.w('onPlayerJoin', `Failed to track connection for ${player.name}: ${err.message}`);
-    });
+    // Track player connection for anti-spam analysis (HTTP version - DISABLED for performance)
+    // trackPlayerConnection(player).catch(err => {
+    //     window.gameRoom.logger.w('onPlayerJoin', `Failed to track connection for ${player.name}: ${err.message}`);
+    // });
 
     // Track player connection locally (no HTTP issues)
     trackPlayerConnectionLocal(player);
@@ -334,7 +356,7 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
     }, 1000);
     
     setTimeout(() => {
-        const playerInfo = `👤 ${superAdminIndicator}${adminIndicator}${player.name}#${player.id} | ${tierName} | ELO: ${playerData.stats.rating}`;
+        const playerInfo = `👤 ${superAdminIndicator}${adminIndicator}${player.name}#${player.id} | ${tierName} | ELO: ${Math.round(playerData.stats.rating)}`;
         const statsHeader = `📊 Estas son tus estadísticas actuales: ${playerInfo}`;
         window.gameRoom._room.sendAnnouncement(statsHeader, player.id, tierColor, "bold", 0);
     }, 2000);

@@ -54,28 +54,26 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
         
         // Continue with message processing for all players (including admins)
         if (!player.admin) { // Only apply anti-flood and filters to non-admins
-                // Anti Chat Flood Checking - Intelligent Time-based Spam Detection
+                // Anti Chat Flood Checking - Optimized per-player tracking
                 if (window.gameRoom.config.settings.antiChatFlood === true && window.gameRoom.isStatRecord === true) {
-                    const currentTime = getUnixTimestamp() * 1000; // Convert to milliseconds for precision
+                    const currentTime = getUnixTimestamp() * 1000;
                     const timeWindow = window.gameRoom.config.settings.chatFloodIntervalMillisecs;
                     const playerData = window.gameRoom.playerList.get(player.id)!;
                     
-                    // Add current message with timestamp
-                    window.gameRoom.antiTrollingChatFloodCount.push({ 
-                        playerID: player.id, 
-                        timestamp: currentTime 
-                    });
+                    // Initialize player's message history if not exists
+                    if (!playerData.permissions.chatHistory) {
+                        playerData.permissions.chatHistory = [];
+                    }
                     
-                    // Clean old messages outside the time window in a single pass
+                    // Add current message
+                    playerData.permissions.chatHistory.push(currentTime);
+                    
+                    // Clean old messages for this player only (much more efficient)
                     const cutoffTime = currentTime - timeWindow;
-                    window.gameRoom.antiTrollingChatFloodCount = window.gameRoom.antiTrollingChatFloodCount.filter(
-                        record => record.timestamp > cutoffTime
-                    );
+                    playerData.permissions.chatHistory = playerData.permissions.chatHistory.filter(timestamp => timestamp > cutoffTime);
                     
-                    // Count this player's messages in the current time window
-                    const playerMessagesInWindow = window.gameRoom.antiTrollingChatFloodCount.filter(
-                        record => record.playerID === player.id
-                    ).length;
+                    // Count messages in window
+                    const playerMessagesInWindow = playerData.permissions.chatHistory.length;
                     
                     // Only mute if player exceeded the criterion within the time window AND is not already muted
                     if (playerMessagesInWindow >= window.gameRoom.config.settings.chatFloodCriterion && 
@@ -85,11 +83,27 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                         playerData.permissions['mute'] = true;
                         playerData.permissions.muteExpire = (currentTime / 1000) + window.gameRoom.config.settings.muteDefaultMillisecs;
                         
+                        // Save to database
+                        window._createMuteDB(
+                            window.gameRoom.config._RUID,
+                            player.auth,
+                            player.conn,
+                            'Chat flood/spam',
+                            Math.floor(window.gameRoom.config.settings.muteDefaultMillisecs / 60000),
+                            'system',
+                            'Anti-spam System'
+                        ).catch(error => {
+                            window.gameRoom.logger.e('onPlayerChat', `Error saving mute to DB: ${error}`);
+                        });
+                        
                         // Notify about the mute
                         window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.antitrolling.chatFlood.muteReason, placeholderChat), null, 0xFF0000, "normal", 1);
                         
                         // Log the action with better formatting
                         window.gameRoom.logger.i('onPlayerChat', `🔇 Player ${player.name}#${player.id} muted for spam: ${playerMessagesInWindow} messages in ${timeWindow/1000}s`);
+                        
+                        // Clear player's chat history after mute
+                        playerData.permissions.chatHistory = [];
                         
                         window._emitSIOPlayerStatusChangeEvent(player.id);
                         return false;

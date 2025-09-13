@@ -241,6 +241,7 @@ export class HeadlessBrowser {
         await page.exposeFunction('_createMuteDB', dbUtilityInject.createMuteDB);
         await page.exposeFunction('_readMuteByAuthDB', dbUtilityInject.readMuteByAuthDB);
         await page.exposeFunction('_deleteMuteByAuthDB', dbUtilityInject.deleteMuteByAuthDB);
+        await page.exposeFunction('_getAllMutesFromDB', dbUtilityInject.getAllMutesFromDB);
         
         // inject webhook function
         await page.exposeFunction('_feedSocialDiscordWebhook', this.feedSocialDiscordWebhook.bind(this));

@@ -1,12 +1,12 @@
-- optimizar el top goleadores/asistidores
-- arreglar arte ascci de la bienvenida
-- cambiar sistema de elo para que tenga en cuenta la cantidad de personas en total
-- darle información interesante a los jugadores cuando entran y al comienzo de cada partido
-- agregar webhooks de:
-	. llamar admin
-	. boletero
-	. server open
-	. chat
-	. entradas y salidas
 
-- los admins pierden el color en el chat, empiezan a escribir de color blanco
+
+- optimizar el top goleadores/asistidores
+- cambiar sistema de elo para que tenga en cuenta la cantidad de personas en total
+- revisar movimiento de pelota
+- goleadores dia no funciona, siempre devuelve goleadores globales
+- el top goleadores que se envía a ds no funciona bien
+- hacer una página de debug buena dentro del archivo react para debuguear mejor a la ia de mierda q hace todo mal la hija de puta
+
+- agregarle cooldown al comando !afk
+
+- api que dice los partidos importantes reales

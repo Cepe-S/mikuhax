@@ -6,7 +6,7 @@ import * as LangRes from "./resource/strings";
 import * as eventListener from "./controller/events/eventListeners";
 import * as Tst from "./controller/Translator";
 import { Player } from "./model/GameObject/Player";
-import { Logger } from "./controller/Logger";
+import { Logger, LogLevel } from "./controller/Logger";
 import { PlayerObject } from "./model/GameObject/PlayerObject";
 import { ScoresObject } from "./model/GameObject/ScoresObject";
 import { KickStack } from "./model/GameObject/BallTrace";
@@ -72,6 +72,9 @@ window.gameRoom = {
 localStorage.removeItem('_initConfig');
 localStorage.removeItem('_defaultMap');
 localStorage.removeItem('_readyMap');
+
+// Configure optimized logging
+window.gameRoom.logger.setLogLevel(LogLevel.INFO); // Set to INFO level to reduce verbosity
 
 // start main bot script
 console.log(`Haxbotron loaded bot script. (UID ${window.gameRoom.config._RUID}, TOKEN ${window.gameRoom.config._config.token})`);
@@ -139,35 +142,49 @@ var scheduledTimer5 = setInterval(() => {
             }
         }
 
-        // check afk
-        if (window.gameRoom.isGamingNow === true && window.gameRoom.isStatRecord === true) { // if the game is in playing
-            if (player.team !== TeamID.Spec && player.permissions.afkmode === false) { // if the player is not spectators and not already AFK
-                if (player.afktrace.count >= window.gameRoom.config.settings.afkCountLimit) { // if the player's count is over than limit
+        // check afk - Sistema basado en tiempo real desde settings
+        if (window.gameRoom.isGamingNow === true && window.gameRoom.isStatRecord === true) { 
+            // Durante el juego: verificar jugadores en equipos (Red/Blue) que no estén ya en modo AFK manual
+            if (player.team !== TeamID.Spec && player.permissions.afkmode === false) {
+                // Usar tiempo real de inactividad basado en afkCommandAutoKickAllowMillisecs
+                const inactiveTime = nowTimeStamp - (player.permissions.lastActivityTime || nowTimeStamp);
+                const maxAfkTime = window.gameRoom.config.settings.afkCommandAutoKickAllowMillisecs;
+                
+                if (inactiveTime >= maxAfkTime) {
                     // Don't kick superadmins for being AFK during games
                     if (!player.permissions.superadmin) {
-                        window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false); // kick
+                        window.gameRoom.logger.i('afk-system', `Kicking player ${player.name}#${player.id} for AFK during game (inactive for ${Math.floor(inactiveTime/1000)}s)`);
+                        window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false);
+                    } else {
+                        // Para superadmins, resetear tiempo de actividad
+                        player.permissions.lastActivityTime = nowTimeStamp;
+                        window.gameRoom.logger.i('afk-system', `Superadmin ${player.name}#${player.id} AFK time reset`);
                     }
                 } else {
-                    // Comentado temporalmente hasta producción
-                    // if (player.afktrace.count >= 1) { // only when the player's count is not 0(in activity)
-                    //     window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.scheduler.afkDetect, placeholderScheduler), player.id, 0xFF7777, "bold", 2); // warning for all
-                    // }
-                    player.afktrace.count++; // add afk detection count
+                    // Advertencia cuando quedan 30 segundos
+                    const remainingTime = maxAfkTime - inactiveTime;
+                    if (remainingTime <= 30000 && remainingTime > 15000) {
+                        window.gameRoom._room.sendAnnouncement(
+                            `⚠️ ${player.name}, estás inactivo. Muévete o serás expulsado en ${Math.floor(remainingTime/1000)}s`,
+                            player.id, 0xFF7777, "bold", 2
+                        );
+                    }
                 }
             }
         } else {
-            if (player.admin == true && player.permissions.afkmode === false) { // if the player is admin and not already AFK
-                if (player.afktrace.count >= window.gameRoom.config.settings.afkCountLimit) { // if the player's count is over than limit
+            // Fuera del juego: solo verificar admins que no estén en modo AFK manual
+            if (player.admin === true && player.permissions.afkmode === false) {
+                const inactiveTime = nowTimeStamp - (player.permissions.lastActivityTime || nowTimeStamp);
+                const maxAfkTime = window.gameRoom.config.settings.afkCommandAutoKickAllowMillisecs;
+                
+                if (inactiveTime >= maxAfkTime) {
                     // Don't kick superadmins for being AFK outside games
                     if (!player.permissions.superadmin) {
-                        window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false); // kick
+                        window.gameRoom.logger.i('afk-system', `Kicking admin ${player.name}#${player.id} for AFK outside game (inactive for ${Math.floor(inactiveTime/1000)}s)`);
+                        window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false);
+                    } else {
+                        player.permissions.lastActivityTime = nowTimeStamp;
                     }
-                } else {
-                    // Comentado temporalmente hasta producción
-                    // if (player.afktrace.count >= 1) { // only when the player's count is not 0(in activity)
-                    //     window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.scheduler.afkDetect, placeholderScheduler), player.id, 0xFF7777, "bold", 2); // warning for all
-                    // }
-                    player.afktrace.count++; // add afk detection count
                 }
             }
         }

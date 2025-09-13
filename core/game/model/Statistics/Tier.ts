@@ -10,22 +10,36 @@ interface Top20Player {
 
 let top20Cache: Top20Player[] = [];
 let cacheLastUpdated: number = 0;
+let isUpdatingCache: boolean = false;
 
 // Update TOP 20 cache (call this at the end of each match)
 export function updateTop20Cache(): void {
+    if (isUpdatingCache) {
+        window.gameRoom?.logger?.i('updateTop20Cache', 'Update already in progress, skipping');
+        return;
+    }
+    
+    isUpdatingCache = true;
+    
+    const timeout = setTimeout(() => {
+        window.gameRoom?.logger?.w('updateTop20Cache', 'Database call timeout, keeping existing cache');
+        isUpdatingCache = false;
+    }, 5000);
+    
     try {
         window.gameRoom.logger.i('updateTop20Cache', 'Attempting to update TOP 20 cache from database using injected function...');
         
         // Get the room ID (ruid) from configuration
         const ruid = window.gameRoom.config._RUID || window.gameRoom.config.rules.ruleName || 'default';
         
-        window.gameRoom.logger.i('updateTop20Cache', `Config _RUID: ${window.gameRoom.config._RUID}`);
-        window.gameRoom.logger.i('updateTop20Cache', `Config ruleName: ${window.gameRoom.config.rules.ruleName}`);
         window.gameRoom.logger.i('updateTop20Cache', `Using ruid: ${ruid}`);
 
         // Use the injected function to avoid CORS issues (like Storage.ts does)
         window._getAllPlayersFromDB(ruid)
             .then((allPlayers: PlayerStorage[]) => {
+                clearTimeout(timeout);
+                isUpdatingCache = false;
+                
                 window.gameRoom.logger.i('updateTop20Cache', `Retrieved ${allPlayers.length} players from database`);
                 
                 if (allPlayers && allPlayers.length > 0) {
@@ -56,12 +70,16 @@ export function updateTop20Cache(): void {
                 }
             })
             .catch(error => {
-                window.gameRoom.logger.e('updateTop20Cache', `Failed to update TOP 20 cache: ${error}`);
-                // Don't clear cache on error - keep existing cache
+                clearTimeout(timeout);
+                isUpdatingCache = false;
+                window.gameRoom.logger.e('updateTop20Cache', `Failed: ${error}, retrying in 30s`);
+                setTimeout(updateTop20Cache, 30000); // Retry in 30 seconds
             });
         
     } catch (error) {
-        window.gameRoom.logger.e('updateTop20Cache', `Error updating TOP 20 cache: ${error}`);
+        clearTimeout(timeout);
+        isUpdatingCache = false;
+        window.gameRoom.logger.e('updateTop20Cache', `Critical error: ${error}`);
     }
 }
 

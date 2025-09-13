@@ -22,7 +22,7 @@ interface styleClass {
     styleClass: any
 }
 
-interface banListItem {
+interface muteListItem {
     auth: string
     playerName: string
     reason: string
@@ -32,7 +32,7 @@ interface banListItem {
     isActive: boolean
 }
 
-interface newBanFields {
+interface newMuteFields {
     auth: string
     playerName: string
     reason: string
@@ -43,15 +43,13 @@ interface matchParams {
     ruid: string
 }
 
-export default function RoomBanList({ styleClass }: styleClass) {
+export default function RoomMuteList({ styleClass }: styleClass) {
     const classes = styleClass;
-
     const fixedHeightPaper = clsx(classes.paper, classes.fullHeight);
-
     const matchParams: matchParams = useParams();
 
-    const [banList, setBanList] = useState([] as banListItem[]);
-    const [newBan, setNewBan] = useState({ auth: '', playerName: '', reason: '', durationMinutes: 0 } as newBanFields);
+    const [muteList, setMuteList] = useState([] as muteListItem[]);
+    const [newMute, setNewMute] = useState({ auth: '', playerName: '', reason: '', durationMinutes: 0 } as newMuteFields);
 
     const [flashMessage, setFlashMessage] = useState('');
     const [alertStatus, setAlertStatus] = useState("success" as AlertColor);
@@ -64,28 +62,28 @@ export default function RoomBanList({ styleClass }: styleClass) {
         return new Date(timestamp).toLocaleString();
     }
 
-    const getBanList = async (page: number) => {
+    const getMuteList = async (page: number) => {
         const index: number = (page - 1) * pagingCount;
         try {
-            const result = await client.get(`/api/v1/sanctions/${matchParams.ruid}/bans?start=${index}&count=${pagingCount}`);
+            const result = await client.get(`/api/v1/sanctions/${matchParams.ruid}/mutes?start=${index}&count=${pagingCount}`);
             if (result.status === 200) {
-                const banList: banListItem[] = result.data;
-                setBanList(banList);
+                const muteList: muteListItem[] = result.data;
+                setMuteList(muteList);
             }
         } catch (error) {
             setAlertStatus('error');
             if (error.response?.status === 404) {
                 setFlashMessage('Failed to load list.');
-                setBanList([]);
+                setMuteList([]);
             } else {
                 setFlashMessage('Unexpected error is caused. Please try again.');
             }
         }
     }
 
-    const onClickBanDelete = async (auth: string) => {
+    const onClickMuteDelete = async (auth: string) => {
         try {
-            const result = await client.delete(`/api/v1/sanctions/${matchParams.ruid}/bans/${auth}`);
+            const result = await client.delete(`/api/v1/sanctions/${matchParams.ruid}/mutes/${auth}`);
             if (result.status === 204) {
                 setFlashMessage('Successfully deleted.');
                 setAlertStatus('success');
@@ -94,19 +92,19 @@ export default function RoomBanList({ styleClass }: styleClass) {
                 }, 3000);
             }
         } catch (error) {
-            setFlashMessage('Failed to delete the ban.');
+            setFlashMessage('Failed to delete the mute.');
             setTimeout(() => {
                 setFlashMessage('');
                 setAlertStatus('error');
             }, 3000);
         }
-        getBanList(pagingOrder);
+        getMuteList(pagingOrder);
     }
 
     const onClickPaging = (move: number) => {
         if (pagingOrder + move >= 1) {
             setPagingOrder(pagingOrder + move);
-            getBanList(pagingOrder + move);
+            getMuteList(pagingOrder + move);
         }
     }
 
@@ -121,16 +119,16 @@ export default function RoomBanList({ styleClass }: styleClass) {
         }
     }
 
-    const onChangeNewBan = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onChangeNewMute = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         if (name === "durationMinutes" && isNumber(parseInt(value))) {
-            setNewBan({
-                ...newBan,
+            setNewMute({
+                ...newMute,
                 durationMinutes: parseInt(value)
             });
         } else {
-            setNewBan({
-                ...newBan,
+            setNewMute({
+                ...newMute,
                 [name]: value
             });
         }
@@ -139,32 +137,32 @@ export default function RoomBanList({ styleClass }: styleClass) {
     const handleAdd = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         try {
-            const result = await client.post(`/api/v1/sanctions/${matchParams.ruid}/bans`, {
-                auth: newBan.auth,
-                playerName: newBan.playerName,
-                reason: newBan.reason,
-                durationMinutes: newBan.durationMinutes
+            const result = await client.post(`/api/v1/sanctions/${matchParams.ruid}/mutes`, {
+                auth: newMute.auth,
+                playerName: newMute.playerName,
+                reason: newMute.reason,
+                durationMinutes: newMute.durationMinutes
             });
             if (result.status === 204) {
-                setFlashMessage('Successfully banned.');
+                setFlashMessage('Successfully muted.');
                 setAlertStatus('success');
-                setNewBan({ auth: '', playerName: '', reason: '', durationMinutes: 0 });
+                setNewMute({ auth: '', playerName: '', reason: '', durationMinutes: 0 });
                 setTimeout(() => {
                     setFlashMessage('');
                 }, 3000);
             }
         } catch (error) {
-            setFlashMessage('Failed to ban.');
+            setFlashMessage('Failed to mute.');
             setAlertStatus('error');
             setTimeout(() => {
                 setFlashMessage('');
             }, 3000);
         }
-        getBanList(pagingOrder);
+        getMuteList(pagingOrder);
     }
 
     useEffect(() => {
-        getBanList(1);
+        getMuteList(1);
     }, []);
 
     return (
@@ -174,27 +172,27 @@ export default function RoomBanList({ styleClass }: styleClass) {
                     <Paper className={fixedHeightPaper}>
                         <React.Fragment>
                             {flashMessage && <Alert severity={alertStatus}>{flashMessage}</Alert>}
-                            <Title>Ban List</Title>
+                            <Title>Mute List</Title>
                             <Grid container spacing={2}>
                                 <form className={classes.form} onSubmit={handleAdd} method="post">
                                     <Grid item xs={12} sm={12}>
                                         <TextField
-                                            variant="outlined" margin="normal" required size="small" value={newBan.auth} onChange={onChangeNewBan}
+                                            variant="outlined" margin="normal" required size="small" value={newMute.auth} onChange={onChangeNewMute}
                                             id="auth" label="Player Auth" name="auth"
                                         />
                                         <TextField
-                                            variant="outlined" margin="normal" required size="small" value={newBan.playerName} onChange={onChangeNewBan}
+                                            variant="outlined" margin="normal" required size="small" value={newMute.playerName} onChange={onChangeNewMute}
                                             id="playerName" label="Player Name" name="playerName"
                                         />
                                         <TextField
-                                            variant="outlined" margin="normal" required size="small" value={newBan.reason} onChange={onChangeNewBan}
+                                            variant="outlined" margin="normal" required size="small" value={newMute.reason} onChange={onChangeNewMute}
                                             id="reason" label="Reason" name="reason"
                                         />
                                         <TextField
-                                            variant="outlined" margin="normal" required size="small" value={newBan.durationMinutes} onChange={onChangeNewBan} type="number"
+                                            variant="outlined" margin="normal" required size="small" value={newMute.durationMinutes} onChange={onChangeNewMute} type="number"
                                             id="durationMinutes" label="Duration (minutes, 0=permanent)" name="durationMinutes"
                                         />
-                                        <Button size="small" type="submit" variant="contained" color="primary" className={classes.submit}>Ban</Button>
+                                        <Button size="small" type="submit" variant="contained" color="primary" className={classes.submit}>Mute</Button>
                                     </Grid>
                                 </form>
                             </Grid>
@@ -202,9 +200,7 @@ export default function RoomBanList({ styleClass }: styleClass) {
 
                             <Grid container spacing={1}>
                                 <Grid item xs={8} sm={4}>
-                                    {/* previous page */}
                                     <Button onClick={() => onClickPaging(-1)} size="small" type="button" variant="outlined" color="inherit" className={classes.submit}>&lt;&lt;</Button>
-                                    {/* next page */}
                                     <Button onClick={() => onClickPaging(1)} size="small" type="button" variant="outlined" color="inherit" className={classes.submit}>&gt;&gt;</Button>
 
                                     <TextField
@@ -221,7 +217,6 @@ export default function RoomBanList({ styleClass }: styleClass) {
 
                                     <Typography>Page {pagingOrder}</Typography>
                                 </Grid>
-
                             </Grid>
                             <Divider />
 
@@ -238,7 +233,7 @@ export default function RoomBanList({ styleClass }: styleClass) {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {banList.map((item, idx) => (
+                                    {muteList.map((item, idx) => (
                                         <TableRow key={idx}>
                                             <TableCell>{item.playerName || 'Unknown'}</TableCell>
                                             <TableCell>{item.reason}</TableCell>
@@ -247,7 +242,7 @@ export default function RoomBanList({ styleClass }: styleClass) {
                                             <TableCell>{item.expiresAt === 0 ? 'Permanent' : convertDate(item.expiresAt)}</TableCell>
                                             <TableCell>{item.isActive ? '🔴 Active' : '🟢 Expired'}</TableCell>
                                             <TableCell align="right">
-                                                <IconButton onClick={() => onClickBanDelete(item.auth)} aria-label="delete" className={classes.margin}>
+                                                <IconButton onClick={() => onClickMuteDelete(item.auth)} aria-label="delete" className={classes.margin}>
                                                     <BackspaceIcon fontSize="small" />
                                                 </IconButton>
                                             </TableCell>

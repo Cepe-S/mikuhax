@@ -66,6 +66,7 @@ export class Player implements PlayerObject {
         }
         this.stats = stats;
         this.permissions = permissions;
+        this.permissions.chatHistory = []; // Initialize chat history for anti-flood protection
         this.afktrace = {
             exemption: true,
             count: 0

@@ -1,14 +1,18 @@
-import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, Index } from "typeorm";
 
 @Entity()
+@Index(["ruid", "rating"])
+@Index(["ruid", "auth"])
 export class Player {
     @PrimaryGeneratedColumn()
     uid!: number;
 
     @Column()
+    @Index()
     ruid!: string;
 
     @Column()
+    @Index()
     auth!: string; 
 
     @Column()
@@ -18,6 +22,7 @@ export class Player {
     name!: string;
 
     @Column()
+    @Index()
     rating!: number; 
 
     @Column()

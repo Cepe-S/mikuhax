@@ -43,9 +43,20 @@ createConnection({
     type: 'sqlite',
     database: path.join(__dirname, '..', process.env.DB_HOST || 'haxbotron.sqlite.db'),
     entities: [Player, BanList, SuperAdmin, MatchEvent, MatchSummary, Connection, MuteList],
-    logging: true,
-    synchronize: true, // Re-enable auto-sync
-    dropSchema: false // Don't drop existing tables
+    logging: false, // Disable logging for better performance
+    synchronize: true,
+    dropSchema: false,
+    cache: {
+        type: 'database',
+        duration: 30000 // Cache queries for 30 seconds
+    },
+    extra: {
+        // SQLite optimizations
+        "journal_mode": "WAL",
+        "synchronous": "NORMAL",
+        "cache_size": -64000, // 64MB cache
+        "temp_store": "MEMORY"
+    }
 }).then(async conn => {
     winstonLogger.info('[db] Database connection established');
     winstonLogger.info('[db] TypeORM synchronization enabled');

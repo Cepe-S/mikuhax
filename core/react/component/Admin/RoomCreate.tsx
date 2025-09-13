@@ -453,14 +453,6 @@ export default function RoomCreate({ styleClass }: styleClass) {
 
                                 <Typography component="h2" variant="subtitle1" color="primary" gutterBottom>HElo Configuration</Typography>
                                 <Grid container spacing={2}>
-                                    <Grid item xs={4} sm={3}>
-                                        <FormControlLabel
-                                            control={<Switch checked={heloUseDefaultValuesField} onChange={(e) => setHeloUseDefaultValuesField(e.target.checked)} color="primary" />}
-                                            label="Use Chess.com Default Values" labelPlacement="start"
-                                        />
-                                    </Grid>
-                                </Grid>
-                                <Grid container spacing={2}>
                                     <Grid item xs={12} sm={12}>
                                         <TextField
                                             fullWidth value={heloFormStringifiedField} onChange={onChangeStringifiedField} id="heloConfig" name="heloConfig" label="JSON Data" variant="outlined" margin="normal" required multiline

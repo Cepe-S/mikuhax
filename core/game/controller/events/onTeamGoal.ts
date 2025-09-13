@@ -216,7 +216,16 @@ export async function onTeamGoalListener(team: TeamID): Promise<void> {
                     window.gameRoom.logger.i('onTeamGoal', `${window.gameRoom.playerList.get(touchPlayer)!.name}#${touchPlayer} was kicked for anti-OGs flood. He made ${ogCountByPlayer} OGs. (conn:${window.gameRoom.playerList.get(touchPlayer)!.conn})`);
                     window.gameRoom._room.kickPlayer(touchPlayer, LangRes.antitrolling.ogFlood.banReason, false); // kick
                     //and add into ban list (not permanent ban, but fixed-term ban)
-                    await setBanlistDataToDB({ conn: window.gameRoom.playerList.get(touchPlayer)!.conn, reason: LangRes.antitrolling.ogFlood.banReason, register: banTimeStamp, expire: banTimeStamp+window.gameRoom.config.settings.ogFloodBanMillisecs });
+                    await window._createBanDB(
+                        window.gameRoom.config._RUID,
+                        window.gameRoom.playerList.get(touchPlayer)!.auth,
+                        window.gameRoom.playerList.get(touchPlayer)!.conn,
+                        LangRes.antitrolling.ogFlood.banReason,
+                        Math.floor(window.gameRoom.config.settings.ogFloodBanMillisecs / 60000),
+                        'system',
+                        'Anti-OG System',
+                        window.gameRoom.playerList.get(touchPlayer)!.name
+                    );
                 }
             }
             

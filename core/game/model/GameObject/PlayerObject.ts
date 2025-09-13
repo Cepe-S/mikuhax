@@ -70,6 +70,8 @@ export interface PlayerPermissions {
     lastPowershotUse: number; // timestamp of last powershot use for cooldown
     cachedDisplayName?: string; // cached display name with tier and admin indicators
     lastAdminCheck?: string; // last admin status check for cache invalidation
+    chatHistory?: number[]; // timestamps of recent messages for anti-flood protection
+    lastActivityTime?: number; // timestamp of last activity for AFK detection
 }
 
 export interface PlayerAfkTrace {

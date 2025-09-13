@@ -565,6 +565,21 @@ export async function getAllBansFromDB(ruid: string): Promise<BanListItem[]> {
     }
 }
 
+// Get all mutes from database
+export async function getAllMutesFromDB(ruid: string): Promise<MuteListItem[]> {
+    try {
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/mutelist`);
+        if (result.status === 200 && result.data) {
+            winstonLogger.info(`200 Succeed on getAllMutesFromDB`);
+            return result.data;
+        }
+        return [];
+    } catch (error) {
+        winstonLogger.error(`Error caught on getAllMutesFromDB: ${error}`);
+        return [];
+    }
+}
+
 // Enhanced function to clean expired bans from database
 export async function cleanExpiredBansDB(ruid: string): Promise<number> {
     try {

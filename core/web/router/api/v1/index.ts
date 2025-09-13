@@ -8,6 +8,7 @@ import { superadminRouter } from "./superadmin";
 import { ruidlistRouter } from "./ruidlist";
 import { banlistRouter } from "./banlist";
 import { playerlistRouter } from "./playerlist";
+import { sanctionsRouter } from "./sanctions";
 import { serverImageRouter } from "../../v1.serverimage.router";
 
 
@@ -25,6 +26,7 @@ indexAPIRouter
     .use('/ruidlist', ruidlistRouter.routes())
     .use('/banlist', banlistRouter.routes())
     .use('/playerlist', playerlistRouter.routes())
+    .use('/sanctions', sanctionsRouter.routes())
     .use('/system', systemRouter.routes())
     .use('/images', serverImageRouter.routes())
 

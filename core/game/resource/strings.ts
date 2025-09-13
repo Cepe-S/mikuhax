@@ -19,8 +19,8 @@ export const teamName = {
 
 export const antitrolling = {
     joinFlood: {
-        banReason: '🚫 Reconexiones frecuentes (5 minutos).'
-        ,floodWarning: '📢 Reconectarte muy rápido puede causar que seas expulsado.'
+        banReason: '🚫 Reconexiones frecuentes (3 minutos).'
+        ,floodWarning: '📢 Reconectarte muy rápido puede causar que seas expulsado. Límite: 5 reconexiones por minuto.'
     }
     ,chatFlood: {
         muteReason: '🔇 {playerName}#{playerID} ha sido silenciado por spam excesivo (3 minutos). Un administrador puede quitar el silencio.'

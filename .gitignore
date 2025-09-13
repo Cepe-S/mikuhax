@@ -119,3 +119,5 @@ jerseyImporter.py
 core/server-images/
 **/server-images/
 *.server-image.json
+elo_adjustments/elo-improvments-10-aug-2025.md
+elo_adjustments/elo-analisys-10-aug-2025.md

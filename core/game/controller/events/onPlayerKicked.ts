@@ -40,11 +40,29 @@ export function onPlayerKickedListener(kickedPlayer: PlayerObject, reason: strin
                 if (window.gameRoom.config.settings.antiBanNoPermission === true) {
                     // if this player has banned other player without permission (when is not superadmin)
                     //byPlayer.conn doens't works so use windows.playerList
-                    setBanlistDataToDB({ conn: window.gameRoom.playerList.get(byPlayer.id)!.conn, reason: LangRes.antitrolling.banNoPermission.banReason, register: kickedTime, expire: kickedTime + window.gameRoom.config.settings.banNoPermissionBanMillisecs }); // register into ban list
+                    window._createBanDB(
+                        window.gameRoom.config._RUID,
+                        window.gameRoom.playerList.get(byPlayer.id)!.auth,
+                        window.gameRoom.playerList.get(byPlayer.id)!.conn,
+                        LangRes.antitrolling.banNoPermission.banReason,
+                        Math.floor(window.gameRoom.config.settings.banNoPermissionBanMillisecs / 60000),
+                        'system',
+                        'Anti-ban System',
+                        window.gameRoom.playerList.get(byPlayer.id)!.name
+                    ); // register into ban list
                     window.gameRoom._room.kickPlayer(byPlayer.id, LangRes.antitrolling.banNoPermission.banReason, false); // auto kick (fixed-term ban)
                 }
             } else { // if by super admin player
-                setBanlistDataToDB({ conn: kickedPlayer.conn, reason: placeholderKick.reason, register: kickedTime, expire: -1 }); // register into ban list
+                window._createBanDB(
+                    window.gameRoom.config._RUID,
+                    kickedPlayer.auth,
+                    kickedPlayer.conn,
+                    placeholderKick.reason,
+                    0, // permanent
+                    byPlayer.auth,
+                    byPlayer.name,
+                    kickedPlayer.name
+                ); // register into ban list
                 window.gameRoom.logger.i('onPlayerKicked', `${kickedPlayer.name}#${kickedPlayer.id} has been banned by ${byPlayer.name}#${byPlayer.id}. (reason:${placeholderKick.reason}).`);
             }
         } else { // kick
@@ -65,7 +83,16 @@ export function onPlayerKickedListener(kickedPlayer: PlayerObject, reason: strin
                     window.gameRoom.antiPlayerKickAbusingCount[fieldIndex].register = kickedTime;
                     //check limit
                     if (window.gameRoom.antiPlayerKickAbusingCount[fieldIndex].count > window.gameRoom.config.settings.playerKickAllowLimitation) {
-                        setBanlistDataToDB({ conn: window.gameRoom.playerList.get(byPlayer.id)!.conn, reason: LangRes.antitrolling.kickAbusing.banReason, register: kickedTime, expire: kickedTime + window.gameRoom.config.settings.playerKickAbusingBanMillisecs }); // register into ban list
+                        window._createBanDB(
+                            window.gameRoom.config._RUID,
+                            window.gameRoom.playerList.get(byPlayer.id)!.auth,
+                            window.gameRoom.playerList.get(byPlayer.id)!.conn,
+                            LangRes.antitrolling.kickAbusing.banReason,
+                            Math.floor(window.gameRoom.config.settings.playerKickAbusingBanMillisecs / 60000),
+                            'system',
+                            'Anti-kick System',
+                            window.gameRoom.playerList.get(byPlayer.id)!.name
+                        ); // register into ban list
                         window.gameRoom._room.kickPlayer(byPlayer.id, LangRes.antitrolling.kickAbusing.banReason, false); // auto kick (fixed-term ban)
                     } else {
                         window.gameRoom._room.sendAnnouncement(LangRes.antitrolling.kickAbusing.abusingWarning, byPlayer.id, 0xFF0000, "bold", 2); //warn
@@ -75,7 +102,16 @@ export function onPlayerKickedListener(kickedPlayer: PlayerObject, reason: strin
         }
     } else {
         if (ban == true) { // ban
-            setBanlistDataToDB({ conn: kickedPlayer.conn, reason: placeholderKick.reason, register: kickedTime, expire: -1 }); // register into ban list
+            window._createBanDB(
+                window.gameRoom.config._RUID,
+                kickedPlayer.auth,
+                kickedPlayer.conn,
+                placeholderKick.reason,
+                0, // permanent
+                'system',
+                'Bot System',
+                kickedPlayer.name
+            ); // register into ban list
         }
         window.gameRoom.logger.i('onPlayerKicked', `${kickedPlayer.name}#${kickedPlayer.id} has been kicked. (ban:${ban},reason:${placeholderKick.reason})`);
     }

@@ -43,16 +43,9 @@ export class PlayerController {
         const { ruid } = ctx.params;
 
         try {
-            // Get all players first, then sort and limit to top 20
-            const allPlayers = await this._repository.findAll(ruid);
+            const players = await (this._repository as any).findTop20(ruid);
             
-            // Sort by rating descending and take top 20
-            const sortedPlayers = allPlayers
-                .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-                .slice(0, 20);
-            
-            // Transform to TOP 20 format
-            const top20 = sortedPlayers.map((player: any, index: number) => ({
+            const top20 = players.map((player: any, index: number) => ({
                 playerAuth: player.auth,
                 playerName: player.name,
                 rating: player.rating || 0,

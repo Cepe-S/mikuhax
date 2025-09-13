@@ -110,7 +110,7 @@ export function onGameStartListener(byPlayer: PlayerObject | null): void {
             // Mostrar información de ELO de equipos
             const redEloMsg = `🔴 Equipo Rojo: ${teamsInfo.redCount} jugadores | ELO Total: ${teamsInfo.redElo} | Promedio: ${teamsInfo.redCount > 0 ? Math.round(teamsInfo.redElo / teamsInfo.redCount) : 0}`;
             const blueEloMsg = `🔵 Equipo Azul: ${teamsInfo.blueCount} jugadores | ELO Total: ${teamsInfo.blueElo} | Promedio: ${teamsInfo.blueCount > 0 ? Math.round(teamsInfo.blueElo / teamsInfo.blueCount) : 0}`;
-            const balanceMsg = `⚖️ Diferencia de ELO: ${Math.abs(teamsInfo.redElo - teamsInfo.blueElo)} puntos`;
+            const balanceMsg = `⚖️ Diferencia de ELO: ${Math.round(Math.abs(teamsInfo.redElo - teamsInfo.blueElo))} puntos`;
             
             window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onStart.startRecord, placeholderStart), null, 0x00FF00, "normal", 0);
             window.gameRoom._room.sendAnnouncement(redEloMsg, null, 0xFD2C2D, "normal", 0);
@@ -172,57 +172,78 @@ function showEloExpectations(): void {
     let blueTeamRatingsMean: number = ratingHelper.calcTeamRatingsMean(blueTeamPlayers);
     
     // Crear registros simulados para predicciones
-    let redStatsRecordsWin: StatsRecord[] = ratingHelper.makeStasRecord(MatchResult.Win, redTeamPlayers);
-    let blueStatsRecordsWin: StatsRecord[] = ratingHelper.makeStasRecord(MatchResult.Win, blueTeamPlayers);
-    let redStatsRecordsLose: StatsRecord[] = ratingHelper.makeStasRecord(MatchResult.Lose, redTeamPlayers);
-    let blueStatsRecordsLose: StatsRecord[] = ratingHelper.makeStasRecord(MatchResult.Lose, blueTeamPlayers);
+    let redStatsRecordsWin: StatsRecord[] = ratingHelper.makeStatsRecord(MatchResult.Win, redTeamPlayers);
+    let blueStatsRecordsWin: StatsRecord[] = ratingHelper.makeStatsRecord(MatchResult.Win, blueTeamPlayers);
+    let redStatsRecordsLose: StatsRecord[] = ratingHelper.makeStatsRecord(MatchResult.Lose, redTeamPlayers);
+    let blueStatsRecordsLose: StatsRecord[] = ratingHelper.makeStatsRecord(MatchResult.Lose, blueTeamPlayers);
     
-    // Calcular y mostrar expectativas para cada jugador
+    // Get TOP 1 info for advanced calculations
+    const allPlayers = Array.from(window.gameRoom.playerList.values());
+    const top1Player = allPlayers.reduce((prev, current) => (prev.stats.rating > current.stats.rating) ? prev : current);
+    const top1Rating = top1Player.stats.rating;
+    
+    // Calcular y mostrar expectativas para cada jugador usando el mismo método que en onTeamVictory
     setTimeout(() => {
         // Jugadores del equipo rojo
-        redStatsRecordsWin.forEach((eachItem: StatsRecord, idx: number) => {
-            let diffArrayWin: number[] = [];
-            let diffArrayLose: number[] = [];
-            let playerTotals: number = window.gameRoom.playerList.get(redTeamPlayers[idx].id)!.stats.totals;
+        redTeamPlayers.forEach((player: PlayerObject, idx: number) => {
+            let playerRating: number = window.gameRoom.playerList.get(player.id)!.stats.rating;
+            let playerTotals: number = window.gameRoom.playerList.get(player.id)!.stats.totals;
+            let isTop1: boolean = playerRating === top1Rating;
             
-            // Calcular cambios si gana
-            for (let i: number = 0; i < blueStatsRecordsLose.length; i++) {
-                diffArrayWin.push(ratingHelper.calcBothDiff(eachItem, blueStatsRecordsLose[i], redTeamRatingsMean, blueTeamRatingsMean, eachItem.matchKFactor, playerTotals));
-            }
+            // Usar el mismo método que en onTeamVictory: calcTeamBasedElo
+            let winChange = ratingHelper.calcTeamBasedElo(
+                playerRating,
+                blueTeamRatingsMean,
+                MatchResult.Win,
+                playerTotals,
+                isTop1,
+                top1Rating,
+                redTeamPlayers.length
+            );
             
-            // Calcular cambios si pierde
-            for (let i: number = 0; i < blueStatsRecordsWin.length; i++) {
-                diffArrayLose.push(ratingHelper.calcBothDiff(redStatsRecordsLose[idx], blueStatsRecordsWin[i], blueTeamRatingsMean, redTeamRatingsMean, redStatsRecordsLose[idx].matchKFactor, playerTotals));
-            }
+            let loseChange = ratingHelper.calcTeamBasedElo(
+                playerRating,
+                blueTeamRatingsMean,
+                MatchResult.Lose,
+                playerTotals,
+                isTop1,
+                top1Rating,
+                redTeamPlayers.length
+            );
             
-            let winChange = Math.round(diffArrayWin.reduce((acc, curr) => acc + curr, 0));
-            let loseChange = Math.round(diffArrayLose.reduce((acc, curr) => acc + curr, 0));
-            
-            let expectationMsg = `📊 Expectativas ELO:\n🏆 Si ganas: +${winChange} puntos\n💔 Si pierdes: ${loseChange} puntos`;
-            window.gameRoom._room.sendAnnouncement(expectationMsg, redTeamPlayers[idx].id, 0xFFD700, "normal", 1);
+            let expectationMsg = `📊 Expectativas ELO:\n🏆 Si ganas: +${Math.round(winChange)} puntos\n💔 Si pierdes: ${Math.round(loseChange)} puntos`;
+            window.gameRoom._room.sendAnnouncement(expectationMsg, player.id, 0xFFD700, "normal", 1);
         });
         
         // Jugadores del equipo azul
-        blueStatsRecordsWin.forEach((eachItem: StatsRecord, idx: number) => {
-            let diffArrayWin: number[] = [];
-            let diffArrayLose: number[] = [];
-            let playerTotals: number = window.gameRoom.playerList.get(blueTeamPlayers[idx].id)!.stats.totals;
+        blueTeamPlayers.forEach((player: PlayerObject, idx: number) => {
+            let playerRating: number = window.gameRoom.playerList.get(player.id)!.stats.rating;
+            let playerTotals: number = window.gameRoom.playerList.get(player.id)!.stats.totals;
+            let isTop1: boolean = playerRating === top1Rating;
             
-            // Calcular cambios si gana
-            for (let i: number = 0; i < redStatsRecordsLose.length; i++) {
-                diffArrayWin.push(ratingHelper.calcBothDiff(eachItem, redStatsRecordsLose[i], blueTeamRatingsMean, redTeamRatingsMean, eachItem.matchKFactor, playerTotals));
-            }
+            // Usar el mismo método que en onTeamVictory: calcTeamBasedElo
+            let winChange = ratingHelper.calcTeamBasedElo(
+                playerRating,
+                redTeamRatingsMean,
+                MatchResult.Win,
+                playerTotals,
+                isTop1,
+                top1Rating,
+                blueTeamPlayers.length
+            );
             
-            // Calcular cambios si pierde
-            for (let i: number = 0; i < redStatsRecordsWin.length; i++) {
-                diffArrayLose.push(ratingHelper.calcBothDiff(blueStatsRecordsLose[idx], redStatsRecordsWin[i], redTeamRatingsMean, blueTeamRatingsMean, blueStatsRecordsLose[idx].matchKFactor, playerTotals));
-            }
+            let loseChange = ratingHelper.calcTeamBasedElo(
+                playerRating,
+                redTeamRatingsMean,
+                MatchResult.Lose,
+                playerTotals,
+                isTop1,
+                top1Rating,
+                blueTeamPlayers.length
+            );
             
-            let winChange = Math.round(diffArrayWin.reduce((acc, curr) => acc + curr, 0));
-            let loseChange = Math.round(diffArrayLose.reduce((acc, curr) => acc + curr, 0));
-            
-            let expectationMsg = `📊 Expectativas ELO:\n🏆 Si ganas: +${winChange} puntos\n💔 Si pierdes: ${loseChange} puntos`;
-            window.gameRoom._room.sendAnnouncement(expectationMsg, blueTeamPlayers[idx].id, 0xFFD700, "normal", 1);
+            let expectationMsg = `📊 Expectativas ELO:\n🏆 Si ganas: +${Math.round(winChange)} puntos\n💔 Si pierdes: ${Math.round(loseChange)} puntos`;
+            window.gameRoom._room.sendAnnouncement(expectationMsg, player.id, 0xFFD700, "normal", 1);
         });
     }, 1000);
 }

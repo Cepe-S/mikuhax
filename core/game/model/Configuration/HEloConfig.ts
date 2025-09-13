@@ -6,6 +6,14 @@ export interface HEloConfig {
         factor_k_normal: number             // 24 (normal K-factor)
         factor_k_replace: number            // 16 (high rating K-factor)
     }
+    guarantees: {
+        min_win_elo: number                 // Minimum ELO gain per victory
+        max_loss_win_ratio: number          // Maximum loss:win ratio
+    }
+    validation: {
+        enable_state_checks: boolean        // Enable state validation
+        fallback_k_factor: number           // Emergency K-factor
+    }
     tier: {
         class_tier_1: number               // 400 (Novice)
         class_tier_2: number               // 800 (Intermediate)
@@ -48,6 +56,14 @@ export const defaultChessComConfig: HEloConfig = {
         factor_k_placement: 40,
         factor_k_normal: 24,
         factor_k_replace: 12
+    },
+    guarantees: {
+        min_win_elo: 10,
+        max_loss_win_ratio: 0.6
+    },
+    validation: {
+        enable_state_checks: true,
+        fallback_k_factor: 24
     },
     tier: {
         class_tier_1: 400,
