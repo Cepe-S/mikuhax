@@ -33,8 +33,8 @@ export function cmdStats(byPlayer: PlayerObject, fullMessage?: string): void {
                     , targetName: getPlayerDisplayName(targetStatsID, targetPlayerData.name, targetPlayer?.admin || false, targetPlayerData.permissions.superadmin)
                     , targetAfkReason: window.gameRoom.playerList.get(targetStatsID)!.permissions.afkreason
                     , targetStatsRatingAvatar: (() => {
-                        const tier = decideTier(window.gameRoom.playerList.get(targetStatsID)!.stats.rating, targetStatsID);
-                        return getTierName(tier, targetStatsID);
+                        const tier = decideTier(window.gameRoom.playerList.get(targetStatsID)!.stats.rating);
+                        return getTierName(tier);
                     })()
                     , targetStatsRating: Math.round(window.gameRoom.playerList.get(targetStatsID)!.stats.rating)
                     , targetStatsTotal: window.gameRoom.playerList.get(targetStatsID)!.stats.totals
@@ -75,8 +75,8 @@ export function cmdStats(byPlayer: PlayerObject, fullMessage?: string): void {
             , targetName: getPlayerDisplayName(byPlayer.id, playerData.name, byPlayer.admin, playerData.permissions.superadmin)
             , targetAfkReason: window.gameRoom.playerList.get(byPlayer.id)!.permissions.afkreason
             , targetStatsRatingAvatar: (() => {
-                const tier = decideTier(window.gameRoom.playerList.get(byPlayer.id)!.stats.rating, byPlayer.id);
-                return getTierName(tier, byPlayer.id);
+                const tier = decideTier(window.gameRoom.playerList.get(byPlayer.id)!.stats.rating);
+                return getTierName(tier);
             })()
             , targetStatsRating: Math.round(window.gameRoom.playerList.get(byPlayer.id)!.stats.rating)
             , targetStatsTotal: window.gameRoom.playerList.get(byPlayer.id)!.stats.totals

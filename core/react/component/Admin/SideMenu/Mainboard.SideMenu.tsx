@@ -5,10 +5,10 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import DashboardIcon from '@material-ui/icons/Dashboard';
-import SportsEsportsIcon from '@material-ui/icons/SportsEsports';
+import ImageIcon from '@material-ui/icons/Image';
 import List from '@material-ui/core/List';
 import Divider from '@material-ui/core/Divider';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
+import AddPhotoAlternateIcon from '@material-ui/icons/AddPhotoAlternate';
 
 export default function MainboardSideMenu() {
     return (
@@ -26,18 +26,18 @@ export default function MainboardSideMenu() {
             <Divider />
             <List>
                 <div>
-                    <ListSubheader inset>Management</ListSubheader>
-                    <ListItem button component={RouterLink} to="/admin/newroom">
+                    <ListSubheader inset>Image Management</ListSubheader>
+                    <ListItem button component={RouterLink} to="/admin/serverimages">
                         <ListItemIcon>
-                            <AddCircleIcon />
+                            <ImageIcon />
                         </ListItemIcon>
-                        <ListItemText primary="New Room" />
+                        <ListItemText primary="Server Images" />
                     </ListItem>
-                    <ListItem button component={RouterLink} to="/admin/roomlist">
+                    <ListItem button component={RouterLink} to="/admin/newimage">
                         <ListItemIcon>
-                            <SportsEsportsIcon />
+                            <AddPhotoAlternateIcon />
                         </ListItemIcon>
-                        <ListItemText primary="Room List" />
+                        <ListItemText primary="New Image" />
                     </ListItem>
                 </div>
             </List>

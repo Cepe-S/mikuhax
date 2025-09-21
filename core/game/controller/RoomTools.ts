@@ -3,6 +3,11 @@ import * as LangRes from "../resource/strings";
 import { PlayerObject } from "../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../model/GameObject/TeamID";
 import { getPlayerDisplayName } from "../model/Statistics/Tier";
+import { getRandomMatch } from "../resource/realTeams";
+
+// Stadium rotation system
+let currentStadiumIndex = 0;
+const availableStadiums = ['futx2', 'futx3', 'futx4', 'futx5', 'futx7'];
 
 export function setDefaultStadiums(): void {
     // set stadium maps as default setting
@@ -19,6 +24,66 @@ export function setDefaultStadiums(): void {
         // Fallback to a basic stadium if loading fails
         window.gameRoom._room.setCustomStadium('{"name":"Basic Stadium","width":420,"height":200,"spawnDistance":180,"bg":{"type":"","width":0,"height":0,"kickOffRadius":80,"cornerRadius":0},"vertexes":[{"x":-420,"y":-200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"x":-420,"y":200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"x":420,"y":200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"x":420,"y":-200,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]}],"segments":[{"v0":0,"v1":1,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"v0":1,"v1":2,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"v0":2,"v1":3,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]},{"v0":3,"v1":0,"trait":"ballArea","cMask":["ball"],"cGroup":["ball"]}],"goals":[{"p0":[-420,-60],"p1":[-420,60],"team":"red"},{"p0":[420,60],"p1":[420,-60],"team":"blue"}],"discs":[{"radius":6.4,"color":"0","bCoef":0.4,"invMass":1.5,"damping":0.99,"cGroup":["ball","kick","score"]}],"planes":[{"normal":[0,1],"dist":-200,"bCoef":1},{"normal":[0,-1],"dist":-200,"bCoef":1},{"normal":[1,0],"dist":-420,"bCoef":1},{"normal":[-1,0],"dist":-420,"bCoef":1}],"traits":{"ballArea":{"vis":false,"bCoef":1,"cMask":["ball"],"cGroup":["ball"]}},"playerPhysics":{"bCoef":0,"acceleration":0.11,"kickingAcceleration":0.083,"kickStrength":5},"ballPhysics":"disc0"}');
         window.gameRoom.logger.i('setDefaultStadiums', 'Fallback basic stadium loaded');
+    }
+}
+
+export function setRandomStadium(): boolean {
+    try {
+        // Import stadium loader
+        const { loadStadiumData } = require('../lib/stadiumLoader');
+        
+        // Select random stadium
+        const randomIndex = Math.floor(Math.random() * availableStadiums.length);
+        const selectedStadium = availableStadiums[randomIndex];
+        
+        // Load and set stadium
+        const stadiumData = loadStadiumData(selectedStadium);
+        window.gameRoom._room.setCustomStadium(stadiumData);
+        
+        // Announce stadium change
+        window.gameRoom._room.sendAnnouncement(
+            `🏆 Nuevo estadio: ${selectedStadium.toUpperCase()}`,
+            null,
+            0x00FF00,
+            "bold",
+            2
+        );
+        
+        window.gameRoom.logger.i('setRandomStadium', `Stadium changed to: ${selectedStadium}`);
+        return true;
+    } catch (error) {
+        window.gameRoom.logger.e('setRandomStadium', `Failed to set random stadium: ${error}`);
+        return false;
+    }
+}
+
+export function rotateStadium(): boolean {
+    try {
+        // Import stadium loader
+        const { loadStadiumData } = require('../lib/stadiumLoader');
+        
+        // Rotate to next stadium
+        currentStadiumIndex = (currentStadiumIndex + 1) % availableStadiums.length;
+        const selectedStadium = availableStadiums[currentStadiumIndex];
+        
+        // Load and set stadium
+        const stadiumData = loadStadiumData(selectedStadium);
+        window.gameRoom._room.setCustomStadium(stadiumData);
+        
+        // Announce stadium change
+        window.gameRoom._room.sendAnnouncement(
+            `🏆 Rotación de estadio: ${selectedStadium.toUpperCase()}`,
+            null,
+            0x00FF00,
+            "bold",
+            2
+        );
+        
+        window.gameRoom.logger.i('rotateStadium', `Stadium rotated to: ${selectedStadium}`);
+        return true;
+    } catch (error) {
+        window.gameRoom.logger.e('rotateStadium', `Failed to rotate stadium: ${error}`);
+        return false;
     }
 }
 
@@ -83,4 +148,51 @@ export function shuffleArray<T>(array: T[]): T[] {
 export function getCookieFromHeadless(name: string): string {
     let result = new RegExp('(?:^|; )' + encodeURIComponent(name) + '=([^;]*)').exec(document.cookie);
     return result ? result[1] : '';
+}
+
+export function setRandomTeamColors(): boolean {
+    try {
+        const randomMatch = getRandomMatch();
+        if (!randomMatch) {
+            window.gameRoom.logger.w('setRandomTeamColors', 'No random match available');
+            return false;
+        }
+
+        // Update team colors in gameRoom
+        window.gameRoom.teamColours = {
+            red: {
+                angle: randomMatch.red.angle,
+                textColour: randomMatch.red.textColour,
+                teamColour1: randomMatch.red.teamColour1,
+                teamColour2: randomMatch.red.teamColour2 || randomMatch.red.teamColour1,
+                teamColour3: randomMatch.red.teamColour3 || randomMatch.red.teamColour1
+            },
+            blue: {
+                angle: randomMatch.blue.angle,
+                textColour: randomMatch.blue.textColour,
+                teamColour1: randomMatch.blue.teamColour1,
+                teamColour2: randomMatch.blue.teamColour2 || randomMatch.blue.teamColour1,
+                teamColour3: randomMatch.blue.teamColour3 || randomMatch.blue.teamColour1
+            }
+        };
+
+        // Apply colors to room
+        window.gameRoom._room.setTeamColors(1, window.gameRoom.teamColours.red.angle, window.gameRoom.teamColours.red.textColour, [window.gameRoom.teamColours.red.teamColour1, window.gameRoom.teamColours.red.teamColour2, window.gameRoom.teamColours.red.teamColour3]);
+        window.gameRoom._room.setTeamColors(2, window.gameRoom.teamColours.blue.angle, window.gameRoom.teamColours.blue.textColour, [window.gameRoom.teamColours.blue.teamColour1, window.gameRoom.teamColours.blue.teamColour2, window.gameRoom.teamColours.blue.teamColour3]);
+
+        // Announce the new teams
+        window.gameRoom._room.sendAnnouncement(
+            `🎽 Nuevos equipos: ${randomMatch.blue.name} vs ${randomMatch.red.name}`,
+            null,
+            0x00BFFF,
+            "bold",
+            2
+        );
+
+        window.gameRoom.logger.i('setRandomTeamColors', `Teams changed to: ${randomMatch.blue.name} vs ${randomMatch.red.name}`);
+        return true;
+    } catch (error) {
+        window.gameRoom.logger.e('setRandomTeamColors', `Failed to set random team colors: ${error}`);
+        return false;
+    }
 }

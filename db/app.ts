@@ -21,6 +21,7 @@ import { MatchSummary } from "./entity/match_summary.entity";
 import { Connection } from "./entity/connection.entity";
 import { MuteList } from "./entity/mutelist.entity";
 import { apiRouterV1 } from "./router/v1.api.router";
+import { simpleRouter } from "./router/simple.router";
 // ========================================================
 //const _GitHublastestRelease = await axios.get('https://api.github.com/repos/dapucita/haxbotron/releases/latest');
 console.log("_|    _|                      _|                    _|                                  " + "\n" +
@@ -65,6 +66,7 @@ createConnection({
     const router = new Router();
 
     router.use('/api/v1', apiRouterV1.routes());
+    router.use('/api/v1', simpleRouter.routes());
 
     app
         .use(ip(whiteListIPs))

@@ -1,5 +1,7 @@
+// Stub AdminKickTrace interface for compatibility
 export interface AdminKickTrace {
-    id: number; // id of admin player who kicked
-    count: number; // how many times this player has kicked
-    register: number; // date when kicked
+    adminId: number;
+    targetId: number;
+    timestamp: number;
+    reason: string;
 }

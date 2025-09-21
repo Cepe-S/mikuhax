@@ -1,7 +1,4 @@
-// Haxbotron by dapucita
-// MAIN OF THE BOT
-// ====================================================================================================
-// import modules
+// Haxbotron by dapucita - Simplified version
 import * as LangRes from "./resource/strings";
 import * as eventListener from "./controller/events/eventListeners";
 import * as Tst from "./controller/Translator";
@@ -12,24 +9,62 @@ import { ScoresObject } from "./model/GameObject/ScoresObject";
 import { KickStack } from "./model/GameObject/BallTrace";
 import { getUnixTimestamp } from "./controller/Statistics";
 import { TeamID } from "./model/GameObject/TeamID";
-import { EmergencyTools } from "./model/ExposeLibs/EmergencyTools";
-import { refreshBanVoteCache } from "./model/OperateHelper/Vote";
 import { GameRoomConfig } from "./model/Configuration/GameRoomConfig";
-import { setDefaultStadiums } from './controller/RoomTools';
-import { updateTop20Cache } from './model/Statistics/Tier';
-// ====================================================================================================
-// load initial configurations
+import { setDefaultStadiums, setRandomTeamColors } from './controller/RoomTools';
+import { getRandomMatch } from './resource/realTeams';
+
+// Load initial configurations
 const loadedConfig: GameRoomConfig = JSON.parse(localStorage.getItem('_initConfig')!);
 
+// Initialize team colors with random match
+let initialTeamColors = {
+    red: {
+        angle: 0,
+        textColour: 0xFFFFFF,
+        teamColour1: 0xE56E56,
+        teamColour2: 0xE56E56,
+        teamColour3: 0xE56E56
+    },
+    blue: {
+        angle: 0,
+        textColour: 0xFFFFFF,
+        teamColour1: 0x5689E5,
+        teamColour2: 0x5689E5,
+        teamColour3: 0x5689E5
+    }
+};
+
+// Try to get random team colors
+try {
+    const randomMatch = getRandomMatch();
+    if (randomMatch) {
+        initialTeamColors = {
+            red: {
+                angle: randomMatch.red.angle,
+                textColour: randomMatch.red.textColour,
+                teamColour1: randomMatch.red.teamColour1,
+                teamColour2: randomMatch.red.teamColour2 || randomMatch.red.teamColour1,
+                teamColour3: randomMatch.red.teamColour3 || randomMatch.red.teamColour1
+            },
+            blue: {
+                angle: randomMatch.blue.angle,
+                textColour: randomMatch.blue.textColour,
+                teamColour1: randomMatch.blue.teamColour1,
+                teamColour2: randomMatch.blue.teamColour2 || randomMatch.blue.teamColour1,
+                teamColour3: randomMatch.blue.teamColour3 || randomMatch.blue.teamColour1
+            }
+        };
+        console.log(`🎽 Teams selected: ${randomMatch.blue.name} vs ${randomMatch.red.name}`);
+    }
+} catch (error) {
+    console.warn('Failed to load random team colors, using defaults:', error);
+}
 
 window.gameRoom = {
-    
-// Reiniciar eventos al inicio de cada partido
-    
-    _room: window.HBInit(loadedConfig._config)
-    ,config: loadedConfig
-    ,link: ''
-    ,social: {
+    _room: window.HBInit(loadedConfig._config),
+    config: loadedConfig,
+    link: '',
+    social: {
         discordWebhook: {
             replayUrl: '',
             adminCallUrl: '',
@@ -38,172 +73,96 @@ window.gameRoom = {
             dailyStatsTime: '',
             replayUpload: false
         }
-    }
-    ,stadiumData: {
-        default: localStorage.getItem('_defaultMap')!
-        ,training: localStorage.getItem('_readyMap')!
-    }
-    ,bannedWordsPool: {
-        nickname: []
-        ,chat: []
-    }
-    ,teamColours: {
-        red: { angle: 0, textColour: 0xffffff, teamColour1: 0xe66e55, teamColour2: 0xe66e55, teamColour3: 0xe66e55 }
-        ,blue: { angle: 0, textColour: 0xffffff, teamColour1: 0x5a89e5, teamColour2: 0x5a89e5, teamColour3: 0x5a89e5 }
-    }
-    ,logger: Logger.getInstance() 
-    ,isStatRecord: false
-    ,isGamingNow: false
-    ,isMuteAll: false
-    ,playerList: new Map()
-    ,ballStack: KickStack.getInstance()
-    ,banVoteCache: []
-    ,winningStreak: { count: 0, teamID: TeamID.Spec }
-    ,antiTrollingOgFloodCount: []
-    ,antiTrollingChatFloodCount: []
-    ,antiInsufficientStartAbusingCount: []
-    ,antiPlayerKickAbusingCount: []
-    ,notice: ''
-    ,onEmergency: EmergencyTools
-    ,matchEventsHolder: [] // Almacena eventos del partido actual
+    },
+    stadiumData: {
+        default: localStorage.getItem('_defaultMap')!,
+        training: localStorage.getItem('_readyMap')!
+    },
+    bannedWordsPool: {
+        nickname: [],
+        chat: []
+    },
+    teamColours: initialTeamColors,
+    logger: Logger.getInstance(),
+    isStatRecord: false,
+    isGamingNow: false,
+    isMuteAll: false,
+    playerList: new Map(),
+    ballStack: KickStack.getInstance(),
+    banVoteCache: [],
+    winningStreak: { count: 0, teamID: TeamID.Spec },
+    antiTrollingOgFloodCount: [],
+    antiTrollingChatFloodCount: [],
+    antiInsufficientStartAbusingCount: [],
+    antiPlayerKickAbusingCount: [],
+    notice: '',
+    onEmergency: {
+        list: () => console.log('Emergency list'),
+        chat: (msg: string, playerID?: number) => console.log('Emergency chat:', msg),
+        kick: (playerID: number, msg?: string) => console.log('Emergency kick:', playerID),
+        ban: (playerID: number, msg?: string) => console.log('Emergency ban:', playerID),
+        password: (password?: string) => console.log('Emergency password')
+    },
+    matchEventsHolder: [],
+    memideCooldowns: new Map(),
+    memideUsedValues: new Map()
 }
 
-// clear localStorage
+// Clear localStorage
 localStorage.removeItem('_initConfig');
 localStorage.removeItem('_defaultMap');
 localStorage.removeItem('_readyMap');
 
-// Configure optimized logging
-window.gameRoom.logger.setLogLevel(LogLevel.INFO); // Set to INFO level to reduce verbosity
+// Configure logging
+window.gameRoom.logger.setLogLevel(LogLevel.INFO);
 
-// start main bot script
+// Start bot
 console.log(`Haxbotron loaded bot script. (UID ${window.gameRoom.config._RUID}, TOKEN ${window.gameRoom.config._config.token})`);
 window.document.title = `Haxbotron ${window.gameRoom.config._RUID}`;
 
 makeRoom();
-// ====================================================================================================
-// set scheduling timers
 
+// Simple scheduler - only advertisement
 var scheduledTimer60 = setInterval(() => {
-    window.gameRoom._room.sendAnnouncement(LangRes.scheduler.advertise, null, 0x7289DA, "normal", 0); // advertisement
+    window.gameRoom._room.sendAnnouncement(LangRes.scheduler.advertise, null, 0x7289DA, "normal", 0);
+}, 300000);
 
-    refreshBanVoteCache(); // update banvote status cache
-    if (window.gameRoom.banVoteCache.length >= 1) { // if there are some votes (include top voted players only)
-        let placeholderVote = {
-            voteList: ''
-        }
-        for (let i: number = 0; i < window.gameRoom.banVoteCache.length; i++) {
-            if (window.gameRoom.playerList.has(window.gameRoom.banVoteCache[i])) {
-                placeholderVote.voteList += `${window.gameRoom.playerList.get(window.gameRoom.banVoteCache[i])!.name}#${window.gameRoom.banVoteCache[i]} `;
-            }
-        }
-        window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.scheduler.banVoteAutoNotify, placeholderVote), null, 0x00FF00, "normal", 0); //notify it
-    }
-    
-    // Clean expired bans automatically every 5 minutes
-    if (typeof window._cleanExpiredBansDB === 'function') {
-        window._cleanExpiredBansDB(window.gameRoom.config._RUID).then((clearedCount: number) => {
-            if (clearedCount > 0) {
-                window.gameRoom.logger.i('scheduler', `Auto-cleared ${clearedCount} expired bans`);
-            }
-        }).catch((error: any) => {
-            window.gameRoom.logger.w('scheduler', `Error during auto-cleanup of expired bans: ${error}`);
-        });
-    }
-}, 300000); // 300secs (5 minutes)
-
+// Simple AFK check
 var scheduledTimer5 = setInterval(() => {
-    // AFK detection and auto-kick system
-    // Superadmins are exempt from all AFK kicks to prevent accidental removal of administrators
-    const nowTimeStamp: number = getUnixTimestamp(); //get timestamp
-
-    let placeholderScheduler = {
-        targetID: 0,
-        targetName: '',
-    }
-
-    window.gameRoom.playerList.forEach((player: Player) => { // afk detection system & auto unmute system
-        // init placeholder
-        placeholderScheduler.targetID = player.id;
-        placeholderScheduler.targetName = player.name;
-
-        // check muted player and unmute when it's time to unmute
-        if (player.permissions.mute === true && player.permissions.muteExpire !== -1 && nowTimeStamp > player.permissions.muteExpire) {
-            player.permissions.mute = false; //unmute
-            window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.scheduler.autoUnmute, placeholderScheduler), null, 0x479947, "normal", 0); //notify it
-            window._emitSIOPlayerStatusChangeEvent(player.id);
-        }
-
-        // when afk too long kick option is enabled, then check sleeping with afk command and kick if afk too long
-        if (window.gameRoom.config.settings.afkCommandAutoKick === true && player.permissions.afkmode === true && nowTimeStamp > player.permissions.afkdate + window.gameRoom.config.settings.afkCommandAutoKickAllowMillisecs) {
-            // Don't kick superadmins for being AFK too long
+    const nowTimeStamp: number = getUnixTimestamp();
+    
+    window.gameRoom.playerList.forEach((player: Player) => {
+        if (player.permissions.afkmode === true && nowTimeStamp > player.permissions.afkdate + 300000) {
             if (!player.permissions.superadmin) {
-                window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkCommandTooLongKick, placeholderScheduler), false); // kick
-            }
-        }
-
-        // check afk - Sistema basado en tiempo real desde settings
-        if (window.gameRoom.isGamingNow === true && window.gameRoom.isStatRecord === true) { 
-            // Durante el juego: verificar jugadores en equipos (Red/Blue) que no estén ya en modo AFK manual
-            if (player.team !== TeamID.Spec && player.permissions.afkmode === false) {
-                // Usar tiempo real de inactividad basado en afkCommandAutoKickAllowMillisecs
-                const inactiveTime = nowTimeStamp - (player.permissions.lastActivityTime || nowTimeStamp);
-                const maxAfkTime = window.gameRoom.config.settings.afkCommandAutoKickAllowMillisecs;
-                
-                if (inactiveTime >= maxAfkTime) {
-                    // Don't kick superadmins for being AFK during games
-                    if (!player.permissions.superadmin) {
-                        window.gameRoom.logger.i('afk-system', `Kicking player ${player.name}#${player.id} for AFK during game (inactive for ${Math.floor(inactiveTime/1000)}s)`);
-                        window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false);
-                    } else {
-                        // Para superadmins, resetear tiempo de actividad
-                        player.permissions.lastActivityTime = nowTimeStamp;
-                        window.gameRoom.logger.i('afk-system', `Superadmin ${player.name}#${player.id} AFK time reset`);
-                    }
-                } else {
-                    // Advertencia cuando quedan 30 segundos
-                    const remainingTime = maxAfkTime - inactiveTime;
-                    if (remainingTime <= 30000 && remainingTime > 15000) {
-                        window.gameRoom._room.sendAnnouncement(
-                            `⚠️ ${player.name}, estás inactivo. Muévete o serás expulsado en ${Math.floor(remainingTime/1000)}s`,
-                            player.id, 0xFF7777, "bold", 2
-                        );
-                    }
-                }
-            }
-        } else {
-            // Fuera del juego: solo verificar admins que no estén en modo AFK manual
-            if (player.admin === true && player.permissions.afkmode === false) {
-                const inactiveTime = nowTimeStamp - (player.permissions.lastActivityTime || nowTimeStamp);
-                const maxAfkTime = window.gameRoom.config.settings.afkCommandAutoKickAllowMillisecs;
-                
-                if (inactiveTime >= maxAfkTime) {
-                    // Don't kick superadmins for being AFK outside games
-                    if (!player.permissions.superadmin) {
-                        window.gameRoom.logger.i('afk-system', `Kicking admin ${player.name}#${player.id} for AFK outside game (inactive for ${Math.floor(inactiveTime/1000)}s)`);
-                        window.gameRoom._room.kickPlayer(player.id, Tst.maketext(LangRes.scheduler.afkKick, placeholderScheduler), false);
-                    } else {
-                        player.permissions.lastActivityTime = nowTimeStamp;
-                    }
-                }
+                window.gameRoom._room.kickPlayer(player.id, "AFK demasiado tiempo", false);
             }
         }
     });
-}, 15 * 1000); // afk time allowed 15secs
-// ====================================================================================================
-// declare functions
+}, 15000);
+
 function makeRoom(): void {
     window.gameRoom.logger.i('initialisation', `The game room is opened at ${window.gameRoom.config._LaunchDate.toLocaleString()}.`);
 
-    window.gameRoom.logger.i('initialisation', `The game mode is '${window.gameRoom.isGamingNow}' now(by default).`);
-
-    // Stadium will be loaded automatically based on player count via setDefaultStadiums()
-    
     window.gameRoom._room.setScoreLimit(window.gameRoom.config.rules.requisite.scoreLimit);
     window.gameRoom._room.setTimeLimit(window.gameRoom.config.rules.requisite.timeLimit);
     window.gameRoom._room.setTeamsLock(window.gameRoom.config.rules.requisite.teamLock);
 
-    // Linking Event Listeners
+    // Initialize powershot system
+    if (window.gameRoom.ballStack) {
+        window.gameRoom.ballStack.initPowershotSystem();
+        window.gameRoom.logger.i('initialisation', 'Powershot system initialized');
+    }
+
+    // Apply team colors
+    try {
+        window.gameRoom._room.setTeamColors(1, window.gameRoom.teamColours.red.angle, window.gameRoom.teamColours.red.textColour, [window.gameRoom.teamColours.red.teamColour1, window.gameRoom.teamColours.red.teamColour2, window.gameRoom.teamColours.red.teamColour3]);
+        window.gameRoom._room.setTeamColors(2, window.gameRoom.teamColours.blue.angle, window.gameRoom.teamColours.blue.textColour, [window.gameRoom.teamColours.blue.teamColour1, window.gameRoom.teamColours.blue.teamColour2, window.gameRoom.teamColours.blue.teamColour3]);
+        window.gameRoom.logger.i('initialisation', 'Team colors applied successfully');
+    } catch (error) {
+        window.gameRoom.logger.w('initialisation', `Failed to apply team colors: ${error}`);
+    }
+
+    // Link Event Listeners
     window.gameRoom._room.onPlayerJoin = async (player: PlayerObject): Promise<void> => await eventListener.onPlayerJoinListener(player);
     window.gameRoom._room.onPlayerLeave = async (player: PlayerObject): Promise<void> => await eventListener.onPlayerLeaveListener(player);
     window.gameRoom._room.onTeamVictory = async (scores: ScoresObject): Promise<void> => await eventListener.onTeamVictoryListener(scores);
@@ -224,12 +183,5 @@ function makeRoom(): void {
     window.gameRoom._room.onRoomLink = (url: string): void => eventListener.onRoomLinkListener(url);
     window.gameRoom._room.onKickRateLimitSet = (min: number, rate: number, burst: number, byPlayer: PlayerObject): void => eventListener.onKickRateLimitSetListener(min, rate, burst, byPlayer);
     
-    // Asegurar que el mapa correcto se carga al inicio (ready mode por defecto)
     setDefaultStadiums();
-    
-    // Initialize TOP 20 cache at startup
-    setTimeout(() => {
-        updateTop20Cache();
-    }, 5000); // Wait 5 seconds after room creation to ensure everything is ready
-    // =========================
 }

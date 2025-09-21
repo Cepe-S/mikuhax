@@ -1,367 +1,84 @@
-import { PlayerStorage } from "../GameObject/PlayerObject";
-
-// TOP 20 Cache System
-interface Top20Player {
-    playerAuth: string; // Use auth instead of playerId (more reliable)
-    playerName: string;
-    rating: number; // Real ELO, not fictional
-    rank: number;
+// Stub Tier system for player ranking
+export enum Tier {
+    BRONZE = 'BRONZE',
+    SILVER = 'SILVER',
+    GOLD = 'GOLD',
+    PLATINUM = 'PLATINUM',
+    DIAMOND = 'DIAMOND',
+    MASTER = 'MASTER'
 }
 
-let top20Cache: Top20Player[] = [];
-let cacheLastUpdated: number = 0;
-let isUpdatingCache: boolean = false;
+export function decideTier(rating: number): Tier {
+    if (rating < 1000) return Tier.BRONZE;
+    if (rating < 1200) return Tier.SILVER;
+    if (rating < 1400) return Tier.GOLD;
+    if (rating < 1600) return Tier.PLATINUM;
+    if (rating < 1800) return Tier.DIAMOND;
+    return Tier.MASTER;
+}
 
-// Update TOP 20 cache (call this at the end of each match)
-export function updateTop20Cache(): void {
-    if (isUpdatingCache) {
-        window.gameRoom?.logger?.i('updateTop20Cache', 'Update already in progress, skipping');
-        return;
-    }
-    
-    isUpdatingCache = true;
-    
-    const timeout = setTimeout(() => {
-        window.gameRoom?.logger?.w('updateTop20Cache', 'Database call timeout, keeping existing cache');
-        isUpdatingCache = false;
-    }, 5000);
-    
-    try {
-        window.gameRoom.logger.i('updateTop20Cache', 'Attempting to update TOP 20 cache from database using injected function...');
-        
-        // Get the room ID (ruid) from configuration
-        const ruid = window.gameRoom.config._RUID || window.gameRoom.config.rules.ruleName || 'default';
-        
-        window.gameRoom.logger.i('updateTop20Cache', `Using ruid: ${ruid}`);
-
-        // Use the injected function to avoid CORS issues (like Storage.ts does)
-        window._getAllPlayersFromDB(ruid)
-            .then((allPlayers: PlayerStorage[]) => {
-                clearTimeout(timeout);
-                isUpdatingCache = false;
-                
-                window.gameRoom.logger.i('updateTop20Cache', `Retrieved ${allPlayers.length} players from database`);
-                
-                if (allPlayers && allPlayers.length > 0) {
-                    // Sort by rating (descending) and take top 20
-                    const sortedPlayers = allPlayers
-                        .filter(player => player && typeof player.rating === 'number')
-                        .sort((a, b) => b.rating - a.rating)
-                        .slice(0, 20);
-                    
-                    top20Cache = sortedPlayers.map((player, index) => ({
-                        playerAuth: player.auth,
-                        playerName: player.name,
-                        rating: player.rating,
-                        rank: index + 1
-                    }));
-                    
-                    cacheLastUpdated = Date.now();
-                    window.gameRoom.logger.i('updateTop20Cache', `TOP 20 cache updated successfully with ${top20Cache.length} players`);
-                    
-                    // Log first few players for debugging
-                    top20Cache.slice(0, 3).forEach(player => {
-                        window.gameRoom.logger.i('updateTop20Cache', `  Rank ${player.rank}: ${player.playerName} (${player.playerAuth}) - ${player.rating} ELO`);
-                    });
-                    
-                } else {
-                    window.gameRoom.logger.w('updateTop20Cache', 'No players found in database');
-                    // Don't clear cache if we receive no data - keep old cache
-                }
-            })
-            .catch(error => {
-                clearTimeout(timeout);
-                isUpdatingCache = false;
-                window.gameRoom.logger.e('updateTop20Cache', `Failed: ${error}, retrying in 30s`);
-                setTimeout(updateTop20Cache, 30000); // Retry in 30 seconds
-            });
-        
-    } catch (error) {
-        clearTimeout(timeout);
-        isUpdatingCache = false;
-        window.gameRoom.logger.e('updateTop20Cache', `Critical error: ${error}`);
+export function getAvatarByTier(tier: Tier): string {
+    switch (tier) {
+        case Tier.BRONZE: return '🥉';
+        case Tier.SILVER: return '🥈';
+        case Tier.GOLD: return '🥇';
+        case Tier.PLATINUM: return '💎';
+        case Tier.DIAMOND: return '💠';
+        case Tier.MASTER: return '👑';
+        default: return '⚪';
     }
 }
 
-// Fallback: Update cache from session data (ONLY for players already known to be TOP 20)
-function updateTop20CacheFromSession(): void {
-    try {
-        window.gameRoom.logger.w('updateTop20CacheFromSession', 'Using session fallback for TOP 20 cache - this should not determine actual TOP 20 rankings');
-        
-        // Don't create fake TOP 20 from current session players
-        // Only use existing cache or clear it if we can't get real data
-        if (top20Cache.length === 0) {
-            window.gameRoom.logger.w('updateTop20CacheFromSession', 'No cached TOP 20 data available and API failed - clearing cache');
-            top20Cache = []; // Keep empty until we get real data
-        }
-        
-        cacheLastUpdated = Date.now();
-    } catch (error) {
-        window.gameRoom.logger.e('updateTop20CacheFromSession', `Error updating cache from session: ${error}`);
-    }
-}
-
-// Check if a player is in TOP 20 using cache
-export function isPlayerInTop20(playerId: number): { isTop20: boolean; rank: number; realElo: number } {
-    // Get player from current session
-    const currentPlayer = window.gameRoom.playerList.get(playerId);
-    if (!currentPlayer) {
-        window.gameRoom.logger.w('isPlayerInTop20', `Player ${playerId} not found in current session`);
-        return { isTop20: false, rank: 999, realElo: 0 };
-    }
-    
-    const playerAuth = currentPlayer.auth;
-    const playerRating = currentPlayer.stats.rating;
-    
-    window.gameRoom.logger.i('isPlayerInTop20', `Checking player ${playerId} (${currentPlayer.name}) with auth: ${playerAuth}, rating: ${playerRating}, cache size: ${top20Cache.length}`);
-    
-    // Only use cache-based TOP 20 determination
-    if (top20Cache.length > 0) {
-        const topPlayer = top20Cache.find(player => player.playerAuth === playerAuth);
-        if (topPlayer) {
-            window.gameRoom.logger.i('isPlayerInTop20', `Found player in TOP 20 cache: rank ${topPlayer.rank}, name: ${topPlayer.playerName}, ELO: ${topPlayer.rating}`);
-            return { isTop20: true, rank: topPlayer.rank, realElo: topPlayer.rating };
-        }
-        
-        window.gameRoom.logger.i('isPlayerInTop20', `Player ${currentPlayer.name} not found in TOP 20 cache`);
-    } else {
-        window.gameRoom.logger.w('isPlayerInTop20', 'TOP 20 cache is empty - no TOP 20 data available');
-    }
-    
-    return { isTop20: false, rank: 999, realElo: playerRating };
-}
-
-// Get TOP 20 cache for external use
-export function getTop20Cache(): Top20Player[] {
-    return [...top20Cache]; // Return copy to prevent mutations
-}
-
-// Force immediate cache update from session data (for debugging)
-export function forceUpdateTop20Cache(): void {
-    updateTop20CacheFromSession();
-}
-
-// Debug function to check cache status
-export function debugTop20Cache(): string {
-    const cacheInfo = {
-        cacheSize: top20Cache.length,
-        lastUpdated: new Date(cacheLastUpdated).toLocaleString(),
-        cacheAge: Date.now() - cacheLastUpdated,
-        players: top20Cache.map(p => `${p.rank}. ${p.playerName} (Auth:${p.playerAuth}, ELO:${p.rating})`)
-    };
-    
-    const debugMessage = `TOP 20 Cache Debug:
-Size: ${cacheInfo.cacheSize}
-Last Updated: ${cacheInfo.lastUpdated}
-Cache Age: ${Math.round(cacheInfo.cacheAge / 1000)}s
-Players: ${cacheInfo.players.length > 0 ? '\n' + cacheInfo.players.join('\n') : 'None'}`;
-    
-    window.gameRoom.logger.i('debugTop20Cache', debugMessage);
-    return debugMessage;
-}
-
-// Admin command to manually clear and refresh TOP 20 cache
-export function clearTop20Cache(): void {
-    top20Cache = [];
-    cacheLastUpdated = 0;
-    window.gameRoom.logger.i('clearTop20Cache', 'TOP 20 cache cleared, will refresh on next check');
-    updateTop20Cache(); // Try to get fresh data immediately
-}
-
-export function decideTier(rating: number, playerId?: number): Tier {
-    // Check if player is in placement matches
-    if (playerId && isInPlacementMatches(playerId)) {
-        return Tier.TierNew;
-    }
-
-    // Check for TOP 20 rankings first (overrides rating-based tiers)
-    if (playerId) {
-        const top20Check = isPlayerInTop20(playerId);
-        if (top20Check.isTop20) {
-            window.gameRoom.logger.i('decideTier', `Player ${playerId} is in TOP 20 - Rank: ${top20Check.rank}, Real ELO: ${top20Check.realElo}`);
-            
-            // Validate rank is within expected range
-            if (top20Check.rank >= 1 && top20Check.rank <= 20) {
-                const tierValue = (Tier.Tier8 + (top20Check.rank - 1)) as Tier;
-                window.gameRoom.logger.i('decideTier', `Assigning tier ${tierValue} for TOP ${top20Check.rank} player`);
-                return tierValue;
-            } else {
-                window.gameRoom.logger.w('decideTier', `Invalid TOP 20 rank ${top20Check.rank} for player ${playerId}, falling back to rating-based tier`);
-            }
-        }
-    }
-
-    // Standard tier system with improved ranges based on analysis
-    if(rating < window.gameRoom.config.HElo.tier.class_tier_1) return Tier.Tier1; // Bronze < 600
-    if(rating < window.gameRoom.config.HElo.tier.class_tier_2) return Tier.Tier2; // Silver < 800  
-    if(rating < window.gameRoom.config.HElo.tier.class_tier_3) return Tier.Tier3; // Gold < 1000
-    if(rating < window.gameRoom.config.HElo.tier.class_tier_4) return Tier.Tier4; // Platinum < 1200
-    if(rating < window.gameRoom.config.HElo.tier.class_tier_5) return Tier.Tier5; // Emerald < 1400
-    if(rating < window.gameRoom.config.HElo.tier.class_tier_6) return Tier.Tier6; // Diamond < 1600
-    if(rating < window.gameRoom.config.HElo.tier.class_tier_7) return Tier.Tier7; // Master < 1800
-    
-    return Tier.Challenger; // Above Master but not in Top 20
-}
-
-function isInPlacementMatches(playerId: number): boolean {
-    const player = window.gameRoom.playerList.get(playerId);
-    if (!player) return false;
-    return player.stats.totals < window.gameRoom.config.HElo.factor.placement_match_chances;
-}
-
-// Get display ELO for a player (returns real ELO always)
-export function getDisplayElo(playerId: number, actualElo: number): number {
-    // Always return real ELO, no fictional ELOs
-    return actualElo;
-}
-
-// Get the complete display name for a player including tier prefix
-export function getPlayerDisplayName(playerId: number, playerName: string, isAdmin: boolean = false, isSuperAdmin: boolean = false): string {
-    try {
-        const player = window.gameRoom.playerList.get(playerId);
-        if (!player) return playerName; // Fallback to basic name
-        
-        const tier = decideTier(player.stats.rating, playerId);
-        const tierName = getTierName(tier, playerId);
-        
-        // Build name with tier prefix
-        const superAdminIndicator = isSuperAdmin ? '👑' : '';
-        const adminIndicator = isAdmin ? '⭐' : '';
-        
-        return `${tierName} ${superAdminIndicator}${adminIndicator}${playerName}`;
-    } catch (error) {
-        window.gameRoom.logger.e('getPlayerDisplayName', `Error getting display name: ${error}`);
-        return playerName; // Fallback to basic name
-    }
-}
-
-export function getAvatarByTier(tier: Tier, playerId?: number): string {
-    if(tier === Tier.TierNew) return window.gameRoom.config.HElo.avatar.avatar_tier_new;
-    if(tier === Tier.Tier1) return window.gameRoom.config.HElo.avatar.avatar_tier_1; // Bronze
-    if(tier === Tier.Tier2) return window.gameRoom.config.HElo.avatar.avatar_tier_2; // Silver
-    if(tier === Tier.Tier3) return window.gameRoom.config.HElo.avatar.avatar_tier_3; // Gold
-    if(tier === Tier.Tier4) return window.gameRoom.config.HElo.avatar.avatar_tier_4; // Platinum
-    if(tier === Tier.Tier5) return window.gameRoom.config.HElo.avatar.avatar_tier_5; // Emerald
-    if(tier === Tier.Tier6) return window.gameRoom.config.HElo.avatar.avatar_tier_6; // Diamond
-    if(tier === Tier.Tier7) return window.gameRoom.config.HElo.avatar.avatar_tier_7; // Master
-    if(tier === Tier.Challenger) return window.gameRoom.config.HElo.avatar.avatar_challenger;
-    
-    // Handle TOP rankings - use cache system for accurate ranking with real ELO
-    if(tier >= Tier.Tier8 && tier <= Tier.Tier27) {
-        let rank = 999;
-        let realElo = 0;
-        
-        if (playerId) {
-            const top20Check = isPlayerInTop20(playerId);
-            if (top20Check.isTop20) {
-                rank = top20Check.rank;
-                realElo = top20Check.realElo;
-            } else {
-                // Fallback: calculate rank from tier enum value and get real ELO from player
-                rank = tier - Tier.Tier8 + 1;
-                const player = window.gameRoom.playerList.get(playerId);
-                realElo = player ? player.stats.rating : 0;
-            }
-        } else {
-            // If no playerId, calculate rank from tier enum value
-            rank = tier - Tier.Tier8 + 1;
-            realElo = 0; // No ELO available without playerId
-        }
-
-        return realElo > 0 ? `✨TOP ${rank}🏆✨ (${Math.round(realElo)})` : `🏆${rank}°🏆`;
-    }   
-    
-    return window.gameRoom.config.HElo.avatar.avatar_unknown;
-}
-
-export function getTierName(tier: Tier, playerId?: number): string {
-    if (tier === Tier.TierNew)      return "⌈⚪⌋ Placement";
-    if (tier === Tier.Tier1)        return "⌈🟤⌋ Bronce";
-    if (tier === Tier.Tier2)        return "⌈⚪⌋ Plata";
-    if (tier === Tier.Tier3)        return "⌈🟡⌋ Oro";
-    if (tier === Tier.Tier4)        return "【⌈🟦⌋】 Platino";
-    if (tier === Tier.Tier5)        return "【⌈🟩⌋】 Esmeralda";
-    if (tier === Tier.Tier6)        return "【⌈✨💎✨⌋】 Diamante";
-    if (tier === Tier.Tier7)        return "【⌈✨👑✨⌋】 Maestro";
-    if (tier === Tier.Challenger)   return "【⌈✨🚀✨⌋】 Challenger";
-
-    // Handle TOP rankings - use cache system for accurate ranking with real ELO
-    if (tier >= Tier.Tier8 && tier <= Tier.Tier27) {
-        let rank = 999;
-        let realElo = 0;
-        
-        if (playerId) {
-            const top20Check = isPlayerInTop20(playerId);
-            if (top20Check.isTop20) {
-                rank = top20Check.rank;
-                realElo = top20Check.realElo;
-            } else {
-                // Fallback: calculate rank from tier enum value and get real ELO from player
-                rank = tier - Tier.Tier8 + 1;
-                const player = window.gameRoom.playerList.get(playerId);
-                realElo = player ? player.stats.rating : 0;
-            }
-        } else {
-            // If no playerId, calculate rank from tier enum value
-            rank = tier - Tier.Tier8 + 1;
-            realElo = 0; // No ELO available without playerId
-        }
-        
-        // Format: 🏆1°🏆 with real ELO for TOP rankings
-        return realElo > 0 ? `🏆${rank}°🏆 (${Math.round(realElo)} ELO)` : `🏆${rank}°🏆`;
-    }
-
-    return "[UNKNOWN]";
+export function getTierName(tier: Tier): string {
+    return tier.toString();
 }
 
 export function getTierColor(tier: Tier): number {
-    if(tier === Tier.TierNew) return 0x808080; // Gray
-    if(tier === Tier.Tier1) return 0xCD7F32; // Bronze
-    if(tier === Tier.Tier2) return 0xC0C0C0; // Silver
-    if(tier === Tier.Tier3) return 0xFFD700; // Gold
-    if(tier === Tier.Tier4) return 0x40E0D0; // Turquoise (Platinum)
-    if(tier === Tier.Tier5) return 0x50C878; // Emerald Green
-    if(tier === Tier.Tier6) return 0x00BFFF; // Deep Sky Blue (Diamond)
-    if(tier === Tier.Tier7) return 0x9932CC; // Dark Orchid (Master)
-    if(tier === Tier.Challenger) return 0xFF4500; // Orange Red (Challenger)
-    
-    if(tier >= Tier.Tier8 && tier <= Tier.Tier27) {
-        return 0xFF1493; // Deep Pink (Top Rankings)
+    switch (tier) {
+        case Tier.BRONZE: return 0xCD7F32;
+        case Tier.SILVER: return 0xC0C0C0;
+        case Tier.GOLD: return 0xFFD700;
+        case Tier.PLATINUM: return 0xE5E4E2;
+        case Tier.DIAMOND: return 0xB9F2FF;
+        case Tier.MASTER: return 0xFF6B6B;
+        default: return 0xFFFFFF;
     }
-    
-    return 0xFFFFFF; // White (Unknown)
 }
 
-export enum Tier {
-    TierNew = 0,      // Placement matches
-    Tier1 = 1,        // Bronze
-    Tier2 = 2,        // Silver
-    Tier3 = 3,        // Gold
-    Tier4 = 4,        // Platinum
-    Tier5 = 5,        // Emerald
-    Tier6 = 6,        // Diamond
-    Tier7 = 7,        // Master
-    Challenger = 100, // Above Master but not in Top 20
+export function getPlayerDisplayName(playerId: number, name?: string, isAdmin?: boolean, isSuperAdmin?: boolean): string {
+    const player = window.gameRoom.playerList.get(playerId);
+    if (!player && !name) return 'Unknown';
     
-    // Top 20 rankings (Tier8 = Top 1, Tier9 = Top 2, etc.)
-    Tier8 = 8,   // Top 1
-    Tier9 = 9,   // Top 2
-    Tier10 = 10, // Top 3
-    Tier11 = 11, // Top 4
-    Tier12 = 12, // Top 5
-    Tier13 = 13, // Top 6
-    Tier14 = 14, // Top 7
-    Tier15 = 15, // Top 8
-    Tier16 = 16, // Top 9
-    Tier17 = 17, // Top 10
-    Tier18 = 18, // Top 11
-    Tier19 = 19, // Top 12
-    Tier20 = 20, // Top 13
-    Tier21 = 21, // Top 14
-    Tier22 = 22, // Top 15
-    Tier23 = 23, // Top 16
-    Tier24 = 24, // Top 17
-    Tier25 = 25, // Top 18
-    Tier26 = 26, // Top 19
-    Tier27 = 27  // Top 20
+    const playerName = name || player?.name || 'Unknown';
+    const rating = player?.stats.rating || 1000;
+    const tier = decideTier(rating);
+    const avatar = getAvatarByTier(tier);
+    
+    let prefix = '';
+    if (isSuperAdmin) prefix = '👑 ';
+    else if (isAdmin) prefix = '🛡️ ';
+    
+    return `${prefix}${avatar} ${playerName}`;
+}
+
+// Top 20 cache functions
+const top20Cache = new Map<string, any>();
+
+export function debugTop20Cache(): string {
+    const cacheEntries = Array.from(top20Cache.entries());
+    return `Top 20 Cache: ${cacheEntries.length} entries - ${JSON.stringify(cacheEntries)}`;
+}
+
+export function clearTop20Cache(): void {
+    top20Cache.clear();
+}
+
+export function isPlayerInTop20(playerId: number): { isTop20: boolean; rank?: number; realElo?: number } {
+    // Stub implementation
+    const player = window.gameRoom.playerList.get(playerId);
+    return {
+        isTop20: false,
+        rank: undefined,
+        realElo: player?.stats.rating || 1000
+    };
 }

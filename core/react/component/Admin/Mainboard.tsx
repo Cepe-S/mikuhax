@@ -5,7 +5,7 @@ import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import ServerInfoWidget from './ServerInfoWidget';
-import RoomWidget from './RoomWidget';
+import ImageWidget from './ImageWidget';
 import Copyright from '../common/Footer.Copyright';
 
 interface styleClass {
@@ -27,7 +27,7 @@ export default function Mainboard({ styleClass }: styleClass) {
                 </Grid>
                 <Grid item xs={12}>
                     <Paper className={classes.paper}>
-                        <RoomWidget />
+                        <ImageWidget />
                     </Paper>
                 </Grid>
             </Grid>

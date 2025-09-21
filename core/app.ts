@@ -17,6 +17,7 @@ import { createServer as HTTPcreateServer } from "http";
 import { Server as SIOserver, Socket as SIOsocket } from "socket.io";
 import { winstonLogger } from "./winstonLoggerSystem";
 import { indexAPIRouter } from "./web/router/api/v1";
+import { simpleApiRouter } from "./web/router/api/simple.router";
 import { jwtMiddleware, jwtMiddlewareWS } from "./web/lib/jwt.middleware";
 import { HeadlessBrowser } from "./lib/browser";
 // ========================================================
@@ -42,7 +43,8 @@ browser.attachSIOserver(sio);
 router
     //.use('/', indexRouter.routes())
     //.use('/install', installRouter.routes())
-    .use('/api/v1', indexAPIRouter.routes());
+    .use('/api/v1', indexAPIRouter.routes())
+    .use('/api/v1', simpleApiRouter.routes());
 
 app
     .use(ip(whiteListIPs))

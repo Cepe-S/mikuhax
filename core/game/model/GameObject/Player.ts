@@ -56,13 +56,13 @@ export class Player implements PlayerObject {
         this.team = player.team;
         this.position = player.position;
         this.matchRecord = { // Temporary stat record for current match
-            goals: 0, // not contains OGs.
-            assists: 0, // count for assist goal
-            ogs: 0, // it means 'own goal' (in Korean, '자책골')
-            losePoints: 0, // it means the points this player lost (in Korean, '실점')
-            balltouch: 0,  // total count of touch(kick) ball
-            passed: 0, // total count of pass success
-            factorK: window.gameRoom.config.HElo.factor.factor_k_normal // K Factor for HElo rating
+            goals: 0,
+            assists: 0,
+            ogs: 0,
+            losePoints: 0,
+            balltouch: 0,
+            passed: 0,
+            factorK: 24 // Simple K Factor
         }
         this.stats = stats;
         this.permissions = permissions;

@@ -20,21 +20,8 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import Mainboard from './Mainboard';
 import { Route, RouteComponentProps, Switch } from 'react-router-dom';
 import NotFound from '../NotFound';
-import RoomList from './RoomList';
 import ServerInfo from './ServerInfo';
-import RoomCreate from './RoomCreate';
-import RoomLog from './RoomLog';
 import MainboardSideMenu from './SideMenu/Mainboard.SideMenu';
-import RoomListSideMenu from './SideMenu/RoomList.SideMenu';
-import RoomInfoSideMenu from './SideMenu/RoomInfo.SideMenu';
-import RoomPower from './RoomPower';
-import RoomSuperAdmin from './RoomSuperAdmin';
-import RoomInfo from './RoomInfo';
-import RoomBanList from './RoomBanList';
-import RoomPlayerList from './RoomPlayerList';
-import RoomSocial from './RoomSocial';
-import RoomTextFilter from './RoomTextFilter';
-import RoomAssets from './RoomAssets';
 import ServerImages from './ServerImages';
 import ServerImageCreate from './ServerImageCreate';
 import ServerImageCreateEdit from './ServerImageCreateEdit';
@@ -212,39 +199,16 @@ function Dashboard({ match }: RouteComponentProps) {
                 </div>
                 <Divider />
                 { /* Side Menu */ }
-                <Switch>
-                    <Route path={match.path} exact><MainboardSideMenu /></Route>
-                    <Route path={`${match.path}/roomlist`}><RoomListSideMenu /></Route>
-                    <Route path={`${match.path}/newroom`}><RoomListSideMenu /></Route>
-                    <Route path={`${match.path}/serverimages`}><RoomListSideMenu /></Route>
-                    <Route path={`${match.path}/newimage`}><RoomListSideMenu /></Route>
-                    <Route path={`${match.path}/editimage/:imageId`}><RoomListSideMenu /></Route>
-                    <Route path={`${match.path}/serverinfo`}><MainboardSideMenu /></Route>
-                    <Route path={`${match.path}/superadmin/:ruid`} component={RoomInfoSideMenu} />
-                    <Route path={`${match.path}/banlist/:ruid`} component={RoomInfoSideMenu} />
-                    <Route path={`${match.path}/room/:ruid`} component={RoomInfoSideMenu} />
-                </Switch>
+                <MainboardSideMenu />
             </Drawer>
             <main className={classes.content}>
                 <div className={classes.appBarSpacer} />
                 { /* Main Content */ }
                 <Switch>
                     <Route path={match.path} render={()=><Mainboard styleClass={styleClass} />} exact />
-                    <Route path={`${match.path}/roomlist`} render={()=><RoomList styleClass={styleClass} />} />
-                    <Route path={`${match.path}/newroom`} render={()=><RoomCreate styleClass={styleClass} />} />
                     <Route path={`${match.path}/serverimages`} render={()=><ServerImages styleClass={styleClass} />} />
                     <Route path={`${match.path}/newimage`} render={()=><ServerImageCreate styleClass={styleClass} />} />
                     <Route path={`${match.path}/editimage/:imageId`} render={(props)=><ServerImageCreateEdit styleClass={styleClass} {...props} />} />
-                    <Route path={`${match.path}/serverinfo`} render={()=><ServerInfo styleClass={styleClass} />} />
-                    <Route path={`${match.path}/superadmin/:ruid`}><RoomSuperAdmin styleClass={styleClass} /></Route>
-                    <Route path={`${match.path}/banlist/:ruid`} exact><RoomBanList styleClass={styleClass} /></Route>
-                    <Route path={`${match.path}/room/:ruid`} exact><RoomLog styleClass={styleClass} /></Route>
-                    <Route path={`${match.path}/room/:ruid/info`}><RoomInfo styleClass={styleClass} /></Route>
-                    <Route path={`${match.path}/room/:ruid/power`}><RoomPower styleClass={styleClass} /></Route>
-                    <Route path={`${match.path}/room/:ruid/player`}><RoomPlayerList styleClass={styleClass} /></Route>
-                    <Route path={`${match.path}/room/:ruid/social`}><RoomSocial styleClass={styleClass} /></Route>
-                    <Route path={`${match.path}/room/:ruid/filter`}><RoomTextFilter styleClass={styleClass} /></Route>
-                    <Route path={`${match.path}/room/:ruid/assets`}><RoomAssets styleClass={styleClass} /></Route>
                     <Route component={NotFound} />
                 </Switch>
             </main>
