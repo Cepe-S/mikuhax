@@ -1,6 +1,6 @@
 import { Player } from "../model/GameObject/Player";
 import { PlayerStorage } from "../model/GameObject/PlayerObject";
-import { BanList } from "../model/PlayerBan/BanList";
+import { SanctionItem } from "../model/PlayerBan/BanList";
 import { MatchEvent } from "../model/GameObject/MatchEvent";
 import { MatchSummary } from "../model/GameObject/MatchSummary";
 
@@ -58,22 +58,16 @@ export async function getPlayerDataFromDB(playerAuth: string): Promise<PlayerSto
     return player;
 }
 
-// register new ban or update it
-export async function setBanlistDataToDB(banList: BanList): Promise<void> {
-    const banplayer: BanList | undefined = await window._readBanlistDB(window.gameRoom.config._RUID, banList.conn);
-    if(banplayer !== undefined) {
-        //if already exist then update it
-        await window._updateBanlistDB(window.gameRoom.config._RUID, banList);
-    } else {
-        // or create new one
-        await window._createBanlistDB(window.gameRoom.config._RUID, banList);
-    }
+// Legacy functions - deprecated, use auth-based functions instead
+export async function setBanlistDataToDB(banData: any): Promise<void> {
+    // Deprecated - use createBanDB instead
+    console.warn('setBanlistDataToDB is deprecated, use createBanDB instead');
 }
 
-// get exist ban
-export async function getBanlistDataFromDB(playerConn: string): Promise<BanList | undefined> {
-    const banplayer: BanList | undefined = await window._readBanlistDB(window.gameRoom.config._RUID, playerConn);
-    return banplayer;
+export async function getBanlistDataFromDB(playerConn: string): Promise<any> {
+    // Deprecated - use getBanByAuthFromDB instead
+    console.warn('getBanlistDataFromDB is deprecated, use getBanByAuthFromDB instead');
+    return undefined;
 }
 
 // get ban by auth (new system)

@@ -25,6 +25,7 @@ import SecurityIcon from '@material-ui/icons/Security';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import EditIcon from '@material-ui/icons/Edit';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
+import GavelIcon from '@material-ui/icons/Gavel';
 
 
 interface ServerImage {
@@ -393,6 +394,9 @@ export default function ServerImages({ styleClass }: styleClass) {
                                                 <PlayArrowIcon />
                                             </IconButton>
                                         )}
+                                        <IconButton onClick={() => history.push(`/admin/sanctions/${image.ruid}`)} title="Manage Sanctions">
+                                            <GavelIcon />
+                                        </IconButton>
                                         <IconButton onClick={() => handleEdit(image)} title="Edit Image">
                                             <EditIcon />
                                         </IconButton>

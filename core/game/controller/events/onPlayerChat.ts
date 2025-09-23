@@ -27,9 +27,23 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
         return false;
     } else {
         // Check if player is muted
-        if (!player.admin && (window.gameRoom.isMuteAll === true || window.gameRoom.playerList.get(player.id)!.permissions['mute'] === true)) {
+        const playerData = window.gameRoom.playerList.get(player.id)!;
+        if (!player.admin && window.gameRoom.isMuteAll === true) {
             window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onChat.mutedChat, placeholderChat), player.id, 0xFF0000, "bold", 2);
             return false;
+        }
+        
+        // Check individual mute with expiration
+        if (!player.admin && playerData.permissions.mute) {
+            if (playerData.permissions.muteExpire !== -1 && playerData.permissions.muteExpire <= Date.now()) {
+                // Mute expired, remove it
+                playerData.permissions.mute = false;
+                playerData.permissions.muteExpire = -1;
+                window._deleteMuteByAuthDB(window.gameRoom.config._RUID, player.auth);
+            } else {
+                window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onChat.mutedChat, placeholderChat), player.id, 0xFF0000, "bold", 2);
+                return false;
+            }
         }
         
         // Simple message length check

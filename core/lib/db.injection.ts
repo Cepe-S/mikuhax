@@ -3,7 +3,7 @@ import "dotenv/config";
 import axios from "axios";
 import { PlayerStorage } from "../game/model/GameObject/PlayerObject";
 import { winstonLogger } from "../winstonLoggerSystem";
-import { BanList } from "../game/model/PlayerBan/BanList";
+import { BanList, SanctionItem } from "../game/model/PlayerBan/BanList";
 import { MatchEvent } from "../game/model/GameObject/MatchEvent";
 import { MatchSummary } from "../game/model/GameObject/MatchSummary";
 
@@ -96,75 +96,56 @@ export async function deleteSuperadminDB(ruid: string, key: string): Promise<voi
     }
 }
 
-export async function createBanlistDB(ruid: string, banList: BanList): Promise<void> {
+// Sanctions system - Ban functions
+export async function createBanDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string, playerName?: string): Promise<void> {
     try {
-        const result = await axios.post(`${dbConnAddr}room/${ruid}/banlist`, banList);
-        if (result.status === 204 && result.data) {
-            winstonLogger.info(`${result.status} Succeed on createBanlistDB: Created. conn(${banList.conn})`);
+        const now = Date.now();
+        const expire = durationMinutes > 0 ? now + (durationMinutes * 60 * 1000) : -1;
+        
+        const banData = {
+            type: 'ban',
+            auth,
+            conn,
+            reason,
+            register: now,
+            expire,
+            adminAuth,
+            adminName,
+            playerName
+        };
+        
+        const result = await axios.post(`${dbConnAddr}room/${ruid}/sanctions`, banData);
+        if (result.status === 201) {
+            winstonLogger.info(`Ban created: auth(${auth}) duration(${durationMinutes}min) reason(${reason})`);
         }
     } catch(error) {
-        const err = error as any;
-        if(err.response && err.response.status === 400) {
-            winstonLogger.info(`${err.response.status} Failed on createBanlistDB: Already exist. conn(${banList.conn})`);
-        } else {
-            winstonLogger.error(`Error caught on createBanlistDB: ${error}`);
-        }
+        winstonLogger.error(`Error creating ban: ${error}`);
     }
 }
 
-export async function readBanlistDB(ruid: string, playerConn: string): Promise<BanList | undefined> {
+export async function readBanByAuthDB(ruid: string, auth: string): Promise<SanctionItem | undefined> {
     try {
-        const result = await axios.get(`${dbConnAddr}room/${ruid}/banlist/${playerConn}`);
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/sanctions/check?auth=${auth}&type=ban`);
         if (result.status === 200 && result.data) {
-            const banlist: BanList = {
-                conn: result.data.conn,
-                reason: result.data.reason,
-                register: result.data.register,
-                expire: result.data.expire
-            }
-            winstonLogger.info(`200 Succeed on readBanlistDB: Read. onn(${playerConn})`);
-            return banlist;
+            return result.data;
         }
     } catch (error) {
-        const err = error as any;
-        if(err.response && err.response.status === 404) {
-            winstonLogger.info(`${err.response.status} Failed on readBanlistDB: No exist. conn(${playerConn})`);
-        } else {
-            winstonLogger.error(`Error caught on readBanlistDB: ${error}`);
-        }
+        // Not banned - normal
     }
+    return undefined;
 }
 
-export async function updateBanlistDB(ruid: string, banList: BanList):Promise<void> {
+export async function deleteBanByAuthDB(ruid: string, auth: string): Promise<boolean> {
     try {
-        const result = await axios.put(`${dbConnAddr}room/${ruid}/banlist/${banList.conn}`, banList);
-        if (result.status === 204 && result.data) {
-            winstonLogger.info(`${result.status} Succeed on updateBanlistDB: Updated. conn(${banList.conn})`);
-        }
-    } catch(error) {
-        const err = error as any;
-        if(err.response && err.response.status === 404) {
-            winstonLogger.info(`${err.response.status} Failed on updateBanlistDB: No Exist. conn(${banList.conn})`);
-        } else {
-            winstonLogger.error(`Error caught on updateBanlistDB: ${error}`);
-        }
-    }
-}
-
-export async function deleteBanlistDB(ruid: string, playerConn: string): Promise<void> {
-    try {
-        const result = await axios.delete(`${dbConnAddr}room/${ruid}/banlist/${playerConn}`);
+        const result = await axios.delete(`${dbConnAddr}room/${ruid}/sanctions/ban/${auth}`);
         if (result.status === 204) {
-            winstonLogger.info(`${result.status} Succeed on deleteBanlistDB: Deleted. conn(${playerConn})`);
+            winstonLogger.info(`Ban removed for auth(${auth})`);
+            return true;
         }
     } catch (error) {
-        const err = error as any;
-        if(err.response && err.response.status === 404) {
-            winstonLogger.info(`${err.response.status} Failed on deleteBanlistDB: No exist. conn(${playerConn})`);
-        } else {
-            winstonLogger.error(`Error caught on deleteBanlistDB: ${error}`);
-        }
+        winstonLogger.error(`Error removing ban: ${error}`);
     }
+    return false;
 }
 
 export async function createPlayerDB(ruid: string, player: PlayerStorage): Promise<void> {
@@ -394,103 +375,14 @@ export async function getConnectionAnalyticsDB(auth: string): Promise<any> {
 
 // ================== NEW AUTH-BASED BAN/MUTE SYSTEM ==================
 
-// Enhanced Ban/Mute system with auth-based identification and duration support
-
-export interface MuteListItem {
-    auth: string;
-    conn: string;
-    reason: string;
-    register: number;
-    expire: number;
-    adminAuth?: string;
-    adminName?: string;
-}
-
-export interface BanListItem {
-    auth: string;
-    conn: string;
-    reason: string;
-    register: number;
-    expire: number;
-    adminAuth?: string;
-    adminName?: string;
-    playerName?: string;
-}
-
-// Enhanced Ban functions
-export async function createBanDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string, playerName?: string): Promise<void> {
-    try {
-        const now = Date.now();
-        const expire = durationMinutes > 0 ? now + (durationMinutes * 60 * 1000) : -1; // -1 for permanent
-        
-        const banData: BanListItem = {
-            auth,
-            conn,
-            reason,
-            register: now,
-            expire,
-            adminAuth,
-            adminName,
-            playerName
-        };
-        
-        const result = await axios.post(`${dbConnAddr}room/${ruid}/banlist`, banData);
-        if (result.status === 204) {
-            winstonLogger.info(`Ban created: auth(${auth}) duration(${durationMinutes}min) reason(${reason})`);
-        }
-    } catch(error) {
-        const err = error as any;
-        if(err.response && err.response.status === 400) {
-            winstonLogger.info(`Ban updated: auth(${auth}) already exists, updating`);
-        } else {
-            winstonLogger.error(`Error creating ban: ${error}`);
-        }
-    }
-}
-
-export async function readBanByAuthDB(ruid: string, auth: string): Promise<BanListItem | undefined> {
-    try {
-        const result = await axios.get(`${dbConnAddr}room/${ruid}/banlist/${auth}`);
-        if (result.status === 200 && result.data) {
-            winstonLogger.info(`Ban found for auth(${auth})`);
-            return result.data;
-        }
-    } catch (error) {
-        const err = error as any;
-        if(err.response && err.response.status === 404) {
-            // Not banned - this is normal
-        } else {
-            winstonLogger.error(`Error reading ban: ${error}`);
-        }
-    }
-    return undefined;
-}
-
-export async function deleteBanByAuthDB(ruid: string, auth: string): Promise<boolean> {
-    try {
-        const result = await axios.delete(`${dbConnAddr}room/${ruid}/banlist/${auth}`);
-        if (result.status === 204) {
-            winstonLogger.info(`Ban removed for auth(${auth})`);
-            return true;
-        }
-    } catch (error) {
-        const err = error as any;
-        if(err.response && err.response.status === 404) {
-            winstonLogger.info(`No ban found to remove for auth(${auth})`);
-        } else {
-            winstonLogger.error(`Error removing ban: ${error}`);
-        }
-    }
-    return false;
-}
-
 // Mute functions
 export async function createMuteDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string): Promise<void> {
     try {
         const now = Date.now();
-        const expire = durationMinutes > 0 ? now + (durationMinutes * 60 * 1000) : -1; // -1 for permanent
+        const expire = durationMinutes > 0 ? now + (durationMinutes * 60 * 1000) : -1;
         
-        const muteData: MuteListItem = {
+        const muteData = {
+            type: 'mute',
             auth,
             conn,
             reason,
@@ -500,110 +392,61 @@ export async function createMuteDB(ruid: string, auth: string, conn: string, rea
             adminName
         };
         
-        const result = await axios.post(`${dbConnAddr}room/${ruid}/mutelist`, muteData);
-        if (result.status === 204) {
+        const result = await axios.post(`${dbConnAddr}room/${ruid}/sanctions`, muteData);
+        if (result.status === 201) {
             winstonLogger.info(`Mute created: auth(${auth}) duration(${durationMinutes}min) reason(${reason})`);
         }
     } catch(error) {
-        const err = error as any;
-        if(err.response && err.response.status === 400) {
-            winstonLogger.info(`Mute updated: auth(${auth}) already exists, updating`);
-        } else {
-            winstonLogger.error(`Error creating mute: ${error}`);
-        }
+        winstonLogger.error(`Error creating mute: ${error}`);
     }
 }
 
-export async function readMuteByAuthDB(ruid: string, auth: string): Promise<MuteListItem | undefined> {
+export async function readMuteByAuthDB(ruid: string, auth: string): Promise<SanctionItem | undefined> {
     try {
-        const result = await axios.get(`${dbConnAddr}room/${ruid}/mutelist/${auth}`);
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/sanctions/check?auth=${auth}&type=mute`);
         if (result.status === 200 && result.data) {
-            winstonLogger.info(`Mute found for auth(${auth})`);
             return result.data;
         }
     } catch (error) {
-        const err = error as any;
-        if(err.response && err.response.status === 404) {
-            // Not muted - this is normal
-        } else {
-            winstonLogger.error(`Error reading mute: ${error}`);
-        }
+        // Not muted - normal
     }
     return undefined;
 }
 
 export async function deleteMuteByAuthDB(ruid: string, auth: string): Promise<boolean> {
     try {
-        const result = await axios.delete(`${dbConnAddr}room/${ruid}/mutelist/${auth}`);
+        const result = await axios.delete(`${dbConnAddr}room/${ruid}/sanctions/mute/${auth}`);
         if (result.status === 204) {
             winstonLogger.info(`Mute removed for auth(${auth})`);
             return true;
         }
     } catch (error) {
-        const err = error as any;
-        if(err.response && err.response.status === 404) {
-            winstonLogger.info(`No mute found to remove for auth(${auth})`);
-        } else {
-            winstonLogger.error(`Error removing mute: ${error}`);
-        }
+        winstonLogger.error(`Error removing mute: ${error}`);
     }
     return false;
 }
 
-// Get all bans from database
-export async function getAllBansFromDB(ruid: string): Promise<BanListItem[]> {
+// Get all sanctions from database
+export async function getAllBansFromDB(ruid: string): Promise<SanctionItem[]> {
     try {
-        const result = await axios.get(`${dbConnAddr}room/${ruid}/banlist`);
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/sanctions?type=ban`);
         if (result.status === 200 && result.data) {
-            winstonLogger.info(`200 Succeed on getAllBansFromDB`);
             return result.data;
         }
         return [];
     } catch (error) {
-        winstonLogger.error(`Error caught on getAllBansFromDB: ${error}`);
         return [];
     }
 }
 
-// Get all mutes from database
-export async function getAllMutesFromDB(ruid: string): Promise<MuteListItem[]> {
+export async function getAllMutesFromDB(ruid: string): Promise<SanctionItem[]> {
     try {
-        const result = await axios.get(`${dbConnAddr}room/${ruid}/mutelist`);
+        const result = await axios.get(`${dbConnAddr}room/${ruid}/sanctions?type=mute`);
         if (result.status === 200 && result.data) {
-            winstonLogger.info(`200 Succeed on getAllMutesFromDB`);
             return result.data;
         }
         return [];
     } catch (error) {
-        winstonLogger.error(`Error caught on getAllMutesFromDB: ${error}`);
         return [];
-    }
-}
-
-// Enhanced function to clean expired bans from database
-export async function cleanExpiredBansDB(ruid: string): Promise<number> {
-    try {
-        const allBans = await getAllBansFromDB(ruid);
-        const now = Date.now();
-        let clearedCount = 0;
-        
-        const clearPromises = allBans.map(async (ban) => {
-            // Check if ban is expired
-            if (ban.expire !== -1 && ban.expire <= now) {
-                try {
-                    await deleteBanByAuthDB(ruid, ban.auth);
-                    clearedCount++;
-                    winstonLogger.info(`Cleared expired ban for auth: ${ban.auth}`);
-                } catch (error) {
-                    winstonLogger.error(`Failed to clear expired ban for auth ${ban.auth}: ${error}`);
-                }
-            }
-        });
-        
-        await Promise.all(clearPromises);
-        return clearedCount;
-    } catch (error) {
-        winstonLogger.error(`Error during expired bans cleanup: ${error}`);
-        return 0;
     }
 }

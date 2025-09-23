@@ -217,10 +217,15 @@ export class HeadlessBrowser {
         await page.exposeFunction('_updatePlayerDB', dbUtilityInject.updatePlayerDB);
         await page.exposeFunction('_deletePlayerDB', dbUtilityInject.deletePlayerDB);
 
-        await page.exposeFunction('_createBanlistDB', dbUtilityInject.createBanlistDB);
-        await page.exposeFunction('_readBanlistDB', dbUtilityInject.readBanlistDB);
-        await page.exposeFunction('_updateBanlistDB', dbUtilityInject.updateBanlistDB);
-        await page.exposeFunction('_deleteBanlistDB', dbUtilityInject.deleteBanlistDB);
+        // Sanctions system functions
+        await page.exposeFunction('_createBanDB', dbUtilityInject.createBanDB);
+        await page.exposeFunction('_readBanByAuthDB', dbUtilityInject.readBanByAuthDB);
+        await page.exposeFunction('_deleteBanByAuthDB', dbUtilityInject.deleteBanByAuthDB);
+        await page.exposeFunction('_createMuteDB', dbUtilityInject.createMuteDB);
+        await page.exposeFunction('_readMuteByAuthDB', dbUtilityInject.readMuteByAuthDB);
+        await page.exposeFunction('_deleteMuteByAuthDB', dbUtilityInject.deleteMuteByAuthDB);
+        await page.exposeFunction('_getAllBansFromDB', dbUtilityInject.getAllBansFromDB);
+        await page.exposeFunction('_getAllMutesFromDB', dbUtilityInject.getAllMutesFromDB);
         await page.exposeFunction('_createMatchEventDB', dbUtilityInject.createMatchEventDB);
         await page.exposeFunction('_createMatchSummaryDB', dbUtilityInject.createMatchSummaryDB);
         
@@ -232,16 +237,7 @@ export class HeadlessBrowser {
         await page.exposeFunction('_trackConnectionDB', dbUtilityInject.trackConnectionDB);
         await page.exposeFunction('_getConnectionAnalyticsDB', dbUtilityInject.getConnectionAnalyticsDB);
         
-        // Enhanced Ban/Mute system
-        await page.exposeFunction('_createBanDB', dbUtilityInject.createBanDB);
-        await page.exposeFunction('_readBanByAuthDB', dbUtilityInject.readBanByAuthDB);
-        await page.exposeFunction('_deleteBanByAuthDB', dbUtilityInject.deleteBanByAuthDB);
-        await page.exposeFunction('_getAllBansFromDB', dbUtilityInject.getAllBansFromDB);
-        await page.exposeFunction('_cleanExpiredBansDB', dbUtilityInject.cleanExpiredBansDB);
-        await page.exposeFunction('_createMuteDB', dbUtilityInject.createMuteDB);
-        await page.exposeFunction('_readMuteByAuthDB', dbUtilityInject.readMuteByAuthDB);
-        await page.exposeFunction('_deleteMuteByAuthDB', dbUtilityInject.deleteMuteByAuthDB);
-        await page.exposeFunction('_getAllMutesFromDB', dbUtilityInject.getAllMutesFromDB);
+
         
         // inject webhook function
         await page.exposeFunction('_feedSocialDiscordWebhook', this.feedSocialDiscordWebhook.bind(this));
@@ -507,18 +503,18 @@ export class HeadlessBrowser {
     public async banPlayerFixedTerm(ruid: string, id: number, ban: boolean, message: string, seconds: number): Promise<void> {
         await this._PageContainer.get(ruid)?.evaluate(async (id: number, ban: boolean, message: string, seconds: number) => {
             if (window.gameRoom.playerList.has(id)) {
-                const banItem = {
-                    conn: window.gameRoom.playerList.get(id)!.conn,
-                    reason: message,
-                    register: Math.floor(Date.now()),
-                    expire: Math.floor(Date.now()) + (seconds * 1000)
-                }
-                if (await window._readBanlistDB(window.gameRoom.config._RUID, window.gameRoom.playerList.get(id)!.conn) !== undefined) {
-                    //if already exist then update it
-                    await window._updateBanlistDB(window.gameRoom.config._RUID, banItem);
-                } else {
-                    // or create new one
-                    await window._createBanlistDB(window.gameRoom.config._RUID, banItem);
+                const player = window.gameRoom.playerList.get(id)!;
+                if (ban) {
+                    await window._createBanDB(
+                        window.gameRoom.config._RUID,
+                        player.auth,
+                        player.conn,
+                        message,
+                        Math.floor(seconds / 60), // Convert to minutes
+                        'operator',
+                        'Operator',
+                        player.name
+                    );
                 }
                 window.gameRoom._room.kickPlayer(id, message, ban);
                 window.gameRoom.logger.i('system', `[Kick] #${id} has been ${ban ? 'banned' : 'kicked'} by operator. (duration: ${seconds}secs, reason: ${message})`);

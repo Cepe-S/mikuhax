@@ -13,13 +13,13 @@ import ip from "koa-ip";
 import logger from "koa-logger";
 import { createConnection } from "typeorm";
 import { winstonLogger } from "./utility/winstonLoggerSystem";
-import { Player } from "./entity/player.entity";
-import { BanList } from "./entity/banlist.entity";
-import { SuperAdmin } from "./entity/superadmin.entity";
+import { Sanctions } from "./entity/sanctions.entity";
+import { SanctionsLogs } from "./entity/sanctions_logs.entity";
+import { Connection } from "./entity/connection.entity";
 import { MatchEvent } from "./entity/match_event.entity";
 import { MatchSummary } from "./entity/match_summary.entity";
-import { Connection } from "./entity/connection.entity";
-import { MuteList } from "./entity/mutelist.entity";
+import { Player } from "./entity/player.entity";
+import { SuperAdmin } from "./entity/superadmin.entity";
 import { apiRouterV1 } from "./router/v1.api.router";
 import { simpleRouter } from "./router/simple.router";
 // ========================================================
@@ -43,7 +43,7 @@ const whiteListIPs: string[] = process.env.SERVER_WHITELIST_IP?.split(",") || []
 createConnection({
     type: 'sqlite',
     database: path.join(__dirname, '..', process.env.DB_HOST || 'haxbotron.sqlite.db'),
-    entities: [Player, BanList, SuperAdmin, MatchEvent, MatchSummary, Connection, MuteList],
+    entities: [Sanctions, SanctionsLogs, Connection, MatchEvent, MatchSummary, Player, SuperAdmin],
     logging: false, // Disable logging for better performance
     synchronize: true,
     dropSchema: false,

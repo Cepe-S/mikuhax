@@ -5,6 +5,7 @@ import { Player } from "../../model/GameObject/Player";
 import { getUnixTimestamp } from "../Statistics";
 import { setDefaultStadiums, updateAdmins } from "../RoomTools";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
+import { trackPlayerConnection } from "../ConnectionTracker";
 
 export async function onPlayerJoinListener(player: PlayerObject): Promise<void> {
     const joinTimeStamp: number = getUnixTimestamp();
@@ -29,34 +30,130 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         return;
     }
 
-    // Create simple player object
-    window.gameRoom.playerList.set(player.id, new Player(player, {
-        rating: 1000,
-        totals: 0,
-        disconns: 0,
-        wins: 0,
-        goals: 0,
-        assists: 0,
-        ogs: 0,
-        losePoints: 0,
-        balltouch: 0,
-        passed: 0
-    }, {
-        mute: false,
-        muteExpire: -1,
-        afkmode: false,
-        afkreason: '',
-        afkdate: 0,
-        malActCount: 0,
-        superadmin: false,
-        lastPowershotUse: 0,
-        lastActivityTime: joinTimeStamp
-    }, {
-        rejoinCount: 0,
-        joinDate: joinTimeStamp,
-        leftDate: 0,
-        matchEntryTime: 0
-    }));
+    // Check for active ban
+    try {
+        const banCheck = await window._readBanByAuthDB(window.gameRoom.config._RUID, player.auth);
+        if (banCheck) {
+            const reason = banCheck.reason || 'No especificada';
+            const expireText = banCheck.expire === -1 ? 'permanente' : new Date(banCheck.expire).toLocaleString();
+            window.gameRoom._room.kickPlayer(player.id, `Estás baneado. Razón: ${reason}. Expira: ${expireText}`, true);
+            return;
+        }
+    } catch (error) {
+        window.gameRoom.logger.w('onPlayerJoin', `Failed to check ban status for ${player.name}: ${error}`);
+    }
+
+    // Check for active mute before creating player
+    let muteData = null;
+    try {
+        muteData = await window._readMuteByAuthDB(window.gameRoom.config._RUID, player.auth);
+    } catch (error) {
+        window.gameRoom.logger.w('onPlayerJoin', `Failed to check mute status for ${player.name}: ${error}`);
+    }
+
+    // Try to load player data from database
+    let playerData: any;
+    try {
+        playerData = await window._readPlayerDB(window.gameRoom.config._RUID, player.auth);
+    } catch (error) {
+        playerData = null;
+    }
+
+    // Create player object with database data or defaults
+    if (playerData) {
+        // Player exists in database - load their data
+        window.gameRoom.playerList.set(player.id, new Player(player, {
+            rating: playerData.rating || 1000,
+            totals: playerData.totals || 0,
+            disconns: playerData.disconns || 0,
+            wins: playerData.wins || 0,
+            goals: playerData.goals || 0,
+            assists: playerData.assists || 0,
+            ogs: playerData.ogs || 0,
+            losePoints: playerData.losePoints || 0,
+            balltouch: playerData.balltouch || 0,
+            passed: playerData.passed || 0
+        }, {
+            mute: playerData.mute || (muteData ? true : false),
+            muteExpire: playerData.muteExpire || (muteData ? muteData.expire : -1),
+            afkmode: false,
+            afkreason: '',
+            afkdate: 0,
+            malActCount: playerData.malActCount || 0,
+            superadmin: false,
+            lastPowershotUse: 0,
+            lastActivityTime: joinTimeStamp
+        }, {
+            rejoinCount: playerData.rejoinCount || 0,
+            joinDate: playerData.joinDate || joinTimeStamp,
+            leftDate: 0,
+            matchEntryTime: 0
+        }));
+        
+        // Update rejoin count and join date
+        const currentPlayer = window.gameRoom.playerList.get(player.id)!;
+        currentPlayer.entrytime.rejoinCount++;
+        currentPlayer.entrytime.joinDate = joinTimeStamp;
+    } else {
+        // New player - create with defaults
+        window.gameRoom.playerList.set(player.id, new Player(player, {
+            rating: 1000,
+            totals: 0,
+            disconns: 0,
+            wins: 0,
+            goals: 0,
+            assists: 0,
+            ogs: 0,
+            losePoints: 0,
+            balltouch: 0,
+            passed: 0
+        }, {
+            mute: muteData ? true : false,
+            muteExpire: muteData ? muteData.expire : -1,
+            afkmode: false,
+            afkreason: '',
+            afkdate: 0,
+            malActCount: 0,
+            superadmin: false,
+            lastPowershotUse: 0,
+            lastActivityTime: joinTimeStamp
+        }, {
+            rejoinCount: 0,
+            joinDate: joinTimeStamp,
+            leftDate: 0,
+            matchEntryTime: 0
+        }));
+        
+        // Save new player to database
+        try {
+            const newPlayerData = window.gameRoom.playerList.get(player.id)!;
+            await window._createPlayerDB(window.gameRoom.config._RUID, {
+                auth: player.auth,
+                conn: player.conn,
+                name: player.name,
+                rating: newPlayerData.stats.rating,
+                totals: newPlayerData.stats.totals,
+                disconns: newPlayerData.stats.disconns,
+                wins: newPlayerData.stats.wins,
+                goals: newPlayerData.stats.goals,
+                assists: newPlayerData.stats.assists,
+                ogs: newPlayerData.stats.ogs,
+                losePoints: newPlayerData.stats.losePoints,
+                balltouch: newPlayerData.stats.balltouch,
+                passed: newPlayerData.stats.passed,
+                mute: newPlayerData.permissions.mute,
+                muteExpire: newPlayerData.permissions.muteExpire,
+                rejoinCount: newPlayerData.entrytime.rejoinCount,
+                joinDate: newPlayerData.entrytime.joinDate,
+                leftDate: newPlayerData.entrytime.leftDate,
+                malActCount: newPlayerData.permissions.malActCount
+            });
+        } catch (error) {
+            window.gameRoom.logger.w('onPlayerJoin', `Failed to save new player to database: ${error}`);
+        }
+    }
+
+
 
     if (window.gameRoom.config.rules.autoAdmin === true) {
         updateAdmins();
@@ -142,6 +239,14 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         if (window.gameRoom._room.getScores() === null) {
             window.gameRoom._room.startGame();
         }
+    }
+
+    // Track player connection for analytics and anti-spam
+    try {
+        await trackPlayerConnection(player);
+    } catch (error) {
+        window.gameRoom.logger.w('onPlayerJoin', `Failed to track connection for ${player.name}: ${error}`);
+        // Continue execution as connection tracking is not critical
     }
 
     // Emit websocket event if function exists

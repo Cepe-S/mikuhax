@@ -162,7 +162,7 @@ export async function trackConnection(ctx: Context) {
         
         const adaptedData: ConnectionModel = {
             ruid: connectionData.ruid,
-            conn: connectionData.ipAddress, // Using IP as conn for now
+            conn: connectionData.auth, // Use auth as conn for consistency
             auth: connectionData.auth,
             playerName: nickname,
             ipAddress: connectionData.ipAddress,
@@ -190,7 +190,7 @@ export async function trackConnection(ctx: Context) {
 
         // First, check if connection already exists
         console.log('🔍 [Controller] Checking for existing connection');
-        const existingConnection = await connectionRepository.findSingle(connectionData.ruid, adaptedData.conn);
+        const existingConnection = await connectionRepository.findSingle(connectionData.ruid, connectionData.auth);
         
         let connection: Connection;
         if (existingConnection) {

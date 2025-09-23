@@ -97,7 +97,9 @@ export class ConnectionRepository implements IRepository<Connection> {
 
     public async updateSingle(ruid: string, conn: string, connection: ConnectionModel): Promise<Connection> {
         const repository: Repository<Connection> = getRepository(Connection);
-        let existingConnection: Connection | undefined = await repository.findOne({ ruid: ruid, conn: conn });
+        let existingConnection: Connection | undefined = await repository.findOne({ 
+            where: { ruid: ruid, conn: conn } 
+        });
         
         if (existingConnection !== undefined) {
             existingConnection.auth = connection.auth;
@@ -130,7 +132,9 @@ export class ConnectionRepository implements IRepository<Connection> {
 
     public async deleteSingle(ruid: string, conn: string): Promise<void> {
         const repository: Repository<Connection> = getRepository(Connection);
-        let connection: Connection | undefined = await repository.findOne({ ruid: ruid, conn: conn });
+        let connection: Connection | undefined = await repository.findOne({ 
+            where: { ruid: ruid, conn: conn } 
+        });
         
         if (connection === undefined) {
             throw new Error('Connection not found.');

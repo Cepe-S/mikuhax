@@ -61,7 +61,7 @@ function decodeIP(conn: string): string {
 export async function trackPlayerConnection(player: PlayerObject): Promise<void> {
     try {
         const timestamp = getUnixTimestamp();
-        const ruid = 'game_room'; // Default identifier for now
+        const ruid = window.gameRoom.config._RUID; // Use actual room RUID
         
         // Decode IP if it's in hex format (Haxball sometimes sends IPs as hex)
         const decodedIP = decodeIP(player.conn);
