@@ -6,7 +6,7 @@ export function cmdDiscord(byPlayer: PlayerObject): void {
     window.gameRoom._room.sendAnnouncement(
         `🔗 ¡Únete a nuestro servidor de Discord! 
 💬 Comunidad activa, eventos, torneos y mucho más
-🎮 Link: https://discord.gg/qfg45B2
+🎮 Link: https://discord.gg/CPRAxCwPfd
 📢 ¡Te esperamos!`,
         byPlayer.id,
         0x7289DA,

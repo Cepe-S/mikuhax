@@ -2,7 +2,7 @@
 // THE TYPES OF PLACEHOLDER ARE LIMITED BY STRING SET.
 
 export const scheduler = {
-    advertise: '💬 ¡Únete a nuestra comunidad en Discord! Conoce otros jugadores, participa en torneos y mantente al día con las novedades: https://discord.gg/qfg45B2'
+    advertise: '💬 ¡Únete a nuestra comunidad en Discord! Conoce otros jugadores, participa en torneos y mantente al día con las novedades: https://discord.gg/CPRAxCwPfd'
     ,shutdown: '📢 La sala se cerrará pronto. Gracias por usarla.'
     ,afkKick: '📢 Expulsado por inactividad.'
     ,afkCommandTooLongKick: '📢 Expulsado por estar inactivo más de 2 minutos.'
@@ -88,7 +88,7 @@ export const command = {
         ,bb: '📑 !bb : Dices bye bye y sales del servidor. El sistema enviará un mensaje de despedida a todos los jugadores.'
         ,cola: '📑 !cola : Muestra tu posición en la cola de jugadores cuando hay más jugadores que espacios disponibles.\n📑 !cola full : [ADMIN] Muestra la cola completa con todos los jugadores esperando.\n📑 Aliases: !queue, !q'
     } 
-    ,about: '📄 Nombre de la sala : {RoomName} ({_LaunchTime})\n💬 Esta sala está gestionada por el bot Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [Discord] https://discord.gg/qfg45B2 [Apóyanos] https://www.patreon.com/dapucita'
+    ,about: '📄 Nombre de la sala : {RoomName} ({_LaunchTime})\n💬 Esta sala está gestionada por el bot Haxbotron🤖 (https://dapucita.github.io/haxbotron/)\n💬 [Discord]  [Apóyanos] https://discord.gg/CPRAxCwPfd.patreon.com/dapucita'
     ,stats: {
         _ErrorNoPlayer: '❌ No está conectado. Debes especificar un ID en el formato #número. (Ej: !stats #12)\n📑 Usa !list red,blue,spec para obtener el ID numérico.'
         ,statsMsg: '📊 Estadísticas de {targetName}#{ticketTarget} ({targetStatsRatingAvatar} - {targetStatsRating} pts): {targetStatsTotal} partidos jugados (victorias {targetStatsWinRate}%), desconexiones {targetStatsDisconns}\n📊 Goles {targetStatsGoals}, asistencias {targetStatsAssists}, goles en contra {targetStatsOgs}, goles recibidos {targetStatsLosepoints}, pases exitosos {targetStatsPassSuccess}%\n📊 Promedios por partido: {targetStatsGoalsPerGame} goles, {targetStatsAssistsPerGame} asistencias, {targetStatsOgsPerGame} goles en contra, {targetStatsLostGoalsPerGame} goles recibidos.'

@@ -47,7 +47,12 @@ export function cmdMap(byPlayer: PlayerObject, message?: string): void {
     }
 
     try {
-        // Cargar el mapa
+        // 1. Parar el partido si está en curso
+        if (window.gameRoom._room.getScores() !== null) {
+            window.gameRoom._room.stopGame();
+        }
+        
+        // 2. Cambiar el mapa
         const stadiumData = loadStadiumData(mapName.toLowerCase());
         window.gameRoom._room.setCustomStadium(stadiumData);
         
@@ -55,6 +60,11 @@ export function cmdMap(byPlayer: PlayerObject, message?: string): void {
         if (window.gameRoom.ballStack) {
             window.gameRoom.ballStack.initPowershotSystem();
         }
+        
+        // 3. Iniciar el juego con el nuevo mapa
+        setTimeout(() => {
+            window.gameRoom._room.startGame();
+        }, 500);
         
         // Notificar el cambio exitoso
         window.gameRoom._room.sendAnnouncement(
