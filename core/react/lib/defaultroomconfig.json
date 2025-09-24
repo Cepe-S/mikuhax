@@ -67,7 +67,10 @@
 		"powershotActiveColor": 16729344,
 		"powershotInvMassFactor": 2.0,
 		"powershotCooldown": 30000,
-		"powershotStickDistance": 26
+		"powershotStickDistance": 26,
+		"balanceEnabled": true,
+		"balanceMode": "jt",
+		"balanceMaxPlayersPerTeam": 4
 	},
 	"rules": {
 		"ruleName": "default-rule",
@@ -83,6 +86,7 @@
 		"autoAdmin": false,
 		"autoOperating": true,
 		"statsRecord": true,
+		"balanceMode": "jt",
 		"defaultMapName": "futx4",
 		"readyMapName": "futx2",
 		"customJSONOptions": ""

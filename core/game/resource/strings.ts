@@ -66,7 +66,7 @@ export const command = {
         ,statsreset: '📑 !statsreset : Reinicia las estadísticas y la puntuación. No se puede recuperar después.'
         ,poss: '📑 !poss : Muestra la posesión del balón de ambos equipos.'
         ,streak: '📑 !streak : Muestra el equipo con racha ganadora actual y la cantidad de victorias consecutivas.'
-        ,afk: '📑 !afk MSG : Activa o desactiva el modo ausente. Puedes incluir una razón en MSG. Si estás ausente demasiado tiempo, podrías ser expulsado.'
+        ,afk: '📑 !afk [razón] : Activa o desactiva el modo AFK. Te mueve a espectador y te marca como ausente. Incluye una razón opcional. Si permaneces AFK demasiado tiempo, serás expulsado automáticamente.'
         ,list: '📑 !list red/blue/spec : Muestra la lista de jugadores en ese equipo con información básica.\n📑 !list mute : Muestra la lista de jugadores silenciados.\n📑 !list afk : Muestra la lista de jugadores ausentes.'
         ,freeze: '📑 !freeze : Activa o desactiva el bloqueo de chat global. Solo administradores pueden usarlo.'
         ,mute: '📑 !mute #ID : Silencia o des-silencia al jugador con el ID especificado. El ID debe ser un número. (Ej: !mute #12)\n📑 Usa !list red,blue,spec,mute para obtener el ID numérico.'
@@ -99,7 +99,7 @@ export const command = {
     ,streak: '📊 El equipo {streakTeamName} lleva {streakTeamCount} victorias consecutivas.'
     ,afk: {
         _WarnAfkTooLong: '📢 Podrías ser expulsado si estás ausente por demasiado tiempo (2 minutos).'
-        ,setAfk: '💤 {targetName}#{ticketTarget} está ahora ausente... ({targetAfkReason})'
+        ,setAfk: '💤 {targetName}#{ticketTarget} está ahora ausente...{targetAfkReason}'
         ,unAfk: '📢 {targetName}#{ticketTarget} ha regresado de su estado ausente.'
         ,muteNotifyWarn: '❌ Si estás silenciado, los demás jugadores no verán tu notificación de ausencia.'
         ,startRecord: '📊 Hay suficientes jugadores. Las estadísticas ahora se registrarán.'
@@ -267,6 +267,11 @@ export const onGoal = {
     goal: '⚽️ ¡Gol de {scorerName}#{scorerID}!'
     ,goalWithAssist: '⚽️ ¡Gol de {scorerName}#{scorerID}! {assistName}#{assistID} asistió.'
     ,og: '⚽️ {ogName}#{ogID} anotó un gol en propia puerta...'
+}
+
+export const balance = {
+    jtRebalance: '⚖️ {playerName}#{playerID} fue movido al equipo {teamName} para balancear los equipos.'
+    ,proRebalance: '⚖️ {playerName}#{playerID} salió de la cola y se unió al equipo {teamName}.'
 }
 
 export const onAdminChange = {

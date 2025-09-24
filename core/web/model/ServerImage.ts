@@ -76,6 +76,9 @@ export interface ServerImage {
         powershotInvMassFactor: number;
         powershotCooldown: number;
         powershotStickDistance: number;
+        balanceEnabled: boolean;
+        balanceMode: string;
+        balanceMaxPlayersPerTeam: number;
     };
     rules: {
         ruleName: string;

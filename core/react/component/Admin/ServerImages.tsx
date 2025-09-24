@@ -26,6 +26,7 @@ import RefreshIcon from '@material-ui/icons/Refresh';
 import EditIcon from '@material-ui/icons/Edit';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import GavelIcon from '@material-ui/icons/Gavel';
+import EqualizerIcon from '@material-ui/icons/Equalizer';
 
 
 interface ServerImage {
@@ -397,6 +398,11 @@ export default function ServerImages({ styleClass }: styleClass) {
                                         <IconButton onClick={() => history.push(`/admin/sanctions/${image.ruid}`)} title="Manage Sanctions">
                                             <GavelIcon />
                                         </IconButton>
+                                        {image.isRunning && (
+                                            <IconButton onClick={() => history.push(`/admin/balance/${image.ruid}`)} title="Balance Debug">
+                                                <EqualizerIcon />
+                                            </IconButton>
+                                        )}
                                         <IconButton onClick={() => handleEdit(image)} title="Edit Image">
                                             <EditIcon />
                                         </IconButton>

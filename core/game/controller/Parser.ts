@@ -44,6 +44,7 @@ import "./commands/teamuptoggle";
 import "./commands/clearbans";
 import "./commands/randomteams";
 import "./commands/randomstadium";
+import "./commands/balancestatus";
 
 // Check if given string is a command chat. Returns true if it is, false otherwise.
 export function isCommandString(message: string): boolean {

@@ -12,6 +12,9 @@ import { TeamID } from "./model/GameObject/TeamID";
 import { GameRoomConfig } from "./model/Configuration/GameRoomConfig";
 import { setDefaultStadiums, setRandomTeamColors } from './controller/RoomTools';
 import { getRandomMatch } from './resource/realTeams';
+import { BalanceManager } from './controller/balance/BalanceManager';
+import { BalanceMode } from './controller/balance/BalanceConfig';
+import { afkManager } from './controller/AFKManager';
 
 // Load initial configurations
 const loadedConfig: GameRoomConfig = JSON.parse(localStorage.getItem('_initConfig')!);
@@ -105,7 +108,8 @@ window.gameRoom = {
     },
     matchEventsHolder: [],
     memideCooldowns: new Map(),
-    memideUsedValues: new Map()
+    memideUsedValues: new Map(),
+    balanceManager: new BalanceManager()
 }
 
 // Clear localStorage
@@ -127,18 +131,8 @@ var scheduledTimer60 = setInterval(() => {
     window.gameRoom._room.sendAnnouncement(LangRes.scheduler.advertise, null, 0x7289DA, "normal", 0);
 }, 300000);
 
-// Simple AFK check
-var scheduledTimer5 = setInterval(() => {
-    const nowTimeStamp: number = getUnixTimestamp();
-    
-    window.gameRoom.playerList.forEach((player: Player) => {
-        if (player.permissions.afkmode === true && nowTimeStamp > player.permissions.afkdate + 300000) {
-            if (!player.permissions.superadmin) {
-                window.gameRoom._room.kickPlayer(player.id, "AFK demasiado tiempo", false);
-            }
-        }
-    });
-}, 15000);
+// Start AFK Manager
+afkManager.start();
 
 function makeRoom(): void {
     window.gameRoom.logger.i('initialisation', `The game room is opened at ${window.gameRoom.config._LaunchDate.toLocaleString()}.`);
@@ -152,6 +146,18 @@ function makeRoom(): void {
         window.gameRoom.ballStack.initPowershotSystem();
         window.gameRoom.logger.i('initialisation', 'Powershot system initialized');
     }
+
+    // Initialize balance system
+    const balanceConfig = {
+        enabled: window.gameRoom.config.settings.balanceEnabled !== false,
+        mode: (window.gameRoom.config.rules.balanceMode as BalanceMode) || BalanceMode.JT,
+        maxPlayersPerTeam: window.gameRoom.config.rules.requisite.eachTeamPlayers || 4
+    };
+    window.gameRoom.balanceManager.setConfig(balanceConfig);
+    window.gameRoom.logger.i('initialisation', `Balance system initialized: ${balanceConfig.enabled ? 'enabled' : 'disabled'}, mode: ${balanceConfig.mode}, max per team: ${balanceConfig.maxPlayersPerTeam}`);
+    
+    // Log AFK system status
+    window.gameRoom.logger.i('initialisation', `AFK auto-kick system: ${window.gameRoom.config.settings.afkCommandAutoKick ? 'enabled' : 'disabled'}, timeout: ${Math.floor(window.gameRoom.config.settings.afkCommandAutoKickAllowMillisecs / 60000)} minutes`);
 
     // Apply team colors
     try {

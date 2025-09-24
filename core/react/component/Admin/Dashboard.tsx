@@ -26,6 +26,7 @@ import ServerImages from './ServerImages';
 import ServerImageCreate from './ServerImageCreate';
 import ServerImageCreateEdit from './ServerImageCreateEdit';
 import ServerSanctions from './ServerSanctions';
+import { BalanceDebug } from './BalanceDebug';
 
 const drawerWidth = 240;
 
@@ -211,6 +212,7 @@ function Dashboard({ match }: RouteComponentProps) {
                     <Route path={`${match.path}/newimage`} render={()=><ServerImageCreate styleClass={styleClass} />} />
                     <Route path={`${match.path}/editimage/:imageId`} render={(props)=><ServerImageCreateEdit styleClass={styleClass} {...props} />} />
                     <Route path={`${match.path}/sanctions/:ruid`} render={(props)=><ServerSanctions styleClass={styleClass} {...props} />} />
+                    <Route path={`${match.path}/balance/:ruid`} render={(props)=><BalanceDebug />} />
                     <Route component={NotFound} />
                 </Switch>
             </main>

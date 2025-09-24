@@ -225,15 +225,9 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         window.gameRoom._room.sendAnnouncement(rulesMsg, player.id, 0x479947, "small", 0);
     }, 3500);
 
-    // Simple team assignment
+    // Balance system integration
     if (window.gameRoom.config.rules.autoOperating === true) {
-        const redCount = Array.from(window.gameRoom.playerList.values())
-            .filter(p => p.team === TeamID.Red).length;
-        const blueCount = Array.from(window.gameRoom.playerList.values())
-            .filter(p => p.team === TeamID.Blue).length;
-        
-        const targetTeam = redCount <= blueCount ? TeamID.Red : TeamID.Blue;
-        window.gameRoom._room.setPlayerTeam(player.id, targetTeam);
+        window.gameRoom.balanceManager.onPlayerJoin(player);
         
         // Auto start if no game running
         if (window.gameRoom._room.getScores() === null) {

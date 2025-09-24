@@ -1,8 +1,16 @@
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
+import { TeamID } from "../../model/GameObject/TeamID";
 import { getUnixTimestamp } from "../Statistics";
 
 export async function onPlayerLeaveListener(player: PlayerObject): Promise<void> {
     window.gameRoom.logger.i('onPlayerLeave', `${player.name}#${player.id} has left.`);
+
+    // Check if player was AFK before leaving
+    let wasAfk = false;
+    if (window.gameRoom.playerList.has(player.id)) {
+        const playerData = window.gameRoom.playerList.get(player.id)!;
+        wasAfk = playerData.permissions.afkmode;
+    }
 
     // Update player's left date and save to database if exists in playerList
     if (window.gameRoom.playerList.has(player.id)) {
@@ -38,6 +46,29 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
         
         // Remove from playerList
         window.gameRoom.playerList.delete(player.id);
+    }
+
+    // Balance system integration - only if player wasn't AFK
+    // AFK players disconnecting from spectator shouldn't trigger balance
+    if (!wasAfk) {
+        window.gameRoom.logger.i('onPlayerLeave', `Calling balance system for player ${player.name}#${player.id}`);
+        window.gameRoom.balanceManager.onPlayerLeave(player.id);
+        window.gameRoom.logger.i('onPlayerLeave', `Balance system call completed for player ${player.name}#${player.id}`);
+    } else {
+        window.gameRoom.logger.i('onPlayerLeave', `Player ${player.name}#${player.id} was AFK - skipping balance system call`);
+        // Still log the leave for AFK players but don't trigger balance
+        window.gameRoom.balanceManager.getDebugger().logAction(
+            "PLAYER_LEAVE",
+            player.id,
+            player.name,
+            TeamID.Spec, // AFK players are always in spec when they leave
+            TeamID.Spec,
+            "AFK player disconnected",
+            window.gameRoom.balanceManager.getConfig().mode,
+            window.gameRoom.balanceManager.getStatus().redCount,
+            window.gameRoom.balanceManager.getStatus().blueCount,
+            window.gameRoom.balanceManager.getStatus().queueLength
+        );
     }
 
     // Emit websocket event if function exists

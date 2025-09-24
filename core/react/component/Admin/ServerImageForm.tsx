@@ -137,7 +137,14 @@ export default function ServerImageForm({
                             autoOperating: parsedData.roomConfig.rules?.autoOperating || true,
                             statsRecord: parsedData.roomConfig.rules?.statsRecord || true
                         });
-                        setSettingsFormField(parsedData.roomConfig.settings || {});
+                        const settings = parsedData.roomConfig.settings || {};
+                        // Load balance configuration
+                        if (settings.balance) {
+                            settings.balanceEnabled = settings.balance.enabled;
+                            settings.balanceMode = settings.balance.mode;
+                            settings.balanceMaxPlayersPerTeam = settings.balance.maxPlayersPerTeam;
+                        }
+                        setSettingsFormField(settings);
                         setHeloFormField(parsedData.roomConfig.helo || {});
                         setCommandsFormField(parsedData.roomConfig.commands || {});
                     }
@@ -196,7 +203,14 @@ export default function ServerImageForm({
                         autoOperating: rulesSwitchesFormField.autoOperating,
                         statsRecord: rulesSwitchesFormField.statsRecord
                     },
-                    settings: settingsFormField,
+                    settings: {
+                        ...settingsFormField,
+                        balance: {
+                            enabled: settingsFormField.balanceEnabled !== false,
+                            mode: settingsFormField.balanceMode || 'jt',
+                            maxPlayersPerTeam: settingsFormField.balanceMaxPlayersPerTeam || 4
+                        }
+                    },
                     helo: heloFormField,
                     commands: commandsFormField
                 }
@@ -627,6 +641,84 @@ export default function ServerImageForm({
                                         helperText="Puntos de rating perdidos por abandonar partidas"
                                         inputProps={{ min: 1, max: 100 }}
                                     />
+                                </Grid>
+                            </Grid>
+                        </AccordionDetails>
+                    </Accordion>
+
+                    {/* Balance System */}
+                    <Accordion>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Typography variant="h6">⚖️ Sistema de Balanceo</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
+                                    <Typography variant="body2" color="textSecondary" style={{ marginBottom: '16px' }}>
+                                        Configura el sistema automático de balanceo de equipos para mantener partidas justas y organizadas.
+                                    </Typography>
+                                </Grid>
+                                
+                                <Grid item xs={12} md={4}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settingsFormField.balanceEnabled !== false}
+                                                onChange={(e) => setSettingsFormField({
+                                                    ...settingsFormField,
+                                                    balanceEnabled: e.target.checked
+                                                })}
+                                            />
+                                        }
+                                        label="Activar Sistema de Balanceo"
+                                    />
+                                </Grid>
+                                
+                                <Grid item xs={12} md={4}>
+                                    <TextField
+                                        fullWidth
+                                        select
+                                        label="Modo de Balanceo"
+                                        value={settingsFormField.balanceMode || 'jt'}
+                                        onChange={(e) => setSettingsFormField({
+                                            ...settingsFormField,
+                                            balanceMode: e.target.value
+                                        })}
+                                        disabled={settingsFormField.balanceEnabled === false}
+                                        SelectProps={{ native: true }}
+                                        helperText="JT: Simple | PRO: Con cola"
+                                    >
+                                        <option value="jt">JT - Balanceo Simple</option>
+                                        <option value="pro">PRO - Con Sistema de Cola</option>
+                                    </TextField>
+                                </Grid>
+                                
+                                <Grid item xs={12} md={4}>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        label="Máximo Jugadores por Equipo"
+                                        value={settingsFormField.balanceMaxPlayersPerTeam || 4}
+                                        onChange={(e) => setSettingsFormField({
+                                            ...settingsFormField,
+                                            balanceMaxPlayersPerTeam: parseInt(e.target.value) || 4
+                                        })}
+                                        disabled={settingsFormField.balanceEnabled === false}
+                                        helperText="Límite de jugadores por equipo"
+                                        inputProps={{ min: 1, max: 10 }}
+                                    />
+                                </Grid>
+                                
+                                <Grid item xs={12}>
+                                    <Typography variant="body2" style={{ 
+                                        padding: '12px', 
+                                        backgroundColor: '#f5f5f5', 
+                                        borderRadius: '4px',
+                                        marginTop: '8px'
+                                    }}>
+                                        <strong>Modo JT:</strong> Balanceo simple que mantiene diferencia máxima de 1 jugador entre equipos.<br/>
+                                        <strong>Modo PRO:</strong> Sistema avanzado con cola FIFO que garantiza equipos perfectamente balanceados y respeta el orden de llegada.
+                                    </Typography>
                                 </Grid>
                             </Grid>
                         </AccordionDetails>

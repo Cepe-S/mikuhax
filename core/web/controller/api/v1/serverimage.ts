@@ -90,7 +90,12 @@ export async function createServerImageFromRoom(ctx: Context) {
                 noPlayer: roomDetailInfo._roomConfig.noPlayer,
                 geo: roomDetailInfo._roomConfig.geo
             },
-            settings: roomDetailInfo._settings,
+            settings: {
+                ...roomDetailInfo._settings,
+                balanceEnabled: roomDetailInfo._settings.balanceEnabled ?? true,
+                balanceMode: roomDetailInfo._settings.balanceMode ?? 'jt',
+                balanceMaxPlayersPerTeam: roomDetailInfo._settings.balanceMaxPlayersPerTeam ?? 4
+            },
             rules: roomDetailInfo._rules,
             helo: roomDetailInfo._HElo,
             commands: roomDetailInfo._commands,
@@ -277,7 +282,8 @@ export async function deployFromImage(ctx: Context) {
                 requisite: {
                     ...imageData.rules.requisite,
                     maxSubPlayers: imageData.rules.requisite.maxSubPlayers ?? 0
-                }
+                },
+                balanceMode: 'jt' // Default balance mode
             },
             HElo: imageData.helo,
             commands: imageData.commands,

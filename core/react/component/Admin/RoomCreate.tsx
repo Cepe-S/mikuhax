@@ -12,7 +12,7 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import * as DefaultConfigSet from "../../lib/defaultroomconfig.json";
 import { useHistory } from 'react-router-dom';
-import { Divider, IconButton, Switch } from '@material-ui/core';
+import { Divider, IconButton, Switch, MenuItem } from '@material-ui/core';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import client from '../../lib/client';
 import Alert, { AlertColor } from '../common/Alert';
@@ -120,6 +120,7 @@ export default function RoomCreate({ styleClass }: styleClass) {
                 ,autoAdmin: rulesSwitchesFormField.autoAdmin
                 ,autoOperating: rulesSwitchesFormField.autoOperating
                 ,statsRecord: rulesSwitchesFormField.statsRecord
+                ,balanceMode: rulesFormField.balanceMode || 'jt'
             },
             helo: { ...heloFormField, useDefaultValues: heloUseDefaultValuesField },
             commands: commandsFormField
@@ -422,6 +423,14 @@ export default function RoomCreate({ styleClass }: styleClass) {
                                             control={<Switch onChange={onChangeRulesSwitch} checked={rulesSwitchesFormField.statsRecord} id="statsRecord" name="statsRecord" size="small" color="primary" />}
                                             label="Stats Recording" labelPlacement="start"
                                         />
+                                    </Grid>
+                                    <Grid item xs={4} sm={2}>
+                                        <TextField
+                                            fullWidth value={rulesFormField.balanceMode || 'jt'} onChange={onChangeRules} id="balanceMode" name="balanceMode" label="Balance Mode" variant="outlined" margin="normal" size="small" select SelectProps={{native: true}} required
+                                        >
+                                            <option value="jt">JT Mode</option>
+                                            <option value="pro">PRO Mode</option>
+                                        </TextField>
                                     </Grid>
                                 </Grid>
                                 <Grid container spacing={2}>

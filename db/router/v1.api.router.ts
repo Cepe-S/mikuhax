@@ -7,6 +7,7 @@ import { matchEventRouter } from "./v1.match_event.router";
 import { matchSummaryRouter } from "./v1.match_summary.router";
 import { connectionsRouter } from "./v1.connections.router";
 import { sanctionsRouter } from "./v1.sanctions.router";
+import { balanceRouter } from "../../web/router/api/v1/balance";
 import { MatchEventController } from "../controller/matchevent.controller";
 import { MatchEventRepository } from "../repository/match_event.repository";
 
@@ -23,6 +24,7 @@ apiRouterV1
     .use('/room/:ruid', sanctionsRouter.routes())
     .use('/room/:ruid/match_event', matchEventRouter.routes())
     .use('/room/:ruid/match_summary', matchSummaryRouter.routes())
+    .use('/room/:ruid/balance', balanceRouter.routes())
     .use('/connections', connectionsRouter.routes());
 
 // Explicit route for unified Top endpoint to avoid nested param issues

@@ -79,4 +79,9 @@ export interface GameRoomSettings {
     powershotInvMassFactor: number  // Powershot force multiplier
     powershotCooldown: number       // Cooldown between powershot uses (milliseconds)
     powershotStickDistance: number  // Distance threshold to consider ball "stuck" to player
+
+    // Balance system settings
+    balanceEnabled: boolean
+    balanceMode: string // balance mode: "jt" or "pro"
+    balanceMaxPlayersPerTeam: number // maximum players per team for balance
 }

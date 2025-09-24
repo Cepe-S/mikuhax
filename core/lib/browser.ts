@@ -1079,6 +1079,24 @@ export class HeadlessBrowser {
     }
 
     /**
+     * Get balance system status
+     * @param ruid Game room's UID
+     */
+    public async getBalanceStatus(ruid: string) {
+        if (this.isExistRoom(ruid)) {
+            return await this._PageContainer.get(ruid)!.evaluate(() => {
+                if (window.gameRoom && window.gameRoom.balanceManager) {
+                    return window.gameRoom.balanceManager.getStatus();
+                } else {
+                    throw new Error('Balance system not initialized');
+                }
+            });
+        } else {
+            throw Error(`The room '${ruid}' is not exist.`);
+        }
+    }
+
+    /**
      * Generate detailed match message for Discord webhook
      * @param ruid Game room's UID
      */

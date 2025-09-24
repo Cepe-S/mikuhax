@@ -58,6 +58,7 @@ export interface BrowserHostRoomGameRule {
     autoAdmin: boolean // auto appoint admin
     autoOperating: boolean // auto emcee mode
     statsRecord: boolean // record game results on statistics system.
+    balanceMode: string // balance mode: "jt" or "pro"
     defaultMapName: string // select default stadium name for the game.
     readyMapName: string // select stadium name for using until the game starts.
     customJSONOptions?: string // JSON stringified cumstom options.
@@ -142,6 +143,10 @@ export interface BrowserHostRoomSettings {
     ballInvMass: number
     ballDamping: number
     ballColor: string
+
+    balanceEnabled: boolean
+    balanceMode: string // balance mode: "jt" or "pro"
+    balanceMaxPlayersPerTeam: number // maximum players per team for balance
 }
 
 export interface BrowserHostRoomHEloConfig {
