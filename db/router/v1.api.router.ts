@@ -7,7 +7,7 @@ import { matchEventRouter } from "./v1.match_event.router";
 import { matchSummaryRouter } from "./v1.match_summary.router";
 import { connectionsRouter } from "./v1.connections.router";
 import { sanctionsRouter } from "./v1.sanctions.router";
-import { balanceRouter } from "../../web/router/api/v1/balance";
+import { balanceRouter } from "./v1.balance.router";
 import { MatchEventController } from "../controller/matchevent.controller";
 import { MatchEventRepository } from "../repository/match_event.repository";
 

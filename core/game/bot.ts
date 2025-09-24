@@ -109,7 +109,7 @@ window.gameRoom = {
     matchEventsHolder: [],
     memideCooldowns: new Map(),
     memideUsedValues: new Map(),
-    balanceManager: new BalanceManager()
+    balanceManager: null as any // Will be initialized after room setup
 }
 
 // Clear localStorage
@@ -147,7 +147,8 @@ function makeRoom(): void {
         window.gameRoom.logger.i('initialisation', 'Powershot system initialized');
     }
 
-    // Initialize balance system
+    // Initialize balance system AFTER room is ready
+    window.gameRoom.balanceManager = new BalanceManager();
     const balanceConfig = {
         enabled: window.gameRoom.config.settings.balanceEnabled !== false,
         mode: (window.gameRoom.config.rules.balanceMode as BalanceMode) || BalanceMode.JT,
