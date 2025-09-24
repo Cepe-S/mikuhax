@@ -11,6 +11,11 @@ import * as mapTraining from "./stadium/training.hbs"
 export function loadStadiumData(mapName: string): string {
     let stadiumText: string;
     
+    // Log stadium loading attempt
+    if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.logger) {
+        window.gameRoom.logger.i('stadiumLoader', `Loading stadium: ${mapName}`);
+    }
+    
     // LINK MAP FILE
     switch (mapName) {
         case 'futx2':
@@ -47,11 +52,11 @@ export function loadStadiumData(mapName: string): string {
     
     if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.config && window.gameRoom.config.settings) {
         const settings = window.gameRoom.config.settings;
-        ballRadius = settings.ballRadius.toString();
-        ballColor = settings.ballColor.toString();
-        ballBCoeff = settings.ballBCoeff.toString();
-        ballInvMass = settings.ballInvMass.toString();
-        ballDamping = settings.ballDamping.toString();
+        if (settings.ballRadius !== undefined) ballRadius = settings.ballRadius.toString();
+        if (settings.ballColor !== undefined) ballColor = settings.ballColor.toString();
+        if (settings.ballBCoeff !== undefined) ballBCoeff = settings.ballBCoeff.toString();
+        if (settings.ballInvMass !== undefined) ballInvMass = settings.ballInvMass.toString();
+        if (settings.ballDamping !== undefined) ballDamping = settings.ballDamping.toString();
     }
     
     stadiumText = stadiumText

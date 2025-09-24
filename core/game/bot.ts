@@ -10,11 +10,12 @@ import { KickStack } from "./model/GameObject/BallTrace";
 import { getUnixTimestamp } from "./controller/Statistics";
 import { TeamID } from "./model/GameObject/TeamID";
 import { GameRoomConfig } from "./model/Configuration/GameRoomConfig";
-import { setDefaultStadiums, setRandomTeamColors } from './controller/RoomTools';
+import { setRandomTeamColors } from './controller/RoomTools';
 import { getRandomMatch } from './resource/realTeams';
 import { BalanceManager } from './controller/balance/BalanceManager';
 import { BalanceMode } from './controller/balance/BalanceConfig';
 import { afkManager } from './controller/AFKManager';
+import { StadiumManager } from './controller/StadiumManager';
 
 // Load initial configurations
 const loadedConfig: GameRoomConfig = JSON.parse(localStorage.getItem('_initConfig')!);
@@ -109,7 +110,8 @@ window.gameRoom = {
     matchEventsHolder: [],
     memideCooldowns: new Map(),
     memideUsedValues: new Map(),
-    balanceManager: null as any // Will be initialized after room setup
+    balanceManager: null as any, // Will be initialized after room setup
+    stadiumManager: null as any // Will be initialized after room setup
 }
 
 // Clear localStorage
@@ -146,6 +148,10 @@ function makeRoom(): void {
         window.gameRoom.ballStack.initPowershotSystem();
         window.gameRoom.logger.i('initialisation', 'Powershot system initialized');
     }
+
+    // Create stadium manager (will be initialized when room is ready)
+    window.gameRoom.stadiumManager = new StadiumManager();
+    window.gameRoom.logger.i('initialisation', 'Stadium manager created');
 
     // Initialize balance system AFTER room is ready
     window.gameRoom.balanceManager = new BalanceManager();
@@ -190,5 +196,5 @@ function makeRoom(): void {
     window.gameRoom._room.onRoomLink = (url: string): void => eventListener.onRoomLinkListener(url);
     window.gameRoom._room.onKickRateLimitSet = (min: number, rate: number, burst: number, byPlayer: PlayerObject): void => eventListener.onKickRateLimitSetListener(min, rate, burst, byPlayer);
     
-    setDefaultStadiums();
+    // Stadium manager handles initial stadium setup
 }

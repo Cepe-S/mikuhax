@@ -3,7 +3,7 @@ import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { Player } from "../../model/GameObject/Player";
 import { getUnixTimestamp } from "../Statistics";
-import { setDefaultStadiums, updateAdmins } from "../RoomTools";
+import { updateAdmins } from "../RoomTools";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
 import { trackPlayerConnection } from "../ConnectionTracker";
 
@@ -225,14 +225,42 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
         window.gameRoom._room.sendAnnouncement(rulesMsg, player.id, 0x479947, "small", 0);
     }, 3500);
 
+    // Add match debug action
+    if (!window.gameRoom.matchDebugActions) {
+        window.gameRoom.matchDebugActions = [];
+    }
+    
+    window.gameRoom.matchDebugActions.unshift({
+        timestamp: Date.now(),
+        action: "PLAYER_JOIN",
+        playerName: player.name,
+        playerId: player.id,
+        details: `Player joined the room`
+    });
+    
+    // Keep only last 20 actions
+    if (window.gameRoom.matchDebugActions.length > 20) {
+        window.gameRoom.matchDebugActions = window.gameRoom.matchDebugActions.slice(0, 20);
+    }
+
     // Balance system integration
     if (window.gameRoom.config.rules.autoOperating === true) {
         window.gameRoom.balanceManager.onPlayerJoin(player);
         
-        // Auto start if no game running
-        if (window.gameRoom._room.getScores() === null) {
-            window.gameRoom._room.startGame();
-        }
+        // Check stadium state after player joins
+        setTimeout(() => {
+            if (window.gameRoom.stadiumManager) {
+                window.gameRoom.stadiumManager.checkPlayerCount();
+            }
+            
+            // GARANTIZAR que se inicie el juego si no hay uno en curso
+            setTimeout(() => {
+                if (window.gameRoom._room.getScores() === null) {
+                    window.gameRoom._room.startGame();
+                    window.gameRoom.logger.i('onPlayerJoin', 'Auto-started game after player join');
+                }
+            }, 1000);
+        }, 100);
     }
 
     // Track player connection for analytics and anti-spam

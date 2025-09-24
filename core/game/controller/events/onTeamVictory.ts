@@ -3,7 +3,7 @@ import * as LangRes from "../../resource/strings";
 import { ScoresObject } from "../../model/GameObject/ScoresObject";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { convertTeamID2Name, TeamID } from "../../model/GameObject/TeamID";
-import { setRandomTeamColors, rotateStadium } from "../RoomTools";
+import { setRandomTeamColors } from "../RoomTools";
 
 export async function onTeamVictoryListener(scores: ScoresObject): Promise<void> {
     let placeholderVictory = {
@@ -128,18 +128,18 @@ export async function onTeamVictoryListener(scores: ScoresObject): Promise<void>
     window.gameRoom.logger.i('onTeamVictory', `The game has ended. Scores ${scores.red}:${scores.blue}.`);
     window.gameRoom._room.sendAnnouncement(winningMessage, null, 0x00FF00, "bold", 1);
 
-    // Auto-change teams and stadium after game ends
+    // Auto-change teams after game ends
     setTimeout(() => {
         try {
             // Change teams every game
             setRandomTeamColors();
-            
-            // Rotate stadium every 2 games
-            if (window.gameRoom.winningStreak.count % 2 === 0) {
-                rotateStadium();
-            }
         } catch (error) {
-            window.gameRoom.logger.w('onTeamVictory', `Failed to auto-change teams/stadium: ${error}`);
+            window.gameRoom.logger.w('onTeamVictory', `Failed to auto-change teams: ${error}`);
         }
     }, 3000); // Wait 3 seconds after victory announcement
+
+    // Let stadium manager handle stadium changes
+    if (window.gameRoom.stadiumManager) {
+        window.gameRoom.stadiumManager.onGameEnd();
+    }
 }

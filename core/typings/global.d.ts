@@ -12,6 +12,7 @@ import { MatchEvent } from "../game/model/GameObject/MatchEvent";
 import { MatchEventHolder } from "../game/model/GameObject/MatchEventHolder";
 import { MatchSummary } from "../game/model/GameObject/MatchSummary";
 import { BalanceManager } from "../game/controller/balance/BalanceManager";
+import { StadiumManager } from "../game/controller/StadiumManager";
 
 declare global {
     interface Window {
@@ -80,9 +81,17 @@ declare global {
                 password(password?: string): void;
             };
             matchEventsHolder: MatchEventHolder[];
+            matchDebugActions?: Array<{
+                timestamp: number;
+                action: string;
+                playerName?: string;
+                playerId?: number;
+                details: string;
+            }>;
             memideCooldowns?: Map<number, number>;
             memideUsedValues?: Map<number, number>;
             balanceManager: BalanceManager;
+            stadiumManager: StadiumManager;
         };
 
         // ==============================

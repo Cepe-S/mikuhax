@@ -51,6 +51,11 @@ export function cmdMap(byPlayer: PlayerObject, message?: string): void {
         const stadiumData = loadStadiumData(mapName.toLowerCase());
         window.gameRoom._room.setCustomStadium(stadiumData);
         
+        // Reinicializar sistema de powershot después del cambio de mapa
+        if (window.gameRoom.ballStack) {
+            window.gameRoom.ballStack.initPowershotSystem();
+        }
+        
         // Notificar el cambio exitoso
         window.gameRoom._room.sendAnnouncement(
             `🗺️ ${byPlayer.name}#${byPlayer.id} cambió el mapa a: ${mapName}`, 

@@ -11,6 +11,24 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
         const playerData = window.gameRoom.playerList.get(player.id)!;
         wasAfk = playerData.permissions.afkmode;
     }
+    
+    // Add match debug action
+    if (!window.gameRoom.matchDebugActions) {
+        window.gameRoom.matchDebugActions = [];
+    }
+    
+    window.gameRoom.matchDebugActions.unshift({
+        timestamp: Date.now(),
+        action: "PLAYER_LEAVE",
+        playerName: player.name,
+        playerId: player.id,
+        details: `Player left the room${wasAfk ? ' (was AFK)' : ''}`
+    });
+    
+    // Keep only last 20 actions
+    if (window.gameRoom.matchDebugActions.length > 20) {
+        window.gameRoom.matchDebugActions = window.gameRoom.matchDebugActions.slice(0, 20);
+    }
 
     // Update player's left date and save to database if exists in playerList
     if (window.gameRoom.playerList.has(player.id)) {
@@ -70,6 +88,13 @@ export async function onPlayerLeaveListener(player: PlayerObject): Promise<void>
             window.gameRoom.balanceManager.getStatus().queueLength
         );
     }
+
+    // Check stadium state after player leaves
+    setTimeout(() => {
+        if (window.gameRoom.stadiumManager) {
+            window.gameRoom.stadiumManager.checkPlayerCount();
+        }
+    }, 100);
 
     // Emit websocket event if function exists
     if (typeof window._emitSIOPlayerInOutEvent === 'function') {

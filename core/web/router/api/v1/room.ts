@@ -2,6 +2,7 @@ import Router from "koa-router";
 import * as roomController from '../../../controller/api/v1/room';
 import { checkLoginMiddleware } from "../../../lib/logincheck.middleware";
 import { balanceRouter } from "./balance";
+import { debugRouter } from "./debug";
 
 export const roomRouter = new Router();
 
@@ -49,3 +50,4 @@ roomRouter.get('/:ruid/asset/team/colour', checkLoginMiddleware, roomController.
 roomRouter.post('/:ruid/asset/team/colour', checkLoginMiddleware, roomController.setTeamColours); // set team colours
 
 roomRouter.use('/:ruid/balance', checkLoginMiddleware, balanceRouter.routes()); // balance system endpoints
+roomRouter.use('/:ruid/debug', checkLoginMiddleware, debugRouter.routes()); // debug system endpoints

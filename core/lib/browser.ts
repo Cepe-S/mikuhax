@@ -1097,6 +1097,60 @@ export class HeadlessBrowser {
     }
 
     /**
+     * Get debug status from all systems
+     * @param ruid Game room's UID
+     */
+    public async getDebugStatus(ruid: string) {
+        if (this.isExistRoom(ruid)) {
+            return await this._PageContainer.get(ruid)!.evaluate(() => {
+                const debugStatus: any = {};
+                
+                // Balance system debug
+                try {
+                    if (window.gameRoom && window.gameRoom.balanceManager) {
+                        debugStatus.balance = window.gameRoom.balanceManager.getStatus();
+                    }
+                } catch (error) {
+                    console.warn('Balance system not available for debug');
+                }
+                
+                // Stadium system debug
+                try {
+                    if (window.gameRoom && window.gameRoom.stadiumManager) {
+                        debugStatus.stadium = window.gameRoom.stadiumManager.getDebugStatus();
+                    }
+                } catch (error) {
+                    console.warn('Stadium system not available for debug');
+                }
+                
+                // Match system debug
+                try {
+                    if (window.gameRoom) {
+                        const scores = window.gameRoom._room.getScores();
+                        const playerList = window.gameRoom._room.getPlayerList();
+                        
+                        debugStatus.match = {
+                            isGaming: window.gameRoom.isGamingNow || false,
+                            matchDuration: scores ? Math.floor(scores.time || 0) : 0,
+                            redScore: scores ? scores.red : 0,
+                            blueScore: scores ? scores.blue : 0,
+                            redPlayers: playerList.filter(p => p.team === 1 && p.id !== 0).length,
+                            bluePlayers: playerList.filter(p => p.team === 2 && p.id !== 0).length,
+                            recentActions: window.gameRoom.matchDebugActions || []
+                        };
+                    }
+                } catch (error) {
+                    console.warn('Match system not available for debug');
+                }
+                
+                return debugStatus;
+            });
+        } else {
+            throw Error(`The room '${ruid}' is not exist.`);
+        }
+    }
+
+    /**
      * Generate detailed match message for Discord webhook
      * @param ruid Game room's UID
      */
