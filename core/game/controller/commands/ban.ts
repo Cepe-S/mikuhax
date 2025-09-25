@@ -22,7 +22,7 @@ export function cmdBan(byPlayer: PlayerObject, message: string): void {
 
     const targetPlayer = window.gameRoom.playerList.get(targetID)!;
     const duration = msgChunk[2] ? parseInt(msgChunk[2]) : 60; // Default 60 minutes
-    const reason = msgChunk.slice(3).join(' ') || 'No especificada';
+    const reason = msgChunk.slice(3).join(' ');
     const adminData = window.gameRoom.playerList.get(byPlayer.id)!;
 
     window._createBanDB(
@@ -35,9 +35,15 @@ export function cmdBan(byPlayer: PlayerObject, message: string): void {
         byPlayer.name,
         targetPlayer.name
     ).then(() => {
-        const expireText = duration > 0 ? `${duration} minutos` : 'permanente';
-        window.gameRoom._room.sendAnnouncement(`🚫 ${targetPlayer.name} ha sido baneado por ${expireText}. Razón: ${reason}`, null, 0xFF7777, "bold", 2);
-        window.gameRoom._room.kickPlayer(targetID, `Baneado por ${expireText}. Razón: ${reason}`, true);
+        const expireText = duration > 0 ? `Termina en ${duration} minutos` : 'Permanente';
+        const reasonText = msgChunk.slice(3).length > 0 ? reason : '';
+        
+        let kickMessage = reasonText;
+        if (kickMessage) kickMessage += '\n';
+        kickMessage += `${expireText}\nPuedes apelar en Discord: https://discord.gg/qfg45B2`;
+        
+        window.gameRoom._room.sendAnnouncement(`🚫 ${targetPlayer.name} ha sido baneado`, null, 0xFF7777, "bold", 2);
+        window.gameRoom._room.kickPlayer(targetID, kickMessage, false);
     }).catch(() => {
         window.gameRoom._room.sendAnnouncement("Error al banear jugador", byPlayer.id, 0xFF7777, "normal", 2);
     });

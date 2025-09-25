@@ -43,6 +43,7 @@ import "./commands/teamup";
 import "./commands/teamuptoggle";
 import "./commands/clearbans";
 import "./commands/randomteams";
+import "./commands/checkban";
 
 import "./commands/balancestatus";
 import "./commands/debugstadium";

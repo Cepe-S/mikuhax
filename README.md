@@ -55,7 +55,7 @@ You can also check the log in `.logs` directory. These log data will be kept for
 
 ## Contacts
 - [Github](https://github.com/dapucita/haxbotron)
-- [Discord](https://discord.gg/qfg45B2)
+- [Discord](https://discord.gg/CPRAxCwPfd)
 
 ## Special thanks to
 

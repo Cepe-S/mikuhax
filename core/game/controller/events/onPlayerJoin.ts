@@ -34,13 +34,31 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
     try {
         const banCheck = await window._readBanByAuthDB(window.gameRoom.config._RUID, player.auth);
         if (banCheck) {
-            const reason = banCheck.reason || 'No especificada';
-            const expireText = banCheck.expire === -1 ? 'permanente' : new Date(banCheck.expire).toLocaleString();
-            window.gameRoom._room.kickPlayer(player.id, `Estás baneado. Razón: ${reason}. Expira: ${expireText}`, true);
-            return;
+            // Double-check if ban is actually active (not expired)
+            const now = Date.now();
+            if (banCheck.expire !== -1 && banCheck.expire <= now) {
+                window.gameRoom.logger.i('onPlayerJoin', `Ban for ${player.name} has expired, allowing join`);
+                // Clean up expired ban from database
+                try {
+                    await window._deleteBanByAuthDB(window.gameRoom.config._RUID, player.auth);
+                    window.gameRoom.logger.i('onPlayerJoin', `Cleaned up expired ban for ${player.name}`);
+                } catch (cleanupError) {
+                    window.gameRoom.logger.w('onPlayerJoin', `Failed to cleanup expired ban: ${cleanupError}`);
+                }
+            } else {
+                const reason = banCheck.reason || 'No especificada';
+                const expireText = banCheck.expire === -1 ? 'permanente' : new Date(banCheck.expire).toLocaleString();
+                window.gameRoom.logger.i('onPlayerJoin', `${player.name}#${player.id} was kicked due to active ban. Auth: ${player.auth}, Reason: ${reason}`);
+                window.gameRoom._room.kickPlayer(player.id, `Estás baneado. Razón: ${reason}. Expira: ${expireText}`, false);
+                return;
+            }
+        } else {
+            window.gameRoom.logger.i('onPlayerJoin', `No active ban found for ${player.name} (Auth: ${player.auth})`);
         }
     } catch (error) {
         window.gameRoom.logger.w('onPlayerJoin', `Failed to check ban status for ${player.name}: ${error}`);
+        // In case of database error, allow the player to join to avoid false positives
+        window.gameRoom.logger.i('onPlayerJoin', `Allowing ${player.name} to join due to ban check error`);
     }
 
     // Check for active mute before creating player
