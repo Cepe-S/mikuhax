@@ -1143,6 +1143,52 @@ export class HeadlessBrowser {
                     console.warn('Match system not available for debug');
                 }
                 
+                // Powershot system debug
+                try {
+                    if (window.gameRoom && window.gameRoom.ballStack) {
+                        const ballStack = window.gameRoom.ballStack;
+                        const playerList = window.gameRoom._room.getPlayerList();
+                        
+                        // Find players currently holding the ball
+                        const playersWithBall = [];
+                        if (playerList && Array.isArray(playerList)) {
+                            for (const player of playerList) {
+                                if (player && player.id && player.id !== 0) {
+                                    const isHolding = ballStack.isPlayerHoldingBall(player.id);
+                                    if (isHolding) {
+                                        playersWithBall.push({
+                                            id: player.id,
+                                            name: player.name,
+                                            team: player.team
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                        
+                        debugStatus.powershot = {
+                            enabled: window.gameRoom.config.settings.powershotEnabled || false,
+                            isActive: ballStack.isPowershotActive(),
+                            currentPlayer: ballStack.getPowershotPlayer(),
+                            counter: ballStack.getPowershotCounter(),
+                            lastTouchPlayer: ballStack.getLastTouchPlayerID(),
+                            activationThreshold: window.gameRoom.config.settings.powershotActivationTime || 10,
+                            stickDistance: window.gameRoom.config.settings.powershotStickDistance || 26,
+                            playersWithBall: playersWithBall,
+                            ballPosition: (() => {
+                                try {
+                                    const pos = window.gameRoom._room.getBallPosition();
+                                    return pos ? { x: Math.round(pos.x * 100) / 100, y: Math.round(pos.y * 100) / 100 } : null;
+                                } catch (e) {
+                                    return null;
+                                }
+                            })()
+                        };
+                    }
+                } catch (error) {
+                    console.warn('Powershot system not available for debug');
+                }
+                
                 return debugStatus;
             });
         } else {

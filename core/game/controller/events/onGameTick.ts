@@ -11,10 +11,33 @@ export function onGameTickListener(): void {
             powershotCheckCounter = 0;
             
             try {
-                // Only check the last player who touched the ball (much more efficient)
-                const lastTouchedPlayerId = window.gameRoom.ballStack.getLastTouchPlayerID();
-                if (lastTouchedPlayerId && lastTouchedPlayerId !== 0) {
-                    window.gameRoom.ballStack.checkBallStuckToPlayer(lastTouchedPlayerId);
+                // Get all active players and check who has the ball
+                const playerList = window.gameRoom._room.getPlayerList();
+                let ballHolderFound = false;
+                
+                if (playerList && Array.isArray(playerList)) {
+                    for (const player of playerList) {
+                        if (player && player.id && player.id !== 0) {
+                            const isHolding = window.gameRoom.ballStack.isPlayerHoldingBall(player.id);
+                            if (isHolding) {
+                                // Only one player should have powershot active at a time
+                                if (!ballHolderFound) {
+                                    window.gameRoom.ballStack.checkBallStuckToPlayer(player.id);
+                                    ballHolderFound = true;
+                                } else {
+                                    // Multiple players detected with ball - reset to prevent conflicts
+                                    window.gameRoom.ballStack.resetPowershot();
+                                    window.gameRoom.logger.w('powershot', 'Multiple players detected with ball - powershot reset');
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // If no player is holding the ball, reset powershot
+                    if (!ballHolderFound && window.gameRoom.ballStack.isPowershotActive()) {
+                        window.gameRoom.ballStack.resetPowershot();
+                    }
                 }
             } catch (error) {
                 window.gameRoom.logger.w('onGameTick', `Error in powershot detection: ${error}`);

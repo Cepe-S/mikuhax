@@ -77,10 +77,29 @@ interface MatchStatus {
     recentActions: MatchAction[];
 }
 
+interface PowershotPlayer {
+    id: number;
+    name: string;
+    team: number;
+}
+
+interface PowershotStatus {
+    enabled: boolean;
+    isActive: boolean;
+    currentPlayer: number | null;
+    counter: number;
+    lastTouchPlayer: number | null;
+    activationThreshold: number;
+    stickDistance: number;
+    playersWithBall: PowershotPlayer[];
+    ballPosition: { x: number; y: number } | null;
+}
+
 interface DebugStatus {
     balance?: BalanceStatus;
     stadium?: StadiumStatus;
     match?: MatchStatus;
+    powershot?: PowershotStatus;
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -434,6 +453,98 @@ export function BalanceDebug() {
         );
     };
 
+    const renderPowershotSystem = () => {
+        if (!debugStatus.powershot) return null;
+        const status = debugStatus.powershot;
+        
+        return (
+            <Card className={classes.systemCard}>
+                <CardHeader 
+                    title="Powershot System" 
+                    subheader={`Threshold: ${status.activationThreshold * 0.1}s | Distance: ${status.stickDistance}`}
+                    action={
+                        <Chip 
+                            label={status.enabled ? 'ENABLED' : 'DISABLED'} 
+                            color={status.enabled ? 'primary' : 'default'}
+                            size="small"
+                        />
+                    }
+                />
+                <CardContent>
+                    <Grid container spacing={1} style={{ marginBottom: 16 }}>
+                        <Grid item xs={3}>
+                            <div className={classes.statBox}>
+                                <Typography variant="h5" style={{ color: status.isActive ? '#4caf50' : '#f44336' }}>
+                                    {status.isActive ? 'YES' : 'NO'}
+                                </Typography>
+                                <Typography variant="caption">Active</Typography>
+                            </div>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <div className={classes.statBox}>
+                                <Typography variant="h5" style={{ color: '#ff9800' }}>{status.counter}</Typography>
+                                <Typography variant="caption">Counter</Typography>
+                            </div>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <div className={classes.statBox}>
+                                <Typography variant="body1" style={{ fontSize: '0.9rem' }}>
+                                    #{status.currentPlayer || 'None'}
+                                </Typography>
+                                <Typography variant="caption">Current</Typography>
+                            </div>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <div className={classes.statBox}>
+                                <Typography variant="body1" style={{ fontSize: '0.9rem' }}>
+                                    #{status.lastTouchPlayer || 'None'}
+                                </Typography>
+                                <Typography variant="caption">Last Touch</Typography>
+                            </div>
+                        </Grid>
+                    </Grid>
+                    
+                    {status.ballPosition && (
+                        <Grid container spacing={1} style={{ marginBottom: 16 }}>
+                            <Grid item xs={6}>
+                                <div className={classes.statBox}>
+                                    <Typography variant="h6" style={{ color: '#2196f3' }}>{status.ballPosition.x}</Typography>
+                                    <Typography variant="caption">Ball X</Typography>
+                                </div>
+                            </Grid>
+                            <Grid item xs={6}>
+                                <div className={classes.statBox}>
+                                    <Typography variant="h6" style={{ color: '#2196f3' }}>{status.ballPosition.y}</Typography>
+                                    <Typography variant="caption">Ball Y</Typography>
+                                </div>
+                            </Grid>
+                        </Grid>
+                    )}
+                    
+                    {status.playersWithBall.length > 0 && (
+                        <>
+                            <Typography className={classes.sectionTitle}>Players with Ball</Typography>
+                            <Box className={classes.actionsList}>
+                                {status.playersWithBall.map((player, index) => (
+                                    <div key={player.id} className={classes.queueItem}>
+                                        <Box display="flex" justifyContent="space-between">
+                                            <Typography variant="body2">
+                                                <strong>#{player.id} {player.name}</strong>
+                                            </Typography>
+                                            <Typography variant="caption" color="textSecondary">
+                                                Team {player.team === 1 ? 'Red' : player.team === 2 ? 'Blue' : 'Spec'}
+                                            </Typography>
+                                        </Box>
+                                    </div>
+                                ))}
+                            </Box>
+                        </>
+                    )}
+                </CardContent>
+            </Card>
+        );
+    };
+
     return (
         <div className={classes.root}>
             <Card className={classes.headerCard}>
@@ -464,14 +575,17 @@ export function BalanceDebug() {
             </Card>
 
             <Grid container spacing={2}>
-                <Grid item xs={12} lg={4}>
+                <Grid item xs={12} lg={6}>
                     {renderBalanceSystem()}
                 </Grid>
-                <Grid item xs={12} lg={4}>
+                <Grid item xs={12} lg={6}>
                     {renderStadiumSystem()}
                 </Grid>
-                <Grid item xs={12} lg={4}>
+                <Grid item xs={12} lg={6}>
                     {renderMatchSystem()}
+                </Grid>
+                <Grid item xs={12} lg={6}>
+                    {renderPowershotSystem()}
                 </Grid>
             </Grid>
         </div>

@@ -376,12 +376,18 @@ export class KickStack {
         if (isBallStuck && !wasStuckBefore) {
             // If we have a timer for a different player, that player no longer has the ball
             if (this.powershot.timerInterval && this.powershot.currentPlayerId !== playerId) {
+                if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.logger) {
+                    window.gameRoom.logger.i('powershot', `Player switch detected: #${this.powershot.currentPlayerId} -> #${playerId}`);
+                }
                 this.resetPowershot();
             }
             this.startPowershotTimer(playerId);
             
         } else if (!isBallStuck && wasStuckBefore) {
             // Ball just got unstuck
+            if (typeof window !== 'undefined' && window.gameRoom && window.gameRoom.logger) {
+                window.gameRoom.logger.i('powershot', `Ball unstuck from player #${playerId}`);
+            }
             this.resetPowershot();
         }
         // If isBallStuck && wasStuckBefore: still stuck (no action needed)
@@ -417,5 +423,25 @@ export class KickStack {
      */
     isPlayerHoldingBall(playerId: number): boolean {
         return this.isBallStuckToPlayer(playerId);
+    }
+
+    /**
+     * Get detailed powershot debug information
+     */
+    getPowershotDebugInfo(): any {
+        return {
+            isActive: this.powershot.isActive,
+            counter: this.powershot.counter,
+            currentPlayerId: this.powershot.currentPlayerId,
+            activationThreshold: this.powershot.activationThreshold,
+            timerRunning: this.powershot.timerInterval !== null,
+            ballStuckCounter: this.powershot.ballStuckCounter,
+            stickDistance: this.powershot.stickDistance,
+            normalColor: this.powershot.normalColor,
+            powershotColor: this.powershot.powershotColor,
+            normalInvMass: this.powershot.normalInvMass,
+            powershotInvMass: this.powershot.powershotInvMass,
+            lastBallPos: this.powershot.lastBallPos
+        };
     }
 }
