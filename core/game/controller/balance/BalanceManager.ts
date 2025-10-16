@@ -4,12 +4,14 @@ import { BalanceConfig, BalanceMode, DEFAULT_BALANCE_CONFIG } from "./BalanceCon
 import { QueueSystem } from "./QueueSystem";
 import { BalanceDebugger } from "./BalanceDebugger";
 import { balance, teamName } from "../../resource/strings";
+import { GameStateCoordinator } from "../GameStateCoordinator";
 
 export class BalanceManager {
     private config: BalanceConfig = DEFAULT_BALANCE_CONFIG;
     private queueSystem = new QueueSystem();
     private debugger = new BalanceDebugger();
     private isProcessing = false;
+    private coordinator: GameStateCoordinator = new GameStateCoordinator();
 
     public setConfig(config: Partial<BalanceConfig>): void {
         this.config = { ...this.config, ...config };
@@ -33,9 +35,10 @@ export class BalanceManager {
     public onPlayerJoin(player: PlayerObject): void {
         if (!this.config.enabled || this.isProcessing) return;
         
-        this.isProcessing = true;
-        
-        setTimeout(() => {
+        // Usar coordinador para evitar conflictos con stadium manager
+        this.coordinator.executeCoordinatedAction('playerJoin', () => {
+            this.isProcessing = true;
+            
             try {
                 const counts = this.getValidatedTeamCounts();
                 
@@ -47,7 +50,7 @@ export class BalanceManager {
             } finally {
                 this.isProcessing = false;
             }
-        }, 50);
+        });
     }
 
     public onPlayerLeave(playerId: number): void {
@@ -134,11 +137,14 @@ export class BalanceManager {
     }
 
     public forceRebalance(): void {
-        if (this.config.mode === BalanceMode.PRO) {
-            setTimeout(() => this.rebalanceFromQueue(), 50);
-        } else if (this.config.mode === BalanceMode.JT) {
-            setTimeout(() => this.forceJTBalance(), 50);
-        }
+        // Usar coordinador para rebalanceos forzados
+        this.coordinator.executeCoordinatedAction('forceRebalance', () => {
+            if (this.config.mode === BalanceMode.PRO) {
+                this.rebalanceFromQueue();
+            } else if (this.config.mode === BalanceMode.JT) {
+                this.forceJTBalance();
+            }
+        });
     }
 
     public onPlayerTeamChange(player: PlayerObject, newTeam: TeamID): void {
@@ -402,6 +408,10 @@ export class BalanceManager {
     public getDebugger(): BalanceDebugger {
         return this.debugger;
     }
+    
+    public getCoordinator(): GameStateCoordinator {
+        return this.coordinator;
+    }
 
     private forceJTBalance(): void {
         if (this.isProcessing) return;
@@ -517,7 +527,8 @@ export class BalanceManager {
             queueLength: this.queueSystem.getQueueLength(),
             queue: this.queueSystem.getQueue(),
             recentActions: this.debugger.getRecentActions(20),
-            isProcessing: this.isProcessing
+            isProcessing: this.isProcessing,
+            coordinator: this.coordinator.getStats()
         };
     }
 }

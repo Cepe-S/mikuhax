@@ -40,19 +40,41 @@ export function onPlayerChatListener(player: PlayerObject, message: string): boo
                 playerData.permissions.mute = false;
                 playerData.permissions.muteExpire = -1;
                 window._deleteMuteByAuthDB(window.gameRoom.config._RUID, player.auth);
+                
+                // Add debug tracking for automatic expiration
+                if (!window.gameRoom.muteDebugActions) {
+                    window.gameRoom.muteDebugActions = [];
+                }
+                window.gameRoom.muteDebugActions.unshift({
+                    timestamp: Date.now(),
+                    action: 'MUTE_EXPIRED',
+                    playerName: player.name,
+                    playerId: player.id,
+                    duration: 0,
+                    reason: 'Automatic expiration',
+                    expireTime: -1
+                });
+                if (window.gameRoom.muteDebugActions.length > 20) {
+                    window.gameRoom.muteDebugActions = window.gameRoom.muteDebugActions.slice(0, 20);
+                }
             } else {
                 window.gameRoom._room.sendAnnouncement(Tst.maketext(LangRes.onChat.mutedChat, placeholderChat), player.id, 0xFF0000, "bold", 2);
                 return false;
             }
         }
         
-        // Simple message length check
-        if(message.length > 100) {
+        // Anti-spam check
+        if (!window.gameRoom.chatFloodManager.checkMessage(player, message)) {
+            return false; // Mensaje bloqueado por antispam
+        }
+        
+        // Message length check
+        if(message.length > window.gameRoom.config.settings.chatLengthLimit) {
             window.gameRoom._room.sendAnnouncement("Mensaje demasiado largo", player.id, 0xFF0000, "bold", 2);
             return false;
         }
         
-        // Simple separator check
+        // Separator check
         if(message.includes('|,|')) {
             window.gameRoom._room.sendAnnouncement("Separador no permitido", player.id, 0xFF0000, "bold", 2);
             return false;

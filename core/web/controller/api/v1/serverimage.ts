@@ -276,7 +276,12 @@ export async function deployFromImage(ctx: Context) {
             _LaunchDate: new Date(),
             _RUID: imageData.ruid,
             _config: config,
-            settings: imageData.settings,
+            settings: {
+                ...imageData.settings,
+                antiSpamMuteEnabled: imageData.settings.antiSpamMuteEnabled ?? true,
+                antiSpamMuteTimeMillisecs: imageData.settings.antiSpamMuteTimeMillisecs ?? 300000,
+                antiSpamMuteLogEnabled: imageData.settings.antiSpamMuteLogEnabled ?? true
+            },
             rules: {
                 ...imageData.rules,
                 requisite: {

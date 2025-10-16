@@ -559,6 +559,57 @@ export default function ServerImageForm({
                                         label="Anti-spam de chat"
                                     />
                                 </Grid>
+                                
+                                {/* Anti-Spam Mute System */}
+                                <Grid item xs={12}>
+                                    <Divider style={{ margin: '16px 0' }} />
+                                    <Typography variant="subtitle1" style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                                        🔇 Sistema de Muteo Automático por Spam
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settingsFormField.antiSpamMuteEnabled || true}
+                                                onChange={(e) => setSettingsFormField({
+                                                    ...settingsFormField,
+                                                    antiSpamMuteEnabled: e.target.checked
+                                                })}
+                                            />
+                                        }
+                                        label="Muteo automático por spam"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        label="Tiempo de muteo (minutos)"
+                                        value={Math.round((settingsFormField.antiSpamMuteTimeMillisecs || 300000) / 60000)}
+                                        onChange={(e) => setSettingsFormField({
+                                            ...settingsFormField,
+                                            antiSpamMuteTimeMillisecs: (parseInt(e.target.value) || 5) * 60000
+                                        })}
+                                        disabled={!settingsFormField.antiSpamMuteEnabled}
+                                        helperText="Duración del muteo automático por spam"
+                                        inputProps={{ min: 1, max: 60 }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={settingsFormField.antiSpamMuteLogEnabled || true}
+                                                onChange={(e) => setSettingsFormField({
+                                                    ...settingsFormField,
+                                                    antiSpamMuteLogEnabled: e.target.checked
+                                                })}
+                                            />
+                                        }
+                                        label="Logging de muteos"
+                                    />
+                                </Grid>
                                 <Grid item xs={12} md={4}>
                                     <FormControlLabel
                                         control={

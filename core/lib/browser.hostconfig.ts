@@ -88,6 +88,11 @@ export interface BrowserHostRoomSettings {
     chatFloodCriterion : number
     chatFloodIntervalMillisecs : number
 
+    // Anti-spam mute system
+    antiSpamMuteEnabled: boolean           // Activar sistema de muteo automático
+    antiSpamMuteTimeMillisecs: number      // Tiempo de muteo (ej: 300000 = 5 min)
+    antiSpamMuteLogEnabled: boolean        // Activar logging de muteos
+
     antiOgFlood : boolean
     ogFloodCriterion : number
     ogFloodBanMillisecs : number

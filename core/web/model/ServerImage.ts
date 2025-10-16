@@ -34,6 +34,9 @@ export interface ServerImage {
         antiChatFlood: boolean;
         chatFloodCriterion: number;
         chatFloodIntervalMillisecs: number;
+        antiSpamMuteEnabled: boolean;
+        antiSpamMuteTimeMillisecs: number;
+        antiSpamMuteLogEnabled: boolean;
         antiOgFlood: boolean;
         ogFloodCriterion: number;
         ogFloodBanMillisecs: number;

@@ -376,7 +376,7 @@ export async function getConnectionAnalyticsDB(auth: string): Promise<any> {
 // ================== NEW AUTH-BASED BAN/MUTE SYSTEM ==================
 
 // Mute functions
-export async function createMuteDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string): Promise<void> {
+export async function createMuteDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string, playerName?: string): Promise<void> {
     try {
         const now = Date.now();
         const expire = durationMinutes > 0 ? now + (durationMinutes * 60 * 1000) : -1;
@@ -389,7 +389,8 @@ export async function createMuteDB(ruid: string, auth: string, conn: string, rea
             register: now,
             expire,
             adminAuth,
-            adminName
+            adminName,
+            playerName
         };
         
         const result = await axios.post(`${dbConnAddr}room/${ruid}/sanctions`, muteData);

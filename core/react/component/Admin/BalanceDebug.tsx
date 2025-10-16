@@ -95,11 +95,36 @@ interface PowershotStatus {
     ballPosition: { x: number; y: number } | null;
 }
 
+interface MuteAction {
+    timestamp: number;
+    action: string;
+    playerName: string;
+    playerId: number;
+    duration: number;
+    reason: string;
+    expireTime: number;
+}
+
+interface MuteStatus {
+    enabled: boolean;
+    activeMutesCount: number;
+    activeMutes: Array<{
+        playerId: number;
+        playerName: string;
+        auth: string;
+        expireTime: number;
+        timeRemaining: number;
+        isPermanent: boolean;
+    }>;
+    recentActions: MuteAction[];
+}
+
 interface DebugStatus {
     balance?: BalanceStatus;
     stadium?: StadiumStatus;
     match?: MatchStatus;
     powershot?: PowershotStatus;
+    mute?: MuteStatus;
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -453,6 +478,115 @@ export function BalanceDebug() {
         );
     };
 
+    const renderMuteSystem = () => {
+        if (!debugStatus.mute) return null;
+        const status = debugStatus.mute;
+        
+        const formatTimeRemaining = (timeRemaining: number, isPermanent: boolean) => {
+            if (isPermanent) return 'Permanente';
+            if (timeRemaining <= 0) return 'Expirado';
+            
+            const minutes = Math.floor(timeRemaining / (1000 * 60));
+            const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+            
+            if (minutes > 0) return `${minutes}m ${seconds}s`;
+            return `${seconds}s`;
+        };
+        
+        return (
+            <Card className={classes.systemCard}>
+                <CardHeader 
+                    title="Mute System" 
+                    subheader={`Active Mutes: ${status.activeMutesCount}`}
+                    action={
+                        <Chip 
+                            label={status.enabled ? 'ENABLED' : 'DISABLED'} 
+                            color={status.enabled ? 'primary' : 'default'}
+                            size="small"
+                        />
+                    }
+                />
+                <CardContent>
+                    <Grid container spacing={1} style={{ marginBottom: 16 }}>
+                        <Grid item xs={4}>
+                            <div className={classes.statBox}>
+                                <Typography variant="h5" style={{ color: status.activeMutesCount > 0 ? '#f44336' : '#4caf50' }}>
+                                    {status.activeMutesCount}
+                                </Typography>
+                                <Typography variant="caption">Active</Typography>
+                            </div>
+                        </Grid>
+                        <Grid item xs={4}>
+                            <div className={classes.statBox}>
+                                <Typography variant="h5" style={{ color: '#ff9800' }}>
+                                    {status.activeMutes.filter(m => m.isPermanent).length}
+                                </Typography>
+                                <Typography variant="caption">Permanent</Typography>
+                            </div>
+                        </Grid>
+                        <Grid item xs={4}>
+                            <div className={classes.statBox}>
+                                <Typography variant="h5" style={{ color: '#2196f3' }}>
+                                    {status.recentActions.length}
+                                </Typography>
+                                <Typography variant="caption">Actions</Typography>
+                            </div>
+                        </Grid>
+                    </Grid>
+                    
+                    <Grid container spacing={2}>
+                        {status.activeMutes.length > 0 && (
+                            <Grid item xs={12} md={6}>
+                                <Typography className={classes.sectionTitle}>Active Mutes ({status.activeMutes.length})</Typography>
+                                <Box className={classes.actionsList}>
+                                    {status.activeMutes.slice(0, 5).map((mute, index) => (
+                                        <div key={mute.playerId} className={classes.queueItem}>
+                                            <Box display="flex" justifyContent="space-between">
+                                                <Typography variant="body2">
+                                                    <strong>#{mute.playerId} {mute.playerName}</strong>
+                                                </Typography>
+                                                <Typography variant="caption" color="textSecondary">
+                                                    {formatTimeRemaining(mute.timeRemaining, mute.isPermanent)}
+                                                </Typography>
+                                            </Box>
+                                        </div>
+                                    ))}
+                                </Box>
+                            </Grid>
+                        )}
+                        <Grid item xs={12} md={status.activeMutes.length > 0 ? 6 : 12}>
+                            <Typography className={classes.sectionTitle}>Recent Actions</Typography>
+                            <Box className={classes.actionsList}>
+                                {status.recentActions.slice(0, 8).map((action, index) => (
+                                    <div key={index} className={classes.actionItem} style={{ borderLeftColor: action.action === 'MUTE_APPLIED' ? '#f44336' : '#4caf50' }}>
+                                        <Box display="flex" alignItems="center" style={{ gap: 8 }}>
+                                            <Chip 
+                                                label={action.action} 
+                                                size="small" 
+                                                style={{ 
+                                                    fontSize: '0.7rem', 
+                                                    height: 20,
+                                                    backgroundColor: action.action === 'MUTE_APPLIED' ? '#ffebee' : '#e8f5e8'
+                                                }} 
+                                            />
+                                            <Typography variant="body2" style={{ flex: 1 }}>
+                                                <strong>{action.playerName}</strong> - {action.reason}
+                                                {action.duration > 0 && ` (${action.duration}min)`}
+                                            </Typography>
+                                            <Typography variant="caption" color="textSecondary">
+                                                {formatTime(action.timestamp)}
+                                            </Typography>
+                                        </Box>
+                                    </div>
+                                ))}
+                            </Box>
+                        </Grid>
+                    </Grid>
+                </CardContent>
+            </Card>
+        );
+    };
+
     const renderPowershotSystem = () => {
         if (!debugStatus.powershot) return null;
         const status = debugStatus.powershot;
@@ -586,6 +720,9 @@ export function BalanceDebug() {
                 </Grid>
                 <Grid item xs={12} lg={6}>
                     {renderPowershotSystem()}
+                </Grid>
+                <Grid item xs={12} lg={6}>
+                    {renderMuteSystem()}
                 </Grid>
             </Grid>
         </div>

@@ -47,6 +47,10 @@ import "./commands/checkban";
 
 import "./commands/balancestatus";
 import "./commands/debugstadium";
+import "./commands/debugcoordinator";
+import "./commands/debugmute";
+import "./commands/resetcoordinator";
+import "./commands/antispam";
 
 // Check if given string is a command chat. Returns true if it is, false otherwise.
 export function isCommandString(message: string): boolean {
@@ -155,17 +159,7 @@ export function parseCommand(byPlayer: PlayerObject, message: string): void {
     const registeredCommand = CommandRegistry.get(commandSign);
     if (registeredCommand) {
         try {
-            // Check permissions if needed
-            if (registeredCommand.meta.superAdminOnly && !window.gameRoom.playerList.get(byPlayer.id)?.permissions.superadmin) {
-                window.gameRoom._room.sendAnnouncement("❌ Solo los superadministradores pueden usar este comando.", byPlayer.id, 0xFF7777, "normal", 2);
-                return;
-            }
-            if (registeredCommand.meta.adminOnly && !byPlayer.admin && !window.gameRoom.playerList.get(byPlayer.id)?.permissions.superadmin) {
-                window.gameRoom._room.sendAnnouncement("❌ Solo los administradores pueden usar este comando.", byPlayer.id, 0xFF7777, "normal", 2);
-                return;
-            }
-            
-            // Execute the registered command
+            // Execute the registered command (permission checks are now handled inside each command)
             registeredCommand.handler(byPlayer, message);
             return;
         } catch (error) {

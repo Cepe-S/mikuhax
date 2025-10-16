@@ -263,22 +263,15 @@ export async function onPlayerJoinListener(player: PlayerObject): Promise<void> 
 
     // Balance system integration
     if (window.gameRoom.config.rules.autoOperating === true) {
+        // Primero el balance, luego el stadium manager
         window.gameRoom.balanceManager.onPlayerJoin(player);
         
-        // Check stadium state after player joins
+        // Check stadium state después del balance (coordinado internamente)
         setTimeout(() => {
             if (window.gameRoom.stadiumManager) {
                 window.gameRoom.stadiumManager.checkPlayerCount();
             }
-            
-            // GARANTIZAR que se inicie el juego si no hay uno en curso
-            setTimeout(() => {
-                if (window.gameRoom._room.getScores() === null) {
-                    window.gameRoom._room.startGame();
-                    window.gameRoom.logger.i('onPlayerJoin', 'Auto-started game after player join');
-                }
-            }, 1000);
-        }, 100);
+        }, 200);
     }
 
     // Track player connection for analytics and anti-spam

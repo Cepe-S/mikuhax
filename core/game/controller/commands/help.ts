@@ -2,23 +2,17 @@ import * as LangRes from "../../resource/strings";
 import { PlayerObject } from "../../model/GameObject/PlayerObject";
 import { CommandRegistry } from "../CommandRegistry";
 import { registerCommand } from "../CommandRegistry";
+import { CommandUtils } from "../utils/CommandUtils";
 
 export function cmdHelp(byPlayer: PlayerObject, fullMessage?: string): void {
-    // Parse the full message to extract the target command
-    const msgChunk = fullMessage ? fullMessage.split(" ") : [];
-    const message = msgChunk[1]; // first argument after command
+    const args = CommandUtils.parseArgs(fullMessage);
+    const message = args[1];
     
     if(message !== undefined) {
         // 🆕 Check if it's a registered command first
         const registeredCommand = CommandRegistry.get(message);
         if (registeredCommand) {
-            window.gameRoom._room.sendAnnouncement(
-                `📋 ${registeredCommand.meta.helpText}`,
-                byPlayer.id,
-                0x479947,
-                "normal",
-                1
-            );
+            CommandUtils.sendInfo(byPlayer.id, `📋 ${registeredCommand.meta.helpText}`);
             return;
         }
 

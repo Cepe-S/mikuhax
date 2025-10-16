@@ -9,4 +9,6 @@ sanctionsRouter
     .get('/sanctions/check', sanctionsController.checkSanction.bind(sanctionsController))
     .delete('/sanctions/:type/:auth', sanctionsController.deleteSanction.bind(sanctionsController))
     .get('/sanctions', sanctionsController.getSanctions.bind(sanctionsController))
-    .get('/bans', sanctionsController.getBans.bind(sanctionsController));
+    .get('/bans', sanctionsController.getBans.bind(sanctionsController))
+    .get('/mutes', sanctionsController.getMutes.bind(sanctionsController))
+    .delete('/mutes/:auth', sanctionsController.deleteSanction.bind(sanctionsController));

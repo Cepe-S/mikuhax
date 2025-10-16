@@ -1,4 +1,5 @@
 import { loadStadiumData } from "../../lib/stadiumLoader";
+import { GameStateCoordinator } from "./GameStateCoordinator";
 
 export enum StadiumState {
     READY = "ready",    // Esperando jugadores
@@ -8,6 +9,7 @@ export enum StadiumState {
 export class StadiumManager {
     private currentState: StadiumState = StadiumState.READY;
     private currentStadium: string = "";
+    private coordinator: GameStateCoordinator = new GameStateCoordinator();
     private debugActions: Array<{
         timestamp: number;
         action: string;
@@ -41,26 +43,30 @@ export class StadiumManager {
     }
     
     public checkPlayerCount(): void {
-        const playerCount = this.getActivePlayers();
-        const minPlayers = window.gameRoom.config.rules.requisite.minimumPlayers;
-        
-        if (playerCount >= minPlayers && this.currentState === StadiumState.READY) {
-            this.setGameStadium();
-        }
-        
-        // GARANTIZAR que siempre haya un juego iniciado si auto-operating está activo
-        if (window.gameRoom.config.rules.autoOperating === true) {
-            setTimeout(() => {
-                if (window.gameRoom._room.getScores() === null) {
-                    window.gameRoom._room.startGame();
-                    window.gameRoom.logger.i('StadiumManager', 'Auto-started game to prevent hanging');
-                }
-            }, 1000);
-        }
+        // Usar coordinador para evitar conflictos con balance manager
+        this.coordinator.executeCoordinatedAction('checkPlayerCount', () => {
+            const playerCount = this.getActivePlayers();
+            const minPlayers = window.gameRoom.config.rules.requisite.minimumPlayers;
+            
+            if (playerCount >= minPlayers && this.currentState === StadiumState.READY) {
+                this.setGameStadium();
+            }
+            
+            // GARANTIZAR que siempre haya un juego iniciado si auto-operating está activo
+            if (window.gameRoom.config.rules.autoOperating === true) {
+                setTimeout(() => {
+                    if (window.gameRoom._room.getScores() === null) {
+                        window.gameRoom._room.startGame();
+                        window.gameRoom.logger.i('StadiumManager', 'Auto-started game to prevent hanging');
+                    }
+                }, 500);
+            }
+        });
     }
     
     public onGameEnd(): void {
-        setTimeout(() => {
+        // Usar coordinador con alta prioridad para cambios post-partido
+        this.coordinator.executeCoordinatedAction('onGameEnd', () => {
             const playerCount = this.getActivePlayers();
             const minPlayers = window.gameRoom.config.rules.requisite.minimumPlayers;
             
@@ -77,9 +83,9 @@ export class StadiumManager {
                         window.gameRoom._room.startGame();
                         window.gameRoom.logger.i('StadiumManager', 'New game started after match end');
                     }
-                }, 1500);
+                }, 800);
             }
-        }, 1000);
+        }, 'high');
     }
     
     private setReadyStadium(): void {
@@ -206,7 +212,8 @@ export class StadiumManager {
             minPlayers,
             readyMap,
             gameMap,
-            recentActions: this.debugActions
+            recentActions: this.debugActions,
+            coordinator: this.coordinator.getStats()
         };
     }
     
@@ -219,5 +226,9 @@ export class StadiumManager {
             window.gameRoom.logger.e('StadiumManager', `Failed to force stadium change: ${error}`);
             return false;
         }
+    }
+    
+    public getCoordinator(): GameStateCoordinator {
+        return this.coordinator;
     }
 }

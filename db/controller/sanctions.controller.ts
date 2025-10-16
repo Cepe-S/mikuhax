@@ -53,8 +53,14 @@ export class SanctionsController {
 
     async deleteSanction(ctx: Context) {
         try {
-            const { ruid, type, auth } = ctx.params;
+            const { ruid } = ctx.params;
+            let { type, auth } = ctx.params;
             const { adminAuth, adminName } = ctx.request.body;
+            
+            // Handle mute-specific route
+            if (!type && ctx.path.includes('/mutes/')) {
+                type = 'mute';
+            }
             
             const sanction = await this.sanctionsModel.findActiveByAuth(ruid, auth, type);
             if (sanction) {
@@ -97,6 +103,35 @@ export class SanctionsController {
             
             const bans = await this.sanctionsModel.findByRuidAndType(ruid, 'ban');
             ctx.body = bans;
+        } catch (error) {
+            ctx.status = 500;
+            ctx.body = { error: error.message };
+        }
+    }
+
+    async getMutes(ctx: Context) {
+        try {
+            const { ruid } = ctx.params;
+            const { start = 0, count = 10 } = ctx.query;
+            
+            const allMutes = await this.sanctionsModel.findByRuidAndType(ruid, 'mute');
+            const startIndex = parseInt(start as string);
+            const countLimit = parseInt(count as string);
+            
+            const paginatedMutes = allMutes.slice(startIndex, startIndex + countLimit);
+            
+            // Format mutes for the frontend
+            const formattedMutes = paginatedMutes.map(mute => ({
+                auth: mute.auth,
+                playerName: mute.playerName || 'Unknown',
+                reason: mute.reason,
+                createdAt: mute.register,
+                expiresAt: mute.expire,
+                adminName: mute.adminName || 'System',
+                isActive: mute.active && (mute.expire === -1 || mute.expire > Date.now())
+            }));
+            
+            ctx.body = formattedMutes;
         } catch (error) {
             ctx.status = 500;
             ctx.body = { error: error.message };

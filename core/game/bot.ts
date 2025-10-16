@@ -16,6 +16,7 @@ import { BalanceManager } from './controller/balance/BalanceManager';
 import { BalanceMode } from './controller/balance/BalanceConfig';
 import { afkManager } from './controller/AFKManager';
 import { StadiumManager } from './controller/StadiumManager';
+import { ChatFloodManager } from './controller/ChatFloodManager';
 
 // Load initial configurations
 const loadedConfig: GameRoomConfig = JSON.parse(localStorage.getItem('_initConfig')!);
@@ -111,7 +112,8 @@ window.gameRoom = {
     memideCooldowns: new Map(),
     memideUsedValues: new Map(),
     balanceManager: null as any, // Will be initialized after room setup
-    stadiumManager: null as any // Will be initialized after room setup
+    stadiumManager: null as any, // Will be initialized after room setup
+    chatFloodManager: new ChatFloodManager()
 }
 
 // Clear localStorage

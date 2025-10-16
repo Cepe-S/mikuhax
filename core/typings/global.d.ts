@@ -13,6 +13,7 @@ import { MatchEventHolder } from "../game/model/GameObject/MatchEventHolder";
 import { MatchSummary } from "../game/model/GameObject/MatchSummary";
 import { BalanceManager } from "../game/controller/balance/BalanceManager";
 import { StadiumManager } from "../game/controller/StadiumManager";
+import { ChatFloodManager } from "../game/controller/ChatFloodManager";
 
 declare global {
     interface Window {
@@ -88,10 +89,31 @@ declare global {
                 playerId?: number;
                 details: string;
             }>;
+            muteDebugActions?: Array<{
+                timestamp: number;
+                action: string;
+                playerName: string;
+                playerId: number;
+                duration: number;
+                reason: string;
+                expireTime: number;
+            }>;
             memideCooldowns?: Map<number, number>;
             memideUsedValues?: Map<number, number>;
+            activeMutes?: Map<number, {
+                auth: string;
+                expireTime: number;
+                reason: string;
+                duration: number;
+            }>;
             balanceManager: BalanceManager;
             stadiumManager: StadiumManager;
+            chatFloodManager: ChatFloodManager;
+            muteManager?: {
+                checkMute(playerId: number): boolean;
+                getMuteInfo(playerId: number): any;
+                getActiveMutes(): any[];
+            };
         };
 
         // ==============================
@@ -137,13 +159,14 @@ declare global {
         _createBanDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string, playerName?: string): Promise<void>;
         _readBanByAuthDB(ruid: string, auth: string): Promise<any>;
         _deleteBanByAuthDB(ruid: string, auth: string): Promise<boolean>;
-        _createMuteDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string): Promise<void>;
+        _createMuteDB(ruid: string, auth: string, conn: string, reason: string, durationMinutes: number, adminAuth?: string, adminName?: string, playerName?: string): Promise<void>;
         _readMuteByAuthDB(ruid: string, auth: string): Promise<any>;
         _deleteMuteByAuthDB(ruid: string, auth: string): Promise<boolean>;
         _getAllBansFromDB(ruid: string): Promise<any[]>;
         _getAllMutesFromDB(ruid: string): Promise<any[]>;
         _cleanExpiredBansDB(ruid: string): Promise<number>;
         _cleanExpiredMutesDB(ruid: string): Promise<number>;
+        _insertMuteByAuthDB(ruid: string, auth: string, expireTime: number, reason: string): Promise<void>;
 
         // ==============================
         // Haxball Headless Initial Methods

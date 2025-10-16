@@ -1097,6 +1097,51 @@ export class HeadlessBrowser {
     }
 
     /**
+     * Get mute system debug info
+     * @param ruid Game room's UID
+     */
+    public async getMuteDebugInfo(ruid: string) {
+        if (this.isExistRoom(ruid)) {
+            return await this._PageContainer.get(ruid)!.evaluate(() => {
+                try {
+                    const activeMutes = [];
+                    const now = Date.now();
+                    
+                    // Get active mutes from player list
+                    window.gameRoom.playerList.forEach((player, id) => {
+                        if (player.permissions.mute) {
+                            const timeRemaining = player.permissions.muteExpire > 0 
+                                ? Math.max(0, player.permissions.muteExpire - now)
+                                : -1;
+                            
+                            activeMutes.push({
+                                playerId: id,
+                                playerName: player.name,
+                                auth: player.auth,
+                                expireTime: player.permissions.muteExpire,
+                                timeRemaining: timeRemaining,
+                                isPermanent: player.permissions.muteExpire === -1
+                            });
+                        }
+                    });
+                    
+                    return {
+                        enabled: true,
+                        activeMutesCount: activeMutes.length,
+                        activeMutes: activeMutes,
+                        recentActions: window.gameRoom.muteDebugActions || []
+                    };
+                } catch (error) {
+                    console.warn('Mute system not available for debug');
+                    return null;
+                }
+            });
+        } else {
+            throw Error(`The room '${ruid}' is not exist.`);
+        }
+    }
+
+    /**
      * Get debug status from all systems
      * @param ruid Game room's UID
      */

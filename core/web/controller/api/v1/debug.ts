@@ -17,6 +17,12 @@ export class DebugController {
             // Get debug status from all systems
             const debugStatus = await browser.getDebugStatus(ruid);
             
+            // Add mute system debug info
+            const muteDebugInfo = await browser.getMuteDebugInfo(ruid);
+            if (muteDebugInfo) {
+                debugStatus.mute = muteDebugInfo;
+            }
+            
             ctx.status = 200;
             ctx.body = debugStatus;
         } catch (error) {
